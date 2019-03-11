@@ -60,14 +60,13 @@ redis_db = 0
     for zz in result:
         redis_pub.publish_redispy(zz)
 
-    def _print_(msg):
+    def print_msg(msg):
         print(msg)
 
     #多线程消费队列
-    redis_customer = RedisCustomer(quenen_name, consuming_function=_print_,threads_num=100)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg,threads_num=100)
     print(redis_customer.threads_num)
-    for i in range(1,100):
-        redis_customer._start_consuming_message()
+    redis_customer.start_consuming_message()
 
 
 ```

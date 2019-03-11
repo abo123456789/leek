@@ -1,3 +1,6 @@
+#-*- coding:utf-8 -*-
+__author__ = 'cc'
+
 import config
 import redis
 import time
@@ -70,7 +73,7 @@ class RedisCustomer(object):
         self.threadpool = BoundedThreadPoolExecutor(threads_num)
 
 
-    def _start_consuming_message(self):
+    def start_consuming_message(self):
         print('*' * 50)
         while True:
             try:
@@ -156,6 +159,7 @@ class RedisPublish(object):
 
 
 class BoundedThreadPoolExecutor(ThreadPoolExecutor):
+    """线程池"""
     def __init__(self, max_workers=None, thread_name_prefix=''):
         super().__init__(max_workers, thread_name_prefix)
         self._work_queue = queue.Queue(max_workers * 2)
@@ -172,14 +176,11 @@ if __name__ == '__main__':
     for zz in result:
         redis_pub.publish_redispy(zz)
 
-    def _print_(msg):
+    def print_msg(msg):
         print(msg)
 
     #多线程消费队列
-    redis_customer = RedisCustomer(quenen_name, consuming_function=_print_,threads_num=100)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg,threads_num=100)
     print(redis_customer.threads_num)
-    for i in range(1,100):
-        redis_customer._start_consuming_message()
+    redis_customer.start_consuming_message()
 
-    # RedisPublish.test_pub()
-    # RedisCustomer.test_custom()
