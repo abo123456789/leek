@@ -1,26 +1,27 @@
 #-*- coding:utf-8 -*-
 __author__ = 'cc'
 
-import config
+from functools import wraps
+
 import redis
 import time
 import queue
 import traceback
 from collections import Callable
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, Future
+from concurrent.futures.thread import _WorkItem
 from tomorrow3 import threads as tomorrow_threads
+
+import config
 
 
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
-    def __init__(self, name, namespace='', **redis_kwargs):
+    def __init__(self, name, namespace='queue', **redis_kwargs):
         """The default connection parameters are: host='localhost', port=6379, db=0"""
         self.__db = redis.Redis(**redis_kwargs)
-        if namespace:
-            self.key = '%s:%s' % (namespace, name)
-        else:
-            self.key = name
+        self.key = '%s:%s' % (namespace, name)
 
     def getdb(self):
         return self.__db
@@ -62,16 +63,13 @@ class RedisCustomer(object):
         redis队列消费程序
         :param queue_name: 队列名称
         :param consuming_function: 队列消息取出来后执行的方法
-        :param threads_num: 启动多少个队列消费线程
+        :param threads_num: 启动多少个队列线程
         """
-        if config.redis_password:
-            self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,password=config.redis_password)
-        else:
-            self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port,db=config.redis_db)
+        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,
+                                       password=config.redis_password)
         self.consuming_function = consuming_function
         self.threads_num = threads_num
         self.threadpool = BoundedThreadPoolExecutor(threads_num)
-
 
     def start_consuming_message(self):
         print('*' * 50)
@@ -100,16 +98,13 @@ class RedisPublish(object):
 
     def __init__(self, queue_name, threads_num=50, max_push_size=1):
         """
-        
+
         :param queue_name: 队列名称(不包含命名空间)
         :param threads_num: 并发线程数
         :param max_push_size: 
         """
-
-        if config.redis_password:
-            self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,password=config.redis_password)
-        else:
-            self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port,db=config.redis_db)
+        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,
+                                       password=config.redis_password)
         self.threads_num = threads_num
         self.max_push_size = max_push_size
 
@@ -159,28 +154,49 @@ class RedisPublish(object):
 
 
 class BoundedThreadPoolExecutor(ThreadPoolExecutor):
-    """线程池"""
     def __init__(self, max_workers=None, thread_name_prefix=''):
         super().__init__(max_workers, thread_name_prefix)
         self._work_queue = queue.Queue(max_workers * 2)
 
+    def submit(self, fn, *args, **kwargs):
+        with self._shutdown_lock:
+            if self._shutdown:
+                raise RuntimeError('cannot schedule new futures after shutdown')
+            f = Future()
+            fn_deco = _deco(fn)
+            w = _WorkItem(f, fn_deco, args, kwargs)
+            self._work_queue.put(w)
+            self._adjust_thread_count()
+            return f
+
+
+def _deco(f):
+    @wraps(f)
+    def __deco(*args, **kwargs):
+        try:
+            return f(*args, **kwargs)
+        except Exception as e:
+            print(e)
+
+    return __deco
+
+
 if __name__ == '__main__':
     quenen_name = 'test'
-
-    #批量写入队列
-    result = [str(i) for i in range(1, 5008)]
+    result = [str(i) for i in range(1, 5000)]
     redis_pub = RedisPublish(quenen_name)
-    redis_pub.publish_redispy_list(result)
+    redis_pub.publish_redispy_list(result)  # 单线程批量写入
 
-    #单条记录入队列
     for zz in result:
-        redis_pub.publish_redispy(zz)
+        redis_pub.publish_redispy(zz)  # 多线程单条记录写入
+
 
     def print_msg(msg):
         print(msg)
 
-    #多线程消费队列
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg,threads_num=100)
+
+    # 多线程消费
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
 
