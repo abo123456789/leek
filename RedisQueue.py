@@ -12,16 +12,19 @@ from concurrent.futures import ThreadPoolExecutor, Future
 from concurrent.futures.thread import _WorkItem
 from tomorrow3 import threads as tomorrow_threads
 
-import config
+from app import config
 
 
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
-    def __init__(self, name, namespace='queue', **redis_kwargs):
+    def __init__(self, name, namespace='', **redis_kwargs):
         """The default connection parameters are: host='localhost', port=6379, db=0"""
         self.__db = redis.Redis(**redis_kwargs)
-        self.key = '%s:%s' % (namespace, name)
+        if namespace:
+            self.key = '%s:%s' % (namespace, name)
+        else:
+            self.key = name
 
     def getdb(self):
         return self.__db
@@ -65,7 +68,7 @@ class RedisCustomer(object):
         :param consuming_function: 队列消息取出来后执行的方法
         :param threads_num: 启动多少个队列线程
         """
-        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,
+        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.db,
                                        password=config.redis_password)
         self.consuming_function = consuming_function
         self.threads_num = threads_num
@@ -96,24 +99,26 @@ class RedisCustomer(object):
 class RedisPublish(object):
     """redis入队列类"""
 
-    def __init__(self, queue_name, threads_num=50, max_push_size=1):
+    def __init__(self, queue_name, max_push_size=1):
         """
 
         :param queue_name: 队列名称(不包含命名空间)
         :param threads_num: 并发线程数
         :param max_push_size: 
         """
-        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,
+        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.db,
                                        password=config.redis_password)
-        self.threads_num = threads_num
+        # self.threads_num = threads_num
         self.max_push_size = max_push_size
+        self.local_quenen = queue.Queue(maxsize=max_push_size + 1)
+        self.pipe = self.redis_quenen.getdb().pipeline()
 
     @tomorrow_threads(50)
     def publish_redispy(self, msg: str):
         """
         单个写入消息队列
         :param msg: 待写入消息字符串
-        :return: 
+        :return: None
         """
         self.redis_quenen.put(msg)
 
@@ -139,18 +144,29 @@ class RedisPublish(object):
                     print(f'*' * 10 + str(left_size) + '*' * 10 + 'commit')
             list_len = list_len - 1
 
+    def publish_redispy_mutil(self, msg: str):
+        """
+        单笔写入,批量提交
+        :param msg: 待写入字符串
+        :return: None
+        """
+        self.local_quenen.put(msg)
+        print(f'self.local_quenen.size:{self.local_quenen.qsize()}')
+        if self.local_quenen.qsize() >= self.max_push_size:
+            try:
+                while self.local_quenen.qsize() > 0:
+                    self.pipe.lpush(self.redis_quenen.key, self.local_quenen.get_nowait())
+            except:
+                traceback.print_exc()
+            self.pipe.execute()
+            print('commit'.center(16, '*'))
+
     def clear_quenen(self):
         """
         清空当前队列
         :return: 
         """
         self.redis_quenen.clear()
-
-    @staticmethod
-    def test_pub():
-        redis_pub = RedisPublish('test')
-        result = [str(i) for i in range(1, 508)]
-        redis_pub.publish_redispy_list(result)
 
 
 class BoundedThreadPoolExecutor(ThreadPoolExecutor):
@@ -182,13 +198,18 @@ def _deco(f):
 
 
 if __name__ == '__main__':
-    quenen_name = 'test'
-    result = [str(i) for i in range(1, 5000)]
-    redis_pub = RedisPublish(quenen_name)
-    redis_pub.publish_redispy_list(result)  # 单线程批量写入
+    quenen_name = 'test1'
+    redis_pub = RedisPublish(queue_name=quenen_name, max_push_size=5)
+
+    result = [str(i) for i in range(1, 101)]
 
     for zz in result:
         redis_pub.publish_redispy(zz)  # 多线程单条记录写入
+
+    redis_pub.publish_redispy_list(result)  # 单线程批量写入1
+
+    for zz in result:
+        redis_pub.publish_redispy_mutil(zz)  # 单线程批量写入2
 
 
     def print_msg(msg):
@@ -199,4 +220,3 @@ if __name__ == '__main__':
     redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
-
