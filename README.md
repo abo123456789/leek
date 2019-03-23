@@ -49,24 +49,29 @@ redis_db = 0
 
 
 ```python
-    quenen_name = 'test'
+    quenen_name = 'test1'
+    redis_pub = RedisPublish(queue_name=quenen_name, max_push_size=5)
 
-    #批量写入队列
-    result = [str(i) for i in range(1, 5008)]
-    redis_pub = RedisPublish(quenen_name)
-    redis_pub.publish_redispy_list(result)
+    result = [str(i) for i in range(1, 101)]
 
-    #单条记录入队列
     for zz in result:
-        redis_pub.publish_redispy(zz)
+        redis_pub.publish_redispy(zz)  # 多线程单条记录写入
+
+    redis_pub.publish_redispy_list(result)  # 单线程批量写入1
+
+    for zz in result:
+        redis_pub.publish_redispy_mutil(zz)  # 单线程批量写入2
+
 
     def print_msg(msg):
         print(msg)
 
-    #多线程消费队列
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg,threads_num=100)
+
+    # 多线程消费
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
+
 
 
 ```
