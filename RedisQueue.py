@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 __author__ = 'cc'
 
+import config
 from functools import wraps
 
 import redis
@@ -11,8 +12,6 @@ from collections import Callable
 from concurrent.futures import ThreadPoolExecutor, Future
 from concurrent.futures.thread import _WorkItem
 from tomorrow3 import threads as tomorrow_threads
-
-from app import config
 
 
 class RedisQueue(object):
@@ -68,7 +67,7 @@ class RedisCustomer(object):
         :param consuming_function: 队列消息取出来后执行的方法
         :param threads_num: 启动多少个队列线程
         """
-        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.db,
+        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,
                                        password=config.redis_password)
         self.consuming_function = consuming_function
         self.threads_num = threads_num
@@ -106,7 +105,7 @@ class RedisPublish(object):
         :param threads_num: 并发线程数
         :param max_push_size: 
         """
-        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.db,
+        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,
                                        password=config.redis_password)
         # self.threads_num = threads_num
         self.max_push_size = max_push_size
@@ -220,3 +219,4 @@ if __name__ == '__main__':
     redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
+
