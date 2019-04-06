@@ -1,5 +1,5 @@
 #-*- coding:utf-8 -*-
-from Redis_Bloomfilter import BloomFilter
+from RedisBloomilter import BloomFilter
 
 __author__ = 'cc'
 
