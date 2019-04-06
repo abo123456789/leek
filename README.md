@@ -95,4 +95,14 @@ redis_db = 0
 ```java
 2019-03-23 新增单线程异步批量提交功能
 
+2019-04-06 新增爬取任务自动去重功能
+
+```
+
+### 参考引用
+
+
+```java
+https://github.com/LiuXingMing/Scrapy_Redis_Bloomfilter
+
 ```

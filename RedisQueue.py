@@ -1,4 +1,6 @@
 #-*- coding:utf-8 -*-
+from Redis_Bloomfilter import BloomFilter
+
 __author__ = 'cc'
 
 from functools import wraps
@@ -18,13 +20,17 @@ from app import config
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
-    def __init__(self, name, namespace='', **redis_kwargs):
+    def __init__(self, name, fliter_rep=True ,namespace='', **redis_kwargs):
         """The default connection parameters are: host='localhost', port=6379, db=0"""
         self.__db = redis.Redis(**redis_kwargs)
         if namespace:
             self.key = '%s:%s' % (namespace, name)
         else:
             self.key = name
+        self.fliter_rep = fliter_rep
+        if fliter_rep:
+            self.key_sets = self.key+':sets'
+            self.bloom_fliter = BloomFilter(blockNum=1, key=self.key_sets,**redis_kwargs)
 
     def getdb(self):
         return self.__db
@@ -39,7 +45,12 @@ class RedisQueue(object):
 
     def put(self, item):
         """Put item into the queue."""
-        self.__db.lpush(self.key, item)
+        if self.fliter_rep:
+            if self.bloom_fliter.isContains(item) is False:
+               self.__db.lpush(self.key, item)
+               self.bloom_fliter.insert(item)
+        else:
+            self.__db.lpush(self.key, item)
 
     def clear(self):
         """delete the queue."""
