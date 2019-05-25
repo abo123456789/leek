@@ -226,6 +226,11 @@ def _deco(f):
 
 
 if __name__ == '__main__':
+    config.redis_db = 0
+    config.redis_port=6379
+    config.redis_password=''
+    config.redis_host = '127.0.0.1'
+
     quenen_name = 'test1'
     redis_pub = RedisPublish(queue_name=quenen_name, max_push_size=5)
 
