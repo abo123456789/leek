@@ -1,4 +1,6 @@
 #-*- coding:utf-8 -*-
+import json
+
 from RedisBloomilter import BloomFilter
 
 __author__ = 'cc'
@@ -19,7 +21,14 @@ from tomorrow3 import threads as tomorrow_threads
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
-    def __init__(self, name, fliter_rep=True ,namespace='', **redis_kwargs):
+    def __init__(self, name, fliter_rep=False ,namespace='', **redis_kwargs):
+        """
+        
+        :param name: 队列名称
+        :param fliter_rep: 是否开始重复任务过滤
+        :param namespace: 队列名前缀
+        :param redis_kwargs: redis连接动态参数
+        """
         """The default connection parameters are: host='localhost', port=6379, db=0"""
         self.__db = redis.Redis(**redis_kwargs)
         if namespace:
@@ -124,9 +133,18 @@ class RedisPublish(object):
         self.pipe = self.redis_quenen.getdb().pipeline()
 
     @tomorrow_threads(50)
-    def publish_redispy(self, msg: str):
+    def publish_redispy(self, **kwargs):
         """
-        单个写入消息队列
+        将多参数写入消息队列
+        :param kwargs: 待写入参数 (a=3,b=4)
+        :return: None
+        """
+        self.redis_quenen.put(json.dumps(kwargs))
+
+    @tomorrow_threads(50)
+    def publish_redispy_str(self, msg:str):
+        """
+        将字符串写入消息队列
         :param msg: 待写入消息字符串
         :return: None
         """
@@ -214,7 +232,7 @@ if __name__ == '__main__':
     result = [str(i) for i in range(1, 101)]
 
     for zz in result:
-        redis_pub.publish_redispy(zz)  # 多线程单条记录写入
+        redis_pub.publish_redispy(a=zz, b=zz, c=zz)  # 多线程单条记录写入
 
     redis_pub.publish_redispy_list(result)  # 单线程批量写入1
 
@@ -223,7 +241,7 @@ if __name__ == '__main__':
 
 
     def print_msg(msg):
-        print(msg)
+        print(json.loads(msg))
 
 
     # 多线程消费

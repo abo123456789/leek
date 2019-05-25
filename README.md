@@ -2,7 +2,7 @@
 redis高并发队列
 ##### [介绍文档]
 
-* 支持版本: python 3.6
+* 支持版本: python 3.6+
 
 
 ### 下载安装
@@ -55,7 +55,7 @@ redis_db = 0
     result = [str(i) for i in range(1, 101)]
 
     for zz in result:
-        redis_pub.publish_redispy(zz)  # 多线程单条记录写入
+        redis_pub.publish_redispy(a=zz, b=zz, c=zz)  # 多线程单条记录写入
 
     redis_pub.publish_redispy_list(result)  # 单线程批量写入1
 
@@ -64,15 +64,13 @@ redis_db = 0
 
 
     def print_msg(msg):
-        print(msg)
+        print(json.loads(msg))
 
 
     # 多线程消费
     redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
-
-
 
 ```
 
@@ -96,6 +94,8 @@ redis_db = 0
 2019-03-23 新增单线程异步批量提交功能
 
 2019-04-06 新增爬取任务自动去重功能
+
+2019-05-25 新增添加任务时动态传参
 
 ```
 
