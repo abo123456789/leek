@@ -17,6 +17,8 @@ from concurrent.futures import ThreadPoolExecutor, Future
 from concurrent.futures.thread import _WorkItem
 from tomorrow3 import threads as tomorrow_threads
 
+redis_conn_instance = {}
+
 
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
@@ -30,7 +32,13 @@ class RedisQueue(object):
         :param redis_kwargs: redis连接动态参数
         """
         """The default connection parameters are: host='localhost', port=6379, db=0"""
-        self.__db = redis.Redis(**redis_kwargs)
+        if 'redis_conn' in redis_conn_instance:
+            # print('****已经初始化过redis队列连接****')
+            self.__db = redis_conn_instance.get('redis_conn')
+        else:
+            # print('****新初始化发布队列redis连接****')
+            self.__db = redis.Redis(**redis_kwargs)
+            redis_conn_instance['redis_conn'] = self.__db
         if namespace:
             self.key = '%s:%s' % (namespace, name)
         else:
