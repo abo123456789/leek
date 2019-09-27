@@ -166,19 +166,13 @@ class RedisPublish(object):
         :return: 
         """
         pipe = self.redis_quenen.getdb().pipeline()
-        left_size = len(msgs) % publish_size
-        list_len = len(msgs)
         for id in msgs:
             pipe.lpush(self.redis_quenen.key, id)
             if len(pipe) == publish_size:
                 pipe.execute()
                 print(f'*' * 10 + str(publish_size) + '*' * 10 + 'commit')
-            else:
-                print(left_size, list_len)
-                if left_size == list_len and left_size != 0:
-                    pipe.execute()
-                    print(f'*' * 10 + str(left_size) + '*' * 10 + 'commit')
-            list_len = list_len - 1
+        if len(pipe)>0:
+            pipe.execute()
 
     def publish_redispy_mutil(self, msg: str):
         """
