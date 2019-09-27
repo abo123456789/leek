@@ -112,6 +112,7 @@ class RedisCustomer(object):
             except:
                 s = traceback.format_exc()
                 print(s)
+                time.sleep(0.1)
 
     @staticmethod
     def test_custom():
@@ -127,8 +128,9 @@ class RedisPublish(object):
 
     def __init__(self, queue_name, fliter_rep=False, max_push_size=1):
         """
-
+        初始化消息发布队列
         :param queue_name: 队列名称(不包含命名空间)
+        :param fliter_rep: 队列任务是否去重 True:去重  False:不去重
         :param threads_num: 并发线程数
         :param max_push_size: 
         """
@@ -233,14 +235,14 @@ if __name__ == '__main__':
     config.redis_host = '127.0.0.1'
 
     quenen_name = 'test1'
-    redis_pub = RedisPublish(queue_name=quenen_name, max_push_size=5)
+    redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=True, max_push_size=50)
 
     result = [str(i) for i in range(1, 101)]
 
     for zz in result:
-        redis_pub.publish_redispy(a=zz, b=zz, c=zz)  # 多线程单条记录写入
+        redis_pub.publish_redispy(a=zz, b=zz, c=zz)  # 单条记录写入
 
-    redis_pub.publish_redispy_list(result)  # 单线程批量写入1
+    redis_pub.publish_redispy_list(result)  # 单线程提交列表任务
 
     for zz in result:
         redis_pub.publish_redispy_mutil(zz)  # 单线程批量写入2
