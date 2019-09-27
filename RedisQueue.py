@@ -1,8 +1,6 @@
 #-*- coding:utf-8 -*-
 import json
 
-from RedisBloomilter import BloomFilter
-
 __author__ = 'cc'
 
 import config
@@ -46,7 +44,6 @@ class RedisQueue(object):
         self.fliter_rep = fliter_rep
         if fliter_rep:
             self.key_sets = self.key+':sets'
-            self.bloom_fliter = BloomFilter(blockNum=1, key=self.key_sets,**redis_kwargs)
 
     def getdb(self):
         return self.__db
@@ -62,15 +59,17 @@ class RedisQueue(object):
     def put(self, item):
         """Put item into the queue."""
         if self.fliter_rep:
-            if self.bloom_fliter.isContains(item) is False:
-               self.__db.lpush(self.key, item)
-               self.bloom_fliter.insert(item)
+            if self.__db.sismember(self.key_sets, item) is False:
+                self.__db.lpush(self.key, item)
+                self.__db.sadd(self.key_sets, item)
         else:
             self.__db.lpush(self.key, item)
 
     def clear(self):
         """delete the queue."""
         self.__db.delete(self.key)
+        if self.key_sets:
+            self.__db.delete(self.key_sets)
 
     def get(self, block=False, timeout=None):
         """Remove and return an item from the queue.
@@ -126,14 +125,14 @@ class RedisCustomer(object):
 class RedisPublish(object):
     """redis入队列类"""
 
-    def __init__(self, queue_name, max_push_size=1):
+    def __init__(self, queue_name, fliter_rep=False, max_push_size=1):
         """
 
         :param queue_name: 队列名称(不包含命名空间)
         :param threads_num: 并发线程数
         :param max_push_size: 
         """
-        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,
+        self.redis_quenen = RedisQueue(queue_name,fliter_rep=fliter_rep, host=config.redis_host, port=config.redis_port, db=config.redis_db,
                                        password=config.redis_password)
         # self.threads_num = threads_num
         self.max_push_size = max_push_size
