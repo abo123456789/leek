@@ -19,11 +19,9 @@ git clone https://github.com/abo123456789/RedisQueue.git
 pip install -r requirements.txt
 ```
 
-* 配置config.py:
+* 配置redis连接:
 
 ```shell
-# config.py 为数据库配置文件
-
 # 配置Redis
 redis_host = '127.0.0.1'
 redis_password = ''
@@ -98,13 +96,5 @@ redis_db = 0
 2019-05-25 新增添加任务时动态传参
 
 2019-09-27 修复提交列表任务BUG
-
-```
-
-### 参考引用
-
-
-```java
-https://github.com/LiuXingMing/Scrapy_Redis_Bloomfilter
 
 ```
