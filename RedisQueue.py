@@ -3,7 +3,6 @@ import json
 
 __author__ = 'cc'
 
-import config
 from functools import wraps
 
 import redis
@@ -14,6 +13,12 @@ from collections import Callable
 from concurrent.futures import ThreadPoolExecutor, Future
 from concurrent.futures.thread import _WorkItem
 from tomorrow3 import threads as tomorrow_threads
+
+# redis配置连接信息
+redis_host = '127.0.0.1'
+redis_password = ''
+redis_port = 6379
+redis_db = 0
 
 redis_conn_instance = {}
 
@@ -94,8 +99,8 @@ class RedisCustomer(object):
         :param consuming_function: 队列消息取出来后执行的方法
         :param threads_num: 启动多少个队列线程
         """
-        self.redis_quenen = RedisQueue(queue_name, host=config.redis_host, port=config.redis_port, db=config.redis_db,
-                                       password=config.redis_password)
+        self.redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
+                                       password=redis_password)
         self.consuming_function = consuming_function
         self.threads_num = threads_num
         self.threadpool = BoundedThreadPoolExecutor(threads_num)
@@ -134,8 +139,8 @@ class RedisPublish(object):
         :param threads_num: 并发线程数
         :param max_push_size: 
         """
-        self.redis_quenen = RedisQueue(queue_name,fliter_rep=fliter_rep, host=config.redis_host, port=config.redis_port, db=config.redis_db,
-                                       password=config.redis_password)
+        self.redis_quenen = RedisQueue(queue_name,fliter_rep=fliter_rep, host=redis_host, port=redis_port, db=redis_db,
+                                       password=redis_password)
         # self.threads_num = threads_num
         self.max_push_size = max_push_size
         self.local_quenen = queue.Queue(maxsize=max_push_size + 1)
@@ -229,10 +234,6 @@ def _deco(f):
 
 
 if __name__ == '__main__':
-    config.redis_db = 0
-    config.redis_port=6379
-    config.redis_password=''
-    config.redis_host = '127.0.0.1'
 
     quenen_name = 'test1'
     redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=True, max_push_size=50)
