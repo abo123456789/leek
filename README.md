@@ -4,8 +4,12 @@ redis高并发队列
 
 * 支持版本: python 3.6+
 
-
 ### 下载安装
+
+* pip安装:
+```shell
+pip install redis-queue-tool
+```
 
 * 下载源码:
 
