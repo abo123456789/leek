@@ -51,6 +51,12 @@ redis_db = 0
 
 
 ```python
+    # redis配置连接信息
+    redis_host = '127.0.0.1'
+    redis_password = ''
+    redis_port = 6379
+    redis_db = 0
+
     quenen_name = 'test1'
     redis_pub = RedisPublish(queue_name=quenen_name, max_push_size=5)
 
