@@ -1,9 +1,9 @@
-    **包安装**
-::
+**包安装**::
+
     pip install redis-queue-tool
 
-    **使用实例**
-::
+**使用实例**::
+
     # redis配置连接信息
     redis_host = '127.0.0.1'
     redis_password = ''
