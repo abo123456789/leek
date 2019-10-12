@@ -2,16 +2,20 @@
 
     pip install redis-queue-tool
 
-**使用实例**::
+**使用例子**::
 
-    # redis配置连接信息
-    redis_host = '127.0.0.1'
-    redis_password = ''
-    redis_port = 6379
-    redis_db = 0
+    from redis_queue_tool import RedisQueue
+    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
+
+    # redis连接配置
+    RedisQueue.redis_host = '127.0.0.1'
+    RedisQueue.redis_password = ''
+    RedisQueue.redis_port = 6379
+    RedisQueue.redis_db = 0
 
     quenen_name = 'test1'
-    redis_pub = RedisPublish(queue_name=quenen_name, max_push_size=5)
+    # 初始化发布队列 fliter_rep=True任务自动去重
+    redis_pub = RedisPublish(queue_name=quenen_name, fliter_rep=True)
 
     result = [str(i) for i in range(1, 101)]
 

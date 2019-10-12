@@ -22,7 +22,6 @@ redis_db = 0
 
 redis_conn_instance = {}
 
-
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
@@ -234,7 +233,6 @@ def _deco(f):
 
 
 if __name__ == '__main__':
-
     quenen_name = 'test1'
     redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=True, max_push_size=50)
 
