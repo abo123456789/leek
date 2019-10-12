@@ -152,7 +152,8 @@ class RedisPublish(object):
         :param kwargs: 待写入参数 (a=3,b=4)
         :return: None
         """
-        self.redis_quenen.put(json.dumps(kwargs))
+        dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
+        self.redis_quenen.put(json.dumps(dict_msg))
 
     @tomorrow_threads(50)
     def publish_redispy_str(self, msg:str):
@@ -233,13 +234,18 @@ def _deco(f):
 
 
 if __name__ == '__main__':
+    redis_host = '127.0.0.1'
+    redis_password = ''
+    redis_port = 6379
+    redis_db = 0
+
     quenen_name = 'test1'
     redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=True, max_push_size=50)
 
     result = [str(i) for i in range(1, 101)]
 
     for zz in result:
-        redis_pub.publish_redispy(a=zz, b=zz, c=zz)  # 单条记录写入
+        redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 单条记录写入
 
     redis_pub.publish_redispy_list(result)  # 单线程提交列表任务
 
