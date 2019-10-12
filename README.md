@@ -8,7 +8,7 @@ redis高并发队列
 
 * pip安装:
 ```shell
-pip3 install redis-queue-tool
+pip install redis-queue-tool
 ```
 
 * 下载源码:
