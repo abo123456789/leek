@@ -80,7 +80,7 @@ redis_db = 0
 
 
     # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100,max_retry_times=5)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
 
@@ -103,14 +103,15 @@ redis_db = 0
 
 
 ```java
-2019-03-23 新增单线程异步批量提交功能
-
-2019-04-06 新增爬取任务自动去重功能
-
-2019-05-25 新增添加任务时动态传参
-
-2019-09-27 修复提交列表任务BUG
+2019-10-14 新增消费函数错误重试机制,默认重试3次
 
 2019-10-12 任务去重忽略参数顺序
 
+2019-09-27 修复提交列表任务BUG
+
+2019-05-25 新增添加任务时动态传参
+
+2019-04-06 新增爬取任务自动去重功能
+
+2019-03-23 新增单线程异步批量提交功能
 ```

@@ -20,7 +20,8 @@ setup(
     license='BSD License',
     install_requires=[
         "redis>=2.10.6",
-        "tomorrow3>=1.1.0"
+        "tomorrow3>=1.1.0",
+        "retrying>=1.3.3"
     ],
     packages=find_packages(),
     platforms=["all"],

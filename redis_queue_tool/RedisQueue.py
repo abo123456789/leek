@@ -1,6 +1,8 @@
 #-*- coding:utf-8 -*-
 import json
 
+from retrying import retry
+
 __author__ = 'cc'
 
 from functools import wraps
@@ -91,18 +93,20 @@ class RedisQueue(object):
 class RedisCustomer(object):
     """reids队列消费类"""
 
-    def __init__(self, queue_name, consuming_function: Callable = None, threads_num=50):
+    def __init__(self, queue_name, consuming_function: Callable = None, threads_num=50,max_retry_times=3):
         """
         redis队列消费程序
         :param queue_name: 队列名称
         :param consuming_function: 队列消息取出来后执行的方法
         :param threads_num: 启动多少个队列线程
+        :param max_retry_times: 错误重试次数
         """
         self.redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
                                        password=redis_password)
         self.consuming_function = consuming_function
         self.threads_num = threads_num
         self.threadpool = BoundedThreadPoolExecutor(threads_num)
+        self.max_retry_times = max_retry_times
 
     def start_consuming_message(self):
         print('*' * 50)
@@ -110,7 +114,7 @@ class RedisCustomer(object):
             try:
                 message = self.redis_quenen.get()
                 if message:
-                    self.threadpool.submit(self.consuming_function, message)
+                    self.threadpool.submit(self._consuming_exception_retry, message)
                 else:
                     time.sleep(0.1)
             except:
@@ -118,13 +122,12 @@ class RedisCustomer(object):
                 print(s)
                 time.sleep(0.1)
 
-    @staticmethod
-    def test_custom():
-        def _print_(msg):
-            print(msg)
+    def _consuming_exception_retry(self,message):
+        @retry(stop_max_attempt_number=self.max_retry_times)
+        def consuming_exception_retry(message):
+            self.consuming_function(message)
+        consuming_exception_retry(message)
 
-        redis_customer = RedisCustomer('test', consuming_function=_print_)
-        redis_customer._start_consuming_message()
 
 
 class RedisPublish(object):
@@ -255,10 +258,11 @@ if __name__ == '__main__':
 
     def print_msg(msg):
         print(json.loads(msg))
+        # raise Exception('hand exception 123')
 
 
     # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100,max_retry_times=5)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
 
