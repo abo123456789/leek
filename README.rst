@@ -33,6 +33,6 @@
 
 
     # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100,max_retry_times=5)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
