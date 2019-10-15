@@ -8,7 +8,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version=1.9,
+    version=2.1,
     description=(
         'reids高并发队列(高并发爬虫利器)'
     ),
@@ -17,7 +17,7 @@ setup(
     author_email='abcdef123456chen@sohu.com',
     maintainer='cc',
     maintainer_email='abcdef123456chen@sohu.com',
-    license='BSD License',
+    license='MIT License',
     install_requires=[
         "redis>=2.10.6",
         "tomorrow3>=1.1.0",
@@ -30,7 +30,7 @@ setup(
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python',
         'Programming Language :: Python :: Implementation',
         'Programming Language :: Python :: 3.6',
