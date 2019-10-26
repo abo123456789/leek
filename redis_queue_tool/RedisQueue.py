@@ -11,6 +11,7 @@ import redis
 import time
 import queue
 import traceback
+from loguru import logger
 from collections import Callable
 from concurrent.futures import ThreadPoolExecutor, Future
 from concurrent.futures.thread import _WorkItem
@@ -109,7 +110,7 @@ class RedisCustomer(object):
         self.max_retry_times = max_retry_times
 
     def start_consuming_message(self):
-        print('*' * 50)
+        logger.info('*' * 50)
         while True:
             try:
                 message = self.redis_quenen.get()
@@ -119,7 +120,7 @@ class RedisCustomer(object):
                     time.sleep(0.1)
             except:
                 s = traceback.format_exc()
-                print(s)
+                logger.error(s)
                 time.sleep(0.1)
 
     def _consuming_exception_retry(self,message):
@@ -179,7 +180,7 @@ class RedisPublish(object):
             pipe.lpush(self.redis_quenen.key, id)
             if len(pipe) == publish_size:
                 pipe.execute()
-                print(f'*' * 10 + str(publish_size) + '*' * 10 + 'commit')
+                logger.info(f'*' * 10 + str(publish_size) + '*' * 10 + 'commit')
         if len(pipe)>0:
             pipe.execute()
 
@@ -190,15 +191,15 @@ class RedisPublish(object):
         :return: None
         """
         self.local_quenen.put(msg)
-        print(f'self.local_quenen.size:{self.local_quenen.qsize()}')
+        logger.info(f'self.local_quenen.size:{self.local_quenen.qsize()}')
         if self.local_quenen.qsize() >= self.max_push_size:
             try:
                 while self.local_quenen.qsize() > 0:
                     self.pipe.lpush(self.redis_quenen.key, self.local_quenen.get_nowait())
             except:
-                traceback.print_exc()
+                logger.error(traceback.format_exc())
             self.pipe.execute()
-            print('commit'.center(16, '*'))
+            logger.info('commit'.center(16, '*'))
 
     def clear_quenen(self):
         """
@@ -231,7 +232,7 @@ def _deco(f):
         try:
             return f(*args, **kwargs)
         except Exception as e:
-            print(e)
+            logger.error(e)
 
     return __deco
 
