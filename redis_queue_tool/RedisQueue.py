@@ -249,17 +249,19 @@ if __name__ == '__main__':
     result = [str(i) for i in range(1, 101)]
 
     for zz in result:
-        redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 单条记录写入
-
-    redis_pub.publish_redispy_list(result)  # 单线程提交列表任务
+        redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
 
     for zz in result:
-        redis_pub.publish_redispy_mutil(zz)  # 单线程批量写入2
+        redis_pub.publish_redispy_str(zz)  # 写入字符串任务
+
+    redis_pub.publish_redispy_list(result)  # 批量提交任务1
+
+    for zz in result:
+        redis_pub.publish_redispy_mutil(zz)  # 批量提交任务2
 
 
     def print_msg(msg):
-        print(json.loads(msg))
-        # raise Exception('hand exception 123')
+        print(msg)
 
 
     # 多线程消费
