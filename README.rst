@@ -29,7 +29,7 @@
 
 
     def print_msg(msg):
-        print(json.loads(msg))
+        print(msg)
 
 
     # 多线程消费

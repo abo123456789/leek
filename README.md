@@ -76,7 +76,7 @@ redis_db = 0
         redis_pub.publish_redispy_mutil(zz)  # 单线程批量写入2
         
     def print_msg(msg):
-        print(json.loads(msg))
+        print(msg)
 
 
     # 多线程消费
