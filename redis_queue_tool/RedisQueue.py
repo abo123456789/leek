@@ -191,7 +191,7 @@ class RedisPublish(object):
         :return: None
         """
         self.local_quenen.put(msg)
-        logger.info(f'self.local_quenen.size:{self.local_quenen.qsize()}')
+        # logger.info(f'self.local_quenen.size:{self.local_quenen.qsize()}')
         if self.local_quenen.qsize() >= self.max_push_size:
             try:
                 while self.local_quenen.qsize() > 0:
