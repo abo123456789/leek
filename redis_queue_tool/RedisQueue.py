@@ -244,7 +244,8 @@ if __name__ == '__main__':
     redis_db = 0
 
     quenen_name = 'test1'
-    redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=True, max_push_size=50)
+    # 初始化发布队列 fliter_rep=True任务自动去重
+    redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=False, max_push_size=50)
 
     result = [str(i) for i in range(1, 101)]
 
