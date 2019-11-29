@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import json
 
 from retrying import retry
@@ -25,10 +25,11 @@ redis_db = 0
 
 redis_conn_instance = {}
 
+
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
-    def __init__(self, name, fliter_rep=False ,namespace='', **redis_kwargs):
+    def __init__(self, name, fliter_rep=False, namespace='', **redis_kwargs):
         """
         
         :param name: 队列名称
@@ -50,7 +51,7 @@ class RedisQueue(object):
             self.key = name
         self.fliter_rep = fliter_rep
         if fliter_rep:
-            self.key_sets = self.key+':sets'
+            self.key_sets = self.key + ':sets'
 
     def getdb(self):
         return self.__db
@@ -94,41 +95,45 @@ class RedisQueue(object):
 class RedisCustomer(object):
     """reids队列消费类"""
 
-    def __init__(self, queue_name, consuming_function: Callable = None, threads_num=50,max_retry_times=3):
-        """
-        redis队列消费程序
-        :param queue_name: 队列名称
-        :param consuming_function: 队列消息取出来后执行的方法
-        :param threads_num: 启动多少个队列线程
-        :param max_retry_times: 错误重试次数
-        """
-        self.redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
-                                       password=redis_password)
-        self.consuming_function = consuming_function
-        self.threads_num = threads_num
-        self.threadpool = BoundedThreadPoolExecutor(threads_num)
-        self.max_retry_times = max_retry_times
+    def __init__(self, queue_name, consuming_function: Callable = None, threads_num = 50, max_retry_times = 3
 
-    def start_consuming_message(self):
-        logger.info('*' * 50)
-        while True:
-            try:
-                message = self.redis_quenen.get()
-                if message:
-                    self.threadpool.submit(self._consuming_exception_retry, message)
-                else:
-                    time.sleep(0.1)
-            except:
-                s = traceback.format_exc()
-                logger.error(s)
+    ):
+    """
+    redis队列消费程序
+    :param queue_name: 队列名称
+    :param consuming_function: 队列消息取出来后执行的方法
+    :param threads_num: 启动多少个队列线程
+    :param max_retry_times: 错误重试次数
+    """
+    self.redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
+                                   password=redis_password)
+    self.consuming_function = consuming_function
+    self.threads_num = threads_num
+    self.threadpool = BoundedThreadPoolExecutor(threads_num)
+    self.max_retry_times = max_retry_times
+
+
+def start_consuming_message(self):
+    logger.info('start consuming message')
+    while True:
+        try:
+            message = self.redis_quenen.get()
+            if message:
+                self.threadpool.submit(self._consuming_exception_retry, message)
+            else:
                 time.sleep(0.1)
+        except:
+            s = traceback.format_exc()
+            logger.error(s)
+            time.sleep(0.1)
 
-    def _consuming_exception_retry(self,message):
-        @retry(stop_max_attempt_number=self.max_retry_times)
-        def consuming_exception_retry(message):
-            self.consuming_function(message)
-        consuming_exception_retry(message)
 
+def _consuming_exception_retry(self, message):
+    @retry(stop_max_attempt_number=self.max_retry_times)
+    def consuming_exception_retry(message):
+        self.consuming_function(message)
+
+    consuming_exception_retry(message)
 
 
 class RedisPublish(object):
@@ -142,7 +147,7 @@ class RedisPublish(object):
         :param threads_num: 并发线程数
         :param max_push_size: 
         """
-        self.redis_quenen = RedisQueue(queue_name,fliter_rep=fliter_rep, host=redis_host, port=redis_port, db=redis_db,
+        self.redis_quenen = RedisQueue(queue_name, fliter_rep=fliter_rep, host=redis_host, port=redis_port, db=redis_db,
                                        password=redis_password)
         # self.threads_num = threads_num
         self.max_push_size = max_push_size
@@ -160,53 +165,62 @@ class RedisPublish(object):
         self.redis_quenen.put(json.dumps(dict_msg))
 
     @tomorrow_threads(50)
-    def publish_redispy_str(self, msg:str):
-        """
-        将字符串写入消息队列
-        :param msg: 待写入消息字符串
-        :return: None
-        """
-        self.redis_quenen.put(msg)
+    def publish_redispy_str(self, msg: str
 
-    def publish_redispy_list(self, msgs: list, publish_size=50):
-        """
-        批量写入redis队列
-        :param msgs: 待写入字符串列表
-        :param publish_size: 每次批量提交数量
-        :return: 
-        """
-        pipe = self.redis_quenen.getdb().pipeline()
-        for id in msgs:
-            pipe.lpush(self.redis_quenen.key, id)
-            if len(pipe) == publish_size:
-                pipe.execute()
-                logger.info(f'*' * 10 + str(publish_size) + '*' * 10 + 'commit')
-        if len(pipe)>0:
-            pipe.execute()
+    ):
+    """
+    将字符串写入消息队列
+    :param msg: 待写入消息字符串
+    :return: None
+    """
+    self.redis_quenen.put(msg)
 
-    def publish_redispy_mutil(self, msg: str):
-        """
-        单笔写入,批量提交
-        :param msg: 待写入字符串
-        :return: None
-        """
-        self.local_quenen.put(msg)
-        # logger.info(f'self.local_quenen.size:{self.local_quenen.qsize()}')
-        if self.local_quenen.qsize() >= self.max_push_size:
-            try:
-                while self.local_quenen.qsize() > 0:
-                    self.pipe.lpush(self.redis_quenen.key, self.local_quenen.get_nowait())
-            except:
-                logger.error(traceback.format_exc())
-            self.pipe.execute()
-            logger.info('commit'.center(16, '*'))
 
-    def clear_quenen(self):
-        """
-        清空当前队列
-        :return: 
-        """
-        self.redis_quenen.clear()
+def publish_redispy_list(self, msgs: list, publish_size = 50
+
+):
+"""
+批量写入redis队列
+:param msgs: 待写入字符串列表
+:param publish_size: 每次批量提交数量
+:return: 
+"""
+pipe = self.redis_quenen.getdb().pipeline()
+for id in msgs:
+    pipe.lpush(self.redis_quenen.key, id)
+    if len(pipe) == publish_size:
+        pipe.execute()
+        logger.info(str(publish_size).center(20, '*') + 'commit')
+if len(pipe) > 0:
+    pipe.execute()
+
+
+def publish_redispy_mutil(self, msg: str
+
+):
+"""
+单笔写入,批量提交
+:param msg: 待写入字符串
+:return: None
+"""
+self.local_quenen.put(msg)
+# logger.info(f'self.local_quenen.size:{self.local_quenen.qsize()}')
+if self.local_quenen.qsize() >= self.max_push_size:
+    try:
+        while self.local_quenen.qsize() > 0:
+            self.pipe.lpush(self.redis_quenen.key, self.local_quenen.get_nowait())
+    except:
+        logger.error(traceback.format_exc())
+    self.pipe.execute()
+    logger.info('commit'.center(16, '*'))
+
+
+def clear_quenen(self):
+    """
+    清空当前队列
+    :return: 
+    """
+    self.redis_quenen.clear()
 
 
 class BoundedThreadPoolExecutor(ThreadPoolExecutor):
@@ -245,7 +259,7 @@ if __name__ == '__main__':
 
     quenen_name = 'test1'
     # 初始化发布队列 fliter_rep=True任务自动去重
-    redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=False, max_push_size=50)
+    redis_pub = RedisPublish(queue_name=quenen_name, fliter_rep=False, max_push_size=50)
 
     result = [str(i) for i in range(1, 101)]
 
@@ -266,7 +280,6 @@ if __name__ == '__main__':
 
 
     # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100,max_retry_times=5)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100, max_retry_times=5)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
-
