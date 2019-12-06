@@ -13,8 +13,7 @@ import queue
 import traceback
 from loguru import logger
 from collections import Callable
-from concurrent.futures import ThreadPoolExecutor, Future
-from concurrent.futures.thread import _WorkItem
+from concurrent.futures import ThreadPoolExecutor
 from tomorrow3 import threads as tomorrow_threads
 
 # redis配置连接信息
@@ -24,6 +23,7 @@ redis_port = 6379
 redis_db = 0
 
 redis_conn_instance = {}
+
 
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
@@ -130,7 +130,6 @@ class RedisCustomer(object):
         consuming_exception_retry(message)
 
 
-
 class RedisPublish(object):
     """redis入队列类"""
 
@@ -215,26 +214,17 @@ class BoundedThreadPoolExecutor(ThreadPoolExecutor):
         self._work_queue = queue.Queue(max_workers * 1)
 
     def submit(self, fn, *args, **kwargs):
-        with self._shutdown_lock:
-            if self._shutdown:
-                raise RuntimeError('cannot schedule new futures after shutdown')
-            f = Future()
-            fn_deco = _deco(fn)
-            w = _WorkItem(f, fn_deco, args, kwargs)
-            self._work_queue.put(w)
-            self._adjust_thread_count()
-            return f
+        fn_deco = self._deco(fn)
+        super().submit(fn_deco, *args, **kwargs)
 
-
-def _deco(f):
-    @wraps(f)
-    def __deco(*args, **kwargs):
-        try:
-            return f(*args, **kwargs)
-        except Exception as e:
-            logger.error(e)
-
-    return __deco
+    def _deco(self,f):
+        @wraps(f)
+        def __deco(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except Exception as e:
+                logger.error(e)
+        return __deco
 
 
 if __name__ == '__main__':
@@ -260,10 +250,8 @@ if __name__ == '__main__':
     for zz in result:
         redis_pub.publish_redispy_mutil(zz)  # 批量提交任务2
 
-
     def print_msg(msg):
         print(msg)
-
 
     # 多线程消费
     redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100,max_retry_times=5)
