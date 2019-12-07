@@ -1,6 +1,8 @@
 #-*- coding:utf-8 -*-
 import json
+import multiprocessing
 
+from multiprocessing import Process
 from retrying import retry
 
 __author__ = 'cc'
@@ -94,7 +96,7 @@ class RedisQueue(object):
 class RedisCustomer(object):
     """reids队列消费类"""
 
-    def __init__(self, queue_name, consuming_function: Callable = None, threads_num=50,max_retry_times=3):
+    def __init__(self, queue_name, consuming_function: Callable = None,process_num=1,threads_num=50,max_retry_times=3):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -105,12 +107,13 @@ class RedisCustomer(object):
         self.redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
                                        password=redis_password)
         self.consuming_function = consuming_function
+        self.process_num = process_num
         self.threads_num = threads_num
         self.threadpool = BoundedThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
 
-    def start_consuming_message(self):
-        logger.info('start consuming message')
+    def start_consuming_message_thread(self):
+        logger.info(f'start consuming message mutil_thread, threads_num:{self.threads_num}')
         while True:
             try:
                 message = self.redis_quenen.get()
@@ -122,6 +125,12 @@ class RedisCustomer(object):
                 s = traceback.format_exc()
                 logger.error(s)
                 time.sleep(0.1)
+
+    def start_consuming_message(self):
+        cpu_count = multiprocessing.cpu_count()
+        logger.info(f'start consuming message  mutil_process,process_num:{min(self.process_num,cpu_count)}')
+        for i in range(0,min(self.process_num,cpu_count)):
+            Process(target=self.start_consuming_message_thread).start()
 
     def _consuming_exception_retry(self,message):
         @retry(stop_max_attempt_number=self.max_retry_times)
@@ -254,7 +263,6 @@ if __name__ == '__main__':
         print(msg)
 
     # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100,max_retry_times=5)
-    print(redis_customer.threads_num)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg,process_num=5,threads_num=100,max_retry_times=5)
     redis_customer.start_consuming_message()
 

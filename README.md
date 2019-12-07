@@ -82,8 +82,8 @@ redis_db = 0
         print(msg)
 
 
-    # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg, threads_num=100,max_retry_times=5)
+    # 多进程和线程消费 (默认启动进程数:1,默认每个进程启动线程数:50)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg,process_num=10, threads_num=100,max_retry_times=5)
     print(redis_customer.threads_num)
     redis_customer.start_consuming_message()
 
