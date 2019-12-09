@@ -162,14 +162,22 @@ class RedisPublish(object):
         self.pipe = self.redis_quenen.getdb().pipeline()
 
     @tomorrow_threads(50)
-    def publish_redispy(self, **kwargs):
+    def publish_redispy(self,*args,**kwargs):
         """
         将多参数写入消息队列
         :param kwargs: 待写入参数 (a=3,b=4)
         :return: None
         """
-        dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
-        self.redis_quenen.put(json.dumps(dict_msg))
+        # logger.info(f"args:{args},kwargs:{kwargs}")
+        dict_msg = None
+        if kwargs:
+            dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
+        elif args:
+            dict_msg = args[0]
+        else:
+            logger.warning('参数非法')
+        if dict_msg:
+            self.redis_quenen.put(json.dumps(dict_msg))
 
     @tomorrow_threads(50)
     def publish_redispy_str(self, msg:str):
@@ -251,6 +259,8 @@ if __name__ == '__main__':
     redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=False, max_push_size=50)
 
     result = [str(i) for i in range(1, 101)]
+
+    redis_pub.publish_redispy({"a":1,"b":1,"c":1})
 
     for zz in result:
         redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
