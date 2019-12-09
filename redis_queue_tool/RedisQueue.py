@@ -1,6 +1,7 @@
 #-*- coding:utf-8 -*-
 import json
 import multiprocessing
+import platform
 
 from multiprocessing import Process
 from retrying import retry
@@ -128,9 +129,12 @@ class RedisCustomer(object):
 
     def start_consuming_message(self):
         cpu_count = multiprocessing.cpu_count()
-        logger.info(f'start consuming message  mutil_process,process_num:{min(self.process_num,cpu_count)}')
-        for i in range(0,min(self.process_num,cpu_count)):
-            Process(target=self.start_consuming_message_thread).start()
+        logger.info(f'start consuming message  mutil_process,process_num:{min(self.process_num,cpu_count)},system:{platform.system()}')
+        if platform.system()=='Darwin' or platform.system()=='Linux':
+            for i in range(0,min(self.process_num,cpu_count)):
+                Process(target=self.start_consuming_message_thread).start()
+        else:
+            self.start_consuming_message_thread()
 
     def _consuming_exception_retry(self,message):
         @retry(stop_max_attempt_number=self.max_retry_times)
