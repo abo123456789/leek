@@ -20,6 +20,8 @@
 
     result = [str(i) for i in range(1, 101)]
 
+    redis_pub.publish_redispy({"a":1,"b":1,"c":1})
+
     for zz in result:
         redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
 
