@@ -135,7 +135,7 @@ class RedisCustomer(object):
             for i in range(0,min(self.process_num,cpu_count)):
                 Process(target=self.start_consuming_message_thread).start()
         else:
-            threading.Thread(target=self.start_consuming_message_thread)
+            threading.Thread(target=self.start_consuming_message_thread).start()
 
     def _consuming_exception_retry(self,message):
         @retry(stop_max_attempt_number=self.max_retry_times)
@@ -253,7 +253,7 @@ if __name__ == '__main__':
     redis_host = '127.0.0.1'
     redis_password = ''
     redis_port = 6379
-    redis_db = 0
+    redis_db = 8
 
     quenen_name = 'test1'
     # 初始化发布队列 fliter_rep=True任务自动去重
@@ -274,10 +274,18 @@ if __name__ == '__main__':
     for zz in result:
         redis_pub.publish_redispy_mutil(zz)  # 批量提交任务2
 
-    def print_msg(msg):
-        print(msg)
+    def print_msg1(msg):
+        print(f"msg1:{msg}")
+
+    def print_msg2(msg):
+        print(f"msg2:{msg}")
 
     # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg,process_num=5,threads_num=100,max_retry_times=5)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg1,process_num=5,threads_num=100,max_retry_times=5)
+    redis_customer.start_consuming_message()
+
+    # 多线程消费
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg2, process_num=5, threads_num=100,
+                                   max_retry_times=5)
     redis_customer.start_consuming_message()
 
