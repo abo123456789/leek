@@ -98,28 +98,34 @@ class RedisQueue(object):
 class RedisCustomer(object):
     """reids队列消费类"""
 
-    def __init__(self, queue_name, consuming_function: Callable = None,process_num=1,threads_num=50,max_retry_times=3):
+    def __init__(self, queue_name, consuming_function: Callable = None,process_num=1,threads_num=50,max_retry_times=3,is_support_mutil_param=False):
         """
         redis队列消费程序
         :param queue_name: 队列名称
         :param consuming_function: 队列消息取出来后执行的方法
         :param threads_num: 启动多少个队列线程
         :param max_retry_times: 错误重试次数
+        :param is_support_mutil_param: 消费函数是否支持多个参数,默认False
         """
         self.redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
                                        password=redis_password)
-        self.consuming_function = consuming_function
+        self._consuming_function = consuming_function
         self.process_num = process_num
         self.threads_num = threads_num
         self.threadpool = BoundedThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
+        self.is_support_mutil_param = is_support_mutil_param
 
-    def start_consuming_message_thread(self):
+    def _start_consuming_message_thread(self):
         logger.info(f'start consuming message mutil_thread, threads_num:{self.threads_num}')
         while True:
             try:
                 message = self.redis_quenen.get()
                 if message:
+                    if self.is_support_mutil_param:
+                       message = json.loads(message)
+                       if type(message)!=dict:
+                          raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
                     self.threadpool.submit(self._consuming_exception_retry, message)
                 else:
                     time.sleep(0.1)
@@ -133,14 +139,17 @@ class RedisCustomer(object):
         logger.info(f'start consuming message  mutil_process,process_num:{min(self.process_num,cpu_count)},system:{platform.system()}')
         if platform.system()=='Darwin' or platform.system()=='Linux':
             for i in range(0,min(self.process_num,cpu_count)):
-                Process(target=self.start_consuming_message_thread).start()
+                Process(target=self._start_consuming_message_thread).start()
         else:
-            threading.Thread(target=self.start_consuming_message_thread).start()
+            threading.Thread(target=self._start_consuming_message_thread).start()
 
     def _consuming_exception_retry(self,message):
         @retry(stop_max_attempt_number=self.max_retry_times)
         def consuming_exception_retry(message):
-            self.consuming_function(message)
+            if type(message)==dict:
+                self._consuming_function(**message)
+            else:
+                self._consuming_function(message)
         consuming_exception_retry(message)
 
 
@@ -259,33 +268,31 @@ if __name__ == '__main__':
     # 初始化发布队列 fliter_rep=True任务自动去重
     redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=False, max_push_size=50)
 
-    result = [str(i) for i in range(1, 101)]
+    result = [str(i) for i in range(1, 501)]
 
-    redis_pub.publish_redispy({"a":1,"b":1,"c":1})
-
-    for zz in result:
-        redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
+    def print_msg_str(msg):
+        print(f"msg_str:{msg}")
 
     for zz in result:
         redis_pub.publish_redispy_str(zz)  # 写入字符串任务
 
-    redis_pub.publish_redispy_list(result)  # 批量提交任务1
-
-    for zz in result:
-        redis_pub.publish_redispy_mutil(zz)  # 批量提交任务2
-
-    def print_msg1(msg):
-        print(f"msg1:{msg}")
-
-    def print_msg2(msg):
-        print(f"msg2:{msg}")
-
-    # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg1,process_num=5,threads_num=100,max_retry_times=5)
-    redis_customer.start_consuming_message()
-
-    # 多线程消费
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg2, process_num=5, threads_num=100,
+    # 多线程消费字符串任务
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_str, process_num=5, threads_num=100,
                                    max_retry_times=5)
     redis_customer.start_consuming_message()
+
+    for zz in result:
+        redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
+
+    # redis_pub.publish_redispy_list(result)  # 批量提交任务1
+
+    def print_msg_dict(a,b,c):
+        print(f"msg_dict:{a},{b},{c}")
+
+    # 多线程消费字典任务
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_dict,process_num=5,threads_num=100,
+                                   max_retry_times=5,is_support_mutil_param=True)
+    redis_customer.start_consuming_message()
+
+
 
