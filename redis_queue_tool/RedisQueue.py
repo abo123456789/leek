@@ -2,6 +2,7 @@
 import json
 import multiprocessing
 import platform
+import threading
 
 from multiprocessing import Process
 from retrying import retry
@@ -134,7 +135,7 @@ class RedisCustomer(object):
             for i in range(0,min(self.process_num,cpu_count)):
                 Process(target=self.start_consuming_message_thread).start()
         else:
-            self.start_consuming_message_thread()
+            threading.Thread(target=self.start_consuming_message_thread)
 
     def _consuming_exception_retry(self,message):
         @retry(stop_max_attempt_number=self.max_retry_times)
