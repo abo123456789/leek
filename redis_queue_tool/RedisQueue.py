@@ -112,7 +112,7 @@ class RedisCustomer(object):
         self._consuming_function = consuming_function
         self.process_num = process_num
         self.threads_num = threads_num
-        self.threadpool = BoundedThreadPoolExecutor(threads_num)
+        self._threadpool = BoundedThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
         self.is_support_mutil_param = is_support_mutil_param
 
@@ -126,7 +126,7 @@ class RedisCustomer(object):
                        message = json.loads(message)
                        if type(message)!=dict:
                           raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
-                    self.threadpool.submit(self._consuming_exception_retry, message)
+                    self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
                     time.sleep(0.1)
             except:

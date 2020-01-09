@@ -9,10 +9,10 @@
 
 
     # redis连接配置
-    redis_host = '127.0.0.1'
-    redis_password = ''
-    redis_port = 6379
-    redis_db = 8
+    RedisQueue.redis_host = '127.0.0.1'
+    RedisQueue.redis_password = ''
+    RedisQueue.redis_port = 6379
+    RedisQueue.redis_db = 8
 
     quenen_name = 'test1'
     # 初始化发布队列 fliter_rep=True任务自动去重
