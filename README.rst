@@ -40,6 +40,6 @@
         print(f"msg_dict:{a},{b},{c}")
 
     # 多线程消费字典任务
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_dict,process_num=5,threads_num=100,
-                                   max_retry_times=5,is_support_mutil_param=True)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_dict, process_num=1, threads_num=100,
+                                   max_retry_times=5, is_support_mutil_param=True, qps=10)
     redis_customer.start_consuming_message()

@@ -1,4 +1,4 @@
-#-*- coding:utf-8 -*-
+# -*- coding:utf-8 -*-
 import json
 import multiprocessing
 import platform
@@ -32,7 +32,7 @@ redis_conn_instance = {}
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
-    def __init__(self, name, fliter_rep=False ,namespace='', **redis_kwargs):
+    def __init__(self, name, fliter_rep=False, namespace='', **redis_kwargs):
         """
         
         :param name: 队列名称
@@ -54,7 +54,7 @@ class RedisQueue(object):
             self.key = name
         self.fliter_rep = fliter_rep
         if fliter_rep:
-            self.key_sets = self.key+':sets'
+            self.key_sets = self.key + ':sets'
         else:
             self.key_sets = None
 
@@ -100,7 +100,8 @@ class RedisQueue(object):
 class RedisCustomer(object):
     """reids队列消费类"""
 
-    def __init__(self, queue_name, consuming_function: Callable = None,process_num=1,threads_num=50,max_retry_times=3,is_support_mutil_param=False):
+    def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
+                 max_retry_times=3, is_support_mutil_param=False, qps=0):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -108,9 +109,10 @@ class RedisCustomer(object):
         :param threads_num: 启动多少个队列线程
         :param max_retry_times: 错误重试次数
         :param is_support_mutil_param: 消费函数是否支持多个参数,默认False
+        :param qps: 每秒限制消费任务数量,默认0不限
         """
         self._redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
-                                       password=redis_password)
+                                        password=redis_password)
         self._consuming_function = consuming_function
         self.queue_name = queue_name
         self.process_num = process_num
@@ -118,6 +120,7 @@ class RedisCustomer(object):
         self._threadpool = BoundedThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
         self.is_support_mutil_param = is_support_mutil_param
+        self.qps = qps
 
     def _start_consuming_message_thread(self):
         logger.info(f'start consuming message mutil_thread, threads_num:{self.threads_num}')
@@ -125,10 +128,12 @@ class RedisCustomer(object):
             try:
                 message = self._redis_quenen.get()
                 if message:
+                    if self.qps != 0:
+                        time.sleep(1 / self.qps)
                     if self.is_support_mutil_param:
-                       message = json.loads(message)
-                       if type(message)!=dict:
-                          raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
+                        message = json.loads(message)
+                        if type(message) != dict:
+                            raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
                     self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
                     time.sleep(0.1)
@@ -139,20 +144,22 @@ class RedisCustomer(object):
 
     def start_consuming_message(self):
         cpu_count = multiprocessing.cpu_count()
-        logger.info(f'start consuming message  mutil_process,process_num:{min(self.process_num,cpu_count)},system:{platform.system()}')
-        if platform.system()=='Darwin' or platform.system()=='Linux':
-            for i in range(0,min(self.process_num,cpu_count)):
+        logger.info(
+            f'start consuming message  mutil_process,process_num:{min(self.process_num,cpu_count)},system:{platform.system()}')
+        if platform.system() == 'Darwin' or platform.system() == 'Linux':
+            for i in range(0, min(self.process_num, cpu_count)):
                 Process(target=self._start_consuming_message_thread).start()
         else:
             threading.Thread(target=self._start_consuming_message_thread).start()
 
-    def _consuming_exception_retry(self,message):
+    def _consuming_exception_retry(self, message):
         @retry(stop_max_attempt_number=self.max_retry_times)
         def consuming_exception_retry(message):
-            if type(message)==dict:
+            if type(message) == dict:
                 self._consuming_function(**message)
             else:
                 self._consuming_function(message)
+
         consuming_exception_retry(message)
 
 
@@ -166,15 +173,16 @@ class RedisPublish(object):
         :param fliter_rep: 队列任务是否去重 True:去重  False:不去重
         :param max_push_size: 使用批量提交时,每次批量提交数量
         """
-        self._redis_quenen = RedisQueue(queue_name,fliter_rep=fliter_rep, host=redis_host, port=redis_port, db=redis_db,
-                                       password=redis_password)
+        self._redis_quenen = RedisQueue(queue_name, fliter_rep=fliter_rep, host=redis_host, port=redis_port,
+                                        db=redis_db,
+                                        password=redis_password)
         self.queue_name = queue_name
         self.max_push_size = max_push_size
         self._local_quenen = queue.Queue(maxsize=max_push_size + 1)
         self._pipe = self._redis_quenen.getdb().pipeline()
 
     @tomorrow_threads(50)
-    def publish_redispy(self,*args,**kwargs):
+    def publish_redispy(self, *args, **kwargs):
         """
         将多参数写入消息队列
         :param kwargs: 待写入参数 (a=3,b=4)
@@ -192,7 +200,7 @@ class RedisPublish(object):
             self._redis_quenen.put(json.dumps(dict_msg))
 
     @tomorrow_threads(50)
-    def publish_redispy_str(self, msg:str):
+    def publish_redispy_str(self, msg: str):
         """
         将字符串写入消息队列
         :param msg: 待写入消息字符串
@@ -211,8 +219,8 @@ class RedisPublish(object):
             pipe.lpush(self._redis_quenen.key, id)
             if len(pipe) == self.max_push_size:
                 pipe.execute()
-                logger.info(str(self.max_push_size).center(20,'*') + 'commit')
-        if len(pipe)>0:
+                logger.info(str(self.max_push_size).center(20, '*') + 'commit')
+        if len(pipe) > 0:
             pipe.execute()
 
     def publish_redispy_mutil(self, msg: str):
@@ -249,13 +257,14 @@ class BoundedThreadPoolExecutor(ThreadPoolExecutor):
         fn_deco = self._deco(fn)
         super().submit(fn_deco, *args, **kwargs)
 
-    def _deco(self,f):
+    def _deco(self, f):
         @wraps(f)
         def __deco(*args, **kwargs):
             try:
                 return f(*args, **kwargs)
             except Exception as e:
                 logger.error(e)
+
         return __deco
 
 
@@ -267,33 +276,34 @@ if __name__ == '__main__':
 
     quenen_name = 'test1'
     # 初始化发布队列 fliter_rep=True任务自动去重
-    redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=False, max_push_size=50)
+    redis_pub = RedisPublish(queue_name=quenen_name, fliter_rep=False, max_push_size=50)
 
-    result = [str(i) for i in range(1, 501)]
+    result = [str(i) for i in range(1, 1001)]
+
 
     def print_msg_str(msg):
         print(f"msg_str:{msg}")
+
 
     for zz in result:
         redis_pub.publish_redispy_str(zz)  # 写入字符串任务
 
     # 多线程消费字符串任务
     redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_str, process_num=2, threads_num=100,
-                                   max_retry_times=5)
+                                   max_retry_times=5, qps=10)
     redis_customer.start_consuming_message()
 
     for zz in result:
         redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
 
+
     # redis_pub.publish_redispy_list(result)  # 批量提交任务1
 
-    def print_msg_dict(a,b,c):
+    def print_msg_dict(a, b, c):
         print(f"msg_dict:{a},{b},{c}")
 
+
     # 多线程消费字典任务
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_dict,process_num=2,threads_num=100,
-                                   max_retry_times=5,is_support_mutil_param=True)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_dict, process_num=1, threads_num=100,
+                                   max_retry_times=5, is_support_mutil_param=True, qps=10)
     redis_customer.start_consuming_message()
-
-
-

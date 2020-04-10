@@ -87,8 +87,8 @@ redis_db = 0
         print(f"msg_dict:{a},{b},{c}")
 
     # 多线程消费字典任务 is_support_mutil_param=True 消费函数支持多参数
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_dict,process_num=5,threads_num=100,
-                                   max_retry_times=5,is_support_mutil_param=True)
+    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_dict, process_num=1, threads_num=100,
+                                   max_retry_times=5, is_support_mutil_param=True, qps=10)
     redis_customer.start_consuming_message()
 
 ```
@@ -110,6 +110,8 @@ redis_db = 0
 
 
 ```java
+2020-04-10 消费函数新增限频参数
+
 2020-01-08 消费函数支持多参数类型
 
 2019-12-06 简化多线程消费队列类
