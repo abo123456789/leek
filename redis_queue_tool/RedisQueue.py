@@ -55,6 +55,8 @@ class RedisQueue(object):
         self.fliter_rep = fliter_rep
         if fliter_rep:
             self.key_sets = self.key+':sets'
+        else:
+            self.key_sets = None
 
     def getdb(self):
         return self.__db
