@@ -129,7 +129,7 @@ class RedisCustomer(object):
                 message = self._redis_quenen.get()
                 if message:
                     if self.qps != 0:
-                        time.sleep(1 / self.qps)
+                        time.sleep((1 / self.qps)*self.process_num)
                     if self.is_support_mutil_param:
                         message = json.loads(message)
                         if type(message) != dict:
