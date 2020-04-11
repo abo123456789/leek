@@ -72,8 +72,8 @@ redis_db = 0
         print(f"msg_str:{msg}")
 
 
-    # 多线程消费字符串任务 quenen_name消费队列名称
-    RedisCustomer(quenen_name='test1', consuming_function=print_msg_str, process_num=5, threads_num=100,
+    # 消费字符串任务 quenen_name消费队列名称
+    RedisCustomer(quenen_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
                   max_retry_times=5).start_consuming_message()
 ```
 
@@ -90,7 +90,7 @@ redis_db = 0
     RedisQueue.redis_db = 8
 
     # 初始化发布队列 quenen_name发布队列名称 fliter_rep=True任务自动去重
-    redis_pub2 = RedisPublish(queue_name='test2', fliter_rep=False, max_push_size=50)
+    redis_pub2 = RedisPublish(queue_name='test2', fliter_rep=False)
 
     for zz in range(1, 501):
         redis_pub2.publish_redispy(c=str(zz), b=str(zz), a=str(zz))  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
@@ -101,7 +101,7 @@ redis_db = 0
 
 
     # 消费多参数类型任务 quenen_name消费队列名称 is_support_mutil_param=True 消费函数支持多参数
-    RedisCustomer('test2', consuming_function=print_msg_dict, process_num=1, threads_num=100,
+    RedisCustomer('test2', consuming_function=print_msg_dict, process_num=2, threads_num=100,
                   max_retry_times=5, is_support_mutil_param=True, qps=10).start_consuming_message()
 ```
 
