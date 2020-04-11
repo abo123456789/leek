@@ -17,37 +17,7 @@ pip install redis-queue-tool
 git clone https://github.com/abo123456789/RedisQueue.git
 ```
 
-* 安装依赖:
-
-```shell
-pip install -r requirements.txt
-```
-
-* 配置redis连接:
-
-```shell
-# 配置Redis
-redis_host = '127.0.0.1'
-redis_password = ''
-redis_port = 6379
-redis_db = 0
-
-
-# redis没有设置密码,默认配置''
-
-```
-
-* 启动:
-
-```shell
-# 如果你的依赖已经安全完成并且具备运行条件,可以直接运行RedisQueue.py
->>>python RedisQueue.py
-
-# 如果运行成功,会自动启动添加任务和消费任务demo
-
-```
-
-### 运行DEMO说明
+### DEMO说明
 
 ##### 1.发布消费字符串类型任务
 ```python
