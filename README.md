@@ -42,16 +42,15 @@ git clone https://github.com/abo123456789/RedisQueue.git
         print(f"msg_str:{msg}")
 
 
-    # 消费字符串任务 quenen_name消费队列名称
-    RedisCustomer(quenen_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
+    # 消费字符串任务 queue_name消费队列名称
+    RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
                   max_retry_times=5).start_consuming_message()
 ```
 
 ##### 2.发布消费多参数类型任务
 ```python
-   from redis_queue_tool import RedisQueue
-   from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
-
+    from redis_queue_tool import RedisQueue
+    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
     # redis连接配置
     RedisQueue.redis_host = '127.0.0.1'
@@ -59,7 +58,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
     RedisQueue.redis_port = 6379
     RedisQueue.redis_db = 8
 
-    # 初始化发布队列 quenen_name发布队列名称 fliter_rep=True任务自动去重
+    # 初始化发布队列 queue_name发布队列名称 fliter_rep=True任务自动去重
     redis_pub2 = RedisPublish(queue_name='test2', fliter_rep=False)
 
     for zz in range(1, 501):
@@ -70,9 +69,10 @@ git clone https://github.com/abo123456789/RedisQueue.git
         print(f"msg_dict:{a},{b},{c}")
 
 
-    # 消费多参数类型任务 quenen_name消费队列名称 is_support_mutil_param=True 消费函数支持多参数
-    RedisCustomer('test2', consuming_function=print_msg_dict, process_num=2, threads_num=100,
-                  max_retry_times=5, is_support_mutil_param=True, qps=10).start_consuming_message()
+    # 消费多参数类型任务 queue_name消费队列名称 is_support_mutil_param=True 消费函数支持多参数
+    RedisCustomer(queue_name='test2', consuming_function=print_msg_dict, process_num=2, threads_num=100,
+                  max_retry_times=5, is_support_mutil_param=True, qps=50).start_consuming_message()
+
 ```
 
 ##### 3.批量提交任务
