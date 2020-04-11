@@ -5,7 +5,6 @@
 **使用例子**::
 
     ##### 1.发布消费字符串类型任务
-    ```python
         from redis_queue_tool import RedisQueue
         from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
@@ -30,10 +29,9 @@
         # 消费字符串任务 queue_name消费队列名称
         RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
                       max_retry_times=5).start_consuming_message()
-    ```
+
 
     ##### 2.发布消费多参数类型任务
-    ```python
         from redis_queue_tool import RedisQueue
         from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
@@ -58,11 +56,9 @@
         RedisCustomer(queue_name='test2', consuming_function=print_msg_dict, process_num=2, threads_num=100,
                       max_retry_times=5, is_support_mutil_param=True, qps=50).start_consuming_message()
 
-    ```
 
     ##### 3.批量提交任务
 
-    ```python
         from redis_queue_tool import RedisQueue
         from redis_queue_tool.RedisQueue import RedisPublish
 
@@ -75,5 +71,3 @@
         result = [str(i) for i in range(1, 501)]
         # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
         RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
-
-    ```
