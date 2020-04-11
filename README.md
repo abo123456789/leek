@@ -49,7 +49,7 @@ redis_db = 0
 
 ### 运行DEMO说明
 
-##### 发布消费字符串类型任务
+##### 1.发布消费字符串类型任务
 ```python
     from redis_queue_tool import RedisQueue
     from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
@@ -77,7 +77,7 @@ redis_db = 0
                   max_retry_times=5).start_consuming_message()
 ```
 
-##### 发布消费多参数类型任务
+##### 2.发布消费多参数类型任务
 ```python
    from redis_queue_tool import RedisQueue
    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
@@ -105,13 +105,21 @@ redis_db = 0
                   max_retry_times=5, is_support_mutil_param=True, qps=10).start_consuming_message()
 ```
 
-##### 批量提交任务
+##### 3.批量提交任务
 
 ```python
-    # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
-    redis_pub3 = RedisPublish(queue_name='test3', max_push_size=100)
+    from redis_queue_tool import RedisQueue
+    from redis_queue_tool.RedisQueue import RedisPublish
+
+    # redis连接配置
+    RedisQueue.redis_host = '127.0.0.1'
+    RedisQueue.redis_password = ''
+    RedisQueue.redis_port = 6379
+    RedisQueue.redis_db = 8
+
     result = [str(i) for i in range(1, 501)]
-    redis_pub3.publish_redispy_list(result)  # 批量提交任务
+    # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
+    RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
 
 ```
 
