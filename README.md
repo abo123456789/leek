@@ -49,7 +49,7 @@ redis_db = 0
 
 ### 运行DEMO说明
 
-
+##### 发布消费字符串类型任务
 ```python
     from redis_queue_tool import RedisQueue
     from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
@@ -61,35 +61,57 @@ redis_db = 0
     RedisQueue.redis_port = 6379
     RedisQueue.redis_db = 8
 
-    quenen_name = 'test1'
-    # 初始化发布队列 fliter_rep=True任务自动去重
-    redis_pub = RedisPublish(queue_name=quenen_name,fliter_rep=False, max_push_size=50)
+    # 初始化发布队列 queue_name发布队列名称 fliter_rep=True任务自动去重
+    redis_pub = RedisPublish(queue_name='test1', fliter_rep=False)
 
-    result = [str(i) for i in range(1, 501)]
+    for zz in range(1, 501):
+        redis_pub.publish_redispy_str(str(zz))  # 发布字符串任务
+
 
     def print_msg_str(msg):
         print(f"msg_str:{msg}")
 
-    for zz in result:
-        redis_pub.publish_redispy_str(zz)  # 写入字符串任务
 
-    # 多线程消费字符串任务
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_str, process_num=5, threads_num=100,
-                                   max_retry_times=5)
-    redis_customer.start_consuming_message()
+    # 多线程消费字符串任务 quenen_name消费队列名称
+    RedisCustomer(quenen_name='test1', consuming_function=print_msg_str, process_num=5, threads_num=100,
+                  max_retry_times=5).start_consuming_message()
+```
 
-    for zz in result:
-        redis_pub.publish_redispy(c=zz, b=zz, a=zz)  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
+##### 发布消费多参数类型任务
+```python
+   from redis_queue_tool import RedisQueue
+   from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
-    # redis_pub.publish_redispy_list(result)  # 批量提交任务1
 
-    def print_msg_dict(a,b,c):
+    # redis连接配置
+    RedisQueue.redis_host = '127.0.0.1'
+    RedisQueue.redis_password = ''
+    RedisQueue.redis_port = 6379
+    RedisQueue.redis_db = 8
+
+    # 初始化发布队列 quenen_name发布队列名称 fliter_rep=True任务自动去重
+    redis_pub2 = RedisPublish(queue_name='test2', fliter_rep=False, max_push_size=50)
+
+    for zz in range(1, 501):
+        redis_pub2.publish_redispy(c=str(zz), b=str(zz), a=str(zz))  # 写入字典任务 {"c":zz,"b":zz,"a":zz}
+
+
+    def print_msg_dict(a, b, c):
         print(f"msg_dict:{a},{b},{c}")
 
-    # 多线程消费字典任务 is_support_mutil_param=True 消费函数支持多参数
-    redis_customer = RedisCustomer(quenen_name, consuming_function=print_msg_dict, process_num=1, threads_num=100,
-                                   max_retry_times=5, is_support_mutil_param=True, qps=10)
-    redis_customer.start_consuming_message()
+
+    # 消费多参数类型任务 quenen_name消费队列名称 is_support_mutil_param=True 消费函数支持多参数
+    RedisCustomer('test2', consuming_function=print_msg_dict, process_num=1, threads_num=100,
+                  max_retry_times=5, is_support_mutil_param=True, qps=10).start_consuming_message()
+```
+
+##### 批量提交任务
+
+```python
+    # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
+    redis_pub3 = RedisPublish(queue_name='test3', max_push_size=100)
+    result = [str(i) for i in range(1, 501)]
+    redis_pub3.publish_redispy_list(result)  # 批量提交任务
 
 ```
 
