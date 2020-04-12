@@ -274,6 +274,7 @@ if __name__ == '__main__':
     redis_port = 6379
     redis_db = 8
 
+    # #### 1.发布消费字符串类型任务
     for zz in range(1, 501):
         # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
         RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(str(zz))
