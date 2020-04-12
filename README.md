@@ -57,7 +57,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
 
 
     for zz in range(1, 501):
-         # 写入字典任务 {"c":zz,"b":zz,"a":zz}
+         # 发布多参数任务
          RedisPublish(queue_name='test2').publish_redispy(c=str(zz), b=str(zz), a=str(zz))
 
 
@@ -65,7 +65,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
         print(f"msg_dict:{a},{b},{c}")
 
 
-    # 消费多参数类型任务 queue_name消费队列名称 is_support_mutil_param=True 消费函数支持多参数 qps每秒消费任务数
+    # 消费多参数类型任务 queue_name消费队列名称 is_support_mutil_param=True消费函数支持多参数(默认False) qps每秒消费任务数
     RedisCustomer(queue_name='test2', consuming_function=print_msg_dict, process_num=2, threads_num=100,
                   max_retry_times=5, is_support_mutil_param=True, qps=50).start_consuming_message()
 
