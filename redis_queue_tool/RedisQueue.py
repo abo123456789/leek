@@ -7,6 +7,8 @@ import threading
 from multiprocessing import Process
 from retrying import retry
 
+from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
+
 __author__ = 'cc'
 
 from functools import wraps
@@ -117,7 +119,7 @@ class RedisCustomer(object):
         self.queue_name = queue_name
         self.process_num = process_num
         self.threads_num = threads_num
-        self._threadpool = BoundedThreadPoolExecutor(threads_num)
+        self._threadpool = CustomThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
         self.is_support_mutil_param = is_support_mutil_param
         self.qps = qps
