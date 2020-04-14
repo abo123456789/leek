@@ -31,6 +31,17 @@ redis_db = 0
 redis_conn_instance = {}
 
 
+def init_redis_config(host, password, port, db):
+    global redis_host
+    redis_host = host
+    global redis_password
+    redis_password = password
+    global redis_port
+    redis_port = port
+    global redis_db
+    redis_db = db
+
+
 class RedisQueue(object):
     """Simple Queue with Redis Backend"""
 
@@ -271,10 +282,8 @@ class BoundedThreadPoolExecutor(ThreadPoolExecutor):
 
 
 if __name__ == '__main__':
-    redis_host = '127.0.0.1'
-    redis_password = ''
-    redis_port = 6379
-    redis_db = 8
+    # 初始化redis连接配置
+    init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
     # #### 1.发布消费字符串类型任务
     for zz in range(1, 501):
