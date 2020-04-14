@@ -5,12 +5,11 @@
 **使用例子**::
 
     ##### 1.发布消费字符串类型任务
-        from redis_queue_tool import RedisQueue
-        from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
+        from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
 
 
         # redis连接配置
-        RedisQueue.init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+        init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
         for zz in range(1, 501):
             # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
@@ -31,7 +30,7 @@
         from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
         # redis连接配置
-        RedisQueue.init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+        init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
         for zz in range(1, 501):
              # 发布多参数任务
@@ -52,7 +51,7 @@
         from redis_queue_tool.RedisQueue import RedisPublish
 
         # redis连接配置
-        RedisQueue.init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+        init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
         result = [str(i) for i in range(1, 501)]
         # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)

@@ -43,8 +43,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
 
 ##### 2.发布消费多参数类型任务
 ```python
-    from redis_queue_tool import RedisQueue
-    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
+    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
 
     # redis连接配置
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
