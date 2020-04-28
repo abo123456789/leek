@@ -86,7 +86,9 @@ git clone https://github.com/abo123456789/RedisQueue.git
 
 2 . 分布式数据清洗
 
-3 . 其它使用场景扩展中
+3 . 短视频处理
+
+4 . 其它使用场景扩展中
 
 ```
 
