@@ -191,8 +191,9 @@ class RedisPublish(object):
                                         password=redis_password)
         self.queue_name = queue_name
         self.max_push_size = max_push_size
-        self._local_quenen = queue.Queue(maxsize=max_push_size + 1)
-        self._pipe = self._redis_quenen.getdb().pipeline()
+        self._local_quenen = None
+        self._pipe = None
+
 
     @tomorrow_threads(50)
     def publish_redispy(self, *args, **kwargs):
@@ -242,6 +243,10 @@ class RedisPublish(object):
         :param msg: 待写入字符串
         :return: None
         """
+        if self._local_quenen is None:
+            self._local_quenen = queue.Queue(maxsize=self.max_push_size + 1)
+        if self._pipe is None:
+            self._pipe = self._redis_quenen.getdb().pipeline()
         self._local_quenen.put(msg)
         # logger.info(f'self._local_quenen.size:{self._local_quenen.qsize()}')
         if self._local_quenen.qsize() >= self.max_push_size:

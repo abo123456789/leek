@@ -1,14 +1,13 @@
 # -*- coding:utf-8 -*-
 # @Author cc
 # @TIME 2019/5/25 23:26
-#!/usr/bin/env python
 # coding=utf-8
 
 from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version=4.0,
+    version='4.0.1',
     description=(
         'reids高并发队列(高并发爬虫利器)'
     ),
