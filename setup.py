@@ -7,11 +7,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.0.1',
+    version='4.0.2',
     description=(
         'reids高并发队列(高并发爬虫利器)'
     ),
-    long_description=open('README.rst').read(),
+    long_description_content_type="text/markdown",
+    long_description=open('README.md').read(),
     author='cc',
     author_email='abcdef123456chen@sohu.com',
     maintainer='cc',
