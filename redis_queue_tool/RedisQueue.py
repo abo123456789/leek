@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import json
 import multiprocessing
+import os
 import platform
 import threading
 
@@ -8,12 +9,13 @@ from multiprocessing import Process
 from retrying import retry
 
 from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
+from redis_queue_tool.redis_queue import RedisQueue
+from redis_queue_tool.sqllite_queue import SqlliteQueue
 
 __author__ = 'cc'
 
 from functools import wraps
 
-import redis
 import time
 import queue
 import traceback
@@ -28,8 +30,6 @@ redis_password = ''
 redis_port = 6379
 redis_db = 0
 
-redis_conn_instance = {}
-
 
 def init_redis_config(host, password, port, db):
     global redis_host
@@ -42,79 +42,11 @@ def init_redis_config(host, password, port, db):
     redis_db = db
 
 
-class RedisQueue(object):
-    """Simple Queue with Redis Backend"""
-
-    def __init__(self, name, fliter_rep=False, namespace='', **redis_kwargs):
-        """
-        
-        :param name: 队列名称
-        :param fliter_rep: 是否开始重复任务过滤
-        :param namespace: 队列名前缀
-        :param redis_kwargs: redis连接动态参数
-        """
-        """The default connection parameters are: host='localhost', port=6379, db=0"""
-        if 'redis_conn' in redis_conn_instance:
-            # print('****已经初始化过redis队列连接****')
-            self.__db = redis_conn_instance.get('redis_conn')
-        else:
-            # print('****新初始化发布队列redis连接****')
-            self.__db = redis.Redis(**redis_kwargs)
-            redis_conn_instance['redis_conn'] = self.__db
-        if namespace:
-            self.key = '%s:%s' % (namespace, name)
-        else:
-            self.key = name
-        self.fliter_rep = fliter_rep
-        if fliter_rep:
-            self.key_sets = self.key + ':sets'
-        else:
-            self.key_sets = None
-
-    def getdb(self):
-        return self.__db
-
-    def qsize(self):
-        """Return the approximate size of the queue."""
-        return self.__db.llen(self.key)
-
-    def isempty(self):
-        """Return True if the queue is empty, False otherwise."""
-        return self.qsize() == 0
-
-    def put(self, item):
-        """Put item into the queue."""
-        if self.fliter_rep:
-            if self.__db.sismember(self.key_sets, item) is False:
-                self.__db.lpush(self.key, item)
-                self.__db.sadd(self.key_sets, item)
-        else:
-            self.__db.lpush(self.key, item)
-
-    def clear(self):
-        """delete the queue."""
-        self.__db.delete(self.key)
-        if self.key_sets:
-            self.__db.delete(self.key_sets)
-
-    def get(self, block=False, timeout=None):
-        """Remove and return an item from the queue.
-        If optional args block is true and timeout is None (the default), block
-        if necessary until an item is available."""
-        if block:
-            item = self.__db.brpop(self.key, timeout=timeout)
-        else:
-            item = self.__db.rpop(self.key)
-        if item:
-            item = item.decode('utf-8')
-        return item
-
-
 class RedisCustomer(object):
     """reids队列消费类"""
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
-                 max_retry_times=3, is_support_mutil_param=False, qps=0):
+                 max_retry_times=3, is_support_mutil_param=False, qps=0, middleware='redis'):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -123,9 +55,13 @@ class RedisCustomer(object):
         :param max_retry_times: 错误重试次数
         :param is_support_mutil_param: 消费函数是否支持多个参数,默认False
         :param qps: 每秒限制消费任务数量,默认0不限
+        :param middleware: 消费中间件,默认redis 支持sqlite
         """
-        self._redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
-                                        password=redis_password)
+        if middleware == SqlliteQueue.middleware_name:
+            self._redis_quenen = SqlliteQueue(queue_name=queue_name)
+        else:
+            self._redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
+                                            password=redis_password)
         self._consuming_function = consuming_function
         self.queue_name = queue_name
         self.process_num = process_num
@@ -179,21 +115,25 @@ class RedisCustomer(object):
 class RedisPublish(object):
     """redis入队列类"""
 
-    def __init__(self, queue_name, fliter_rep=False, max_push_size=50):
+    def __init__(self, queue_name, fliter_rep=False, max_push_size=50, middleware='redis'):
         """
         初始化消息发布队列
         :param queue_name: 队列名称(不包含命名空间)
         :param fliter_rep: 队列任务是否去重 True:去重  False:不去重
         :param max_push_size: 使用批量提交时,每次批量提交数量
+        :param middleware: 中间件,默认redis 支持sqlite
         """
-        self._redis_quenen = RedisQueue(queue_name, fliter_rep=fliter_rep, host=redis_host, port=redis_port,
-                                        db=redis_db,
-                                        password=redis_password)
+        if middleware == SqlliteQueue.middleware_name:
+            self._redis_quenen = SqlliteQueue(queue_name=queue_name)
+        else:
+            self._redis_quenen = RedisQueue(queue_name, fliter_rep=fliter_rep, host=redis_host, port=redis_port,
+                                            db=redis_db,
+                                            password=redis_password)
         self.queue_name = queue_name
         self.max_push_size = max_push_size
         self._local_quenen = None
         self._pipe = None
-
+        self.middleware = middleware
 
     @tomorrow_threads(50)
     def publish_redispy(self, *args, **kwargs):
@@ -228,14 +168,17 @@ class RedisPublish(object):
         :param msgs: 待写入字符串列表
         :return: 
         """
-        pipe = self._redis_quenen.getdb().pipeline()
-        for id in msgs:
-            pipe.lpush(self._redis_quenen.key, id)
-            if len(pipe) == self.max_push_size:
+        if self.middleware == RedisQueue.middleware_name:
+            pipe = self._redis_quenen.getdb().pipeline()
+            for id in msgs:
+                pipe.lpush(self._redis_quenen.queue_name, id)
+                if len(pipe) == self.max_push_size:
+                    pipe.execute()
+                    logger.info(str(self.max_push_size).center(20, '*') + 'commit')
+            if len(pipe) > 0:
                 pipe.execute()
-                logger.info(str(self.max_push_size).center(20, '*') + 'commit')
-        if len(pipe) > 0:
-            pipe.execute()
+        else:
+            raise Exception('sqlite 不支持批量提交,请使用单个提交方法')
 
     def publish_redispy_mutil(self, msg: str):
         """
@@ -286,7 +229,19 @@ class BoundedThreadPoolExecutor(ThreadPoolExecutor):
         return __deco
 
 
+def kill_owner_process():
+    try:
+        cur_file_name = os.path.basename(__file__)
+        if platform.system() == 'Darwin':
+            os.system(f'ps -ef | grep {cur_file_name} | grep -v grep | cut -c  7-11 | xargs kill -9 &')
+        elif platform.system() == 'Linux':
+            os.system(f'ps -ef | grep {cur_file_name} | grep -v grep | cut -c 9-15 | xargs kill -9 &')
+    except:
+        traceback.print_exc()
+
+
 if __name__ == '__main__':
+    # kill_owner_process()
     # 初始化redis连接配置
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
@@ -322,3 +277,11 @@ if __name__ == '__main__':
     result = [str(i) for i in range(1, 501)]
     # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
     RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
+
+    # #### 4.切换任务队列中间件为sqlite(默认为redis)
+    for zz in range(1, 101):
+        RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=str(zz), b=str(zz), c=str(zz))
+
+    RedisCustomer(queue_name='test4', consuming_function=print_msg_dict, middleware='sqlite',
+                  is_support_mutil_param=True,
+                  qps=50).start_consuming_message()
