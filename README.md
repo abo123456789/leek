@@ -80,12 +80,15 @@ git clone https://github.com/abo123456789/RedisQueue.git
 ##### 4.切换任务队列中间件为sqlite(默认为redis)
 
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish
+    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
     for zz in range(1, 101):
         RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=str(zz), b=str(zz), c=str(zz))
 
-    RedisCustomer(queue_name='test4', consuming_function=print_msg_dict, middleware='sqlite',
+    def print_msg_dict2(a, b, c):
+        print(f"msg_dict:{a},{b},{c}")
+
+    RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
                   is_support_mutil_param=True,
                   qps=50).start_consuming_message()
 
