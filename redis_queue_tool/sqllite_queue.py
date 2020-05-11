@@ -13,7 +13,7 @@ class SqlliteQueue(BaseQueue):
     middleware_name = 'sqlite'
 
     def qsize(self):
-        return self._db._ack_count_via_status('0')
+        return self._db._count()
 
     def isempty(self):
         return True if self._db.qsize() == 0 else False
