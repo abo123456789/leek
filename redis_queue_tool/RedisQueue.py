@@ -209,26 +209,6 @@ class RedisPublish(object):
         self._redis_quenen.clear()
 
 
-class BoundedThreadPoolExecutor(ThreadPoolExecutor):
-    def __init__(self, max_workers=None, thread_name_prefix=''):
-        super().__init__(max_workers, thread_name_prefix)
-        self._work_queue = queue.Queue(max_workers * 1)
-
-    def submit(self, fn, *args, **kwargs):
-        fn_deco = self._deco(fn)
-        super().submit(fn_deco, *args, **kwargs)
-
-    def _deco(self, f):
-        @wraps(f)
-        def __deco(*args, **kwargs):
-            try:
-                return f(*args, **kwargs)
-            except Exception as e:
-                logger.error(e)
-
-        return __deco
-
-
 def kill_owner_process():
     try:
         cur_file_name = os.path.basename(__file__)
