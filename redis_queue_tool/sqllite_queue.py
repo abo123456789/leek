@@ -13,18 +13,18 @@ class SqlliteQueue(BaseQueue):
     middleware_name = 'sqlite'
 
     def qsize(self):
-        return self._db.size
+        return self._db._ack_count_via_status('0')
 
     def isempty(self):
         return True if self._db.qsize() == 0 else False
 
     def _getconn(self, **kwargs):
-        return persistqueue.SQLiteQueue(path='/root/sqllite_queues', name=self.queue_name, auto_commit=True,
-                                        multithreading=True, serializer=json)
+        return persistqueue.SQLiteAckQueue(path='/root/sqllite_queues', name=self.queue_name, auto_commit=True,
+                                           multithreading=True, serializer=json)
 
     def clear(self):
         try:
-            sql = f'{"DELETE"}  {"FROM"} queue_{self.queue_name}'
+            sql = f'{"DELETE"}  {"FROM"} ack_queue_{self.queue_name}'
             print(sql)
             self._db._getter.execute(sql)
             self._db._getter.commit()
@@ -40,8 +40,10 @@ class SqlliteQueue(BaseQueue):
 
     def get(self, block=False, timeout=10):
         try:
-            if self._db.size > 0:
-                return self._db.get(block, timeout)
+            if self.qsize() > 0:
+                item = self._db.get(block, timeout)
+                self._db.ack(item)
+                return item
         except:
             return None
         return None
