@@ -16,7 +16,7 @@ class SqlliteQueue(BaseQueue):
         return self._db._count()
 
     def isempty(self):
-        return True if self._db.qsize() == 0 else False
+        return True if self.qsize() == 0 else False
 
     def _getconn(self, **kwargs):
         return persistqueue.SQLiteAckQueue(path='/root/sqllite_queues', name=self.queue_name, auto_commit=True,
