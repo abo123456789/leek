@@ -9,19 +9,17 @@ from multiprocessing import Process
 from retrying import retry
 
 from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
+from redis_queue_tool.kafka_queue import KafkaQueue
 from redis_queue_tool.redis_queue import RedisQueue
 from redis_queue_tool.sqllite_queue import SqlliteQueue
 
 __author__ = 'cc'
-
-from functools import wraps
 
 import time
 import queue
 import traceback
 from loguru import logger
 from collections import Callable
-from concurrent.futures import ThreadPoolExecutor
 from tomorrow3 import threads as tomorrow_threads
 
 # redis配置连接信息
@@ -29,6 +27,8 @@ redis_host = '127.0.0.1'
 redis_password = ''
 redis_port = 6379
 redis_db = 0
+# kafka配置连接信息
+kafka_port = 9092
 
 
 def init_redis_config(host, password, port, db):
@@ -55,10 +55,12 @@ class RedisCustomer(object):
         :param max_retry_times: 错误重试次数
         :param is_support_mutil_param: 消费函数是否支持多个参数,默认False
         :param qps: 每秒限制消费任务数量,默认0不限
-        :param middleware: 消费中间件,默认redis 支持sqlite
+        :param middleware: 消费中间件,默认redis 支持sqlite ,kafka
         """
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
+        elif middleware == KafkaQueue.middleware_name:
+            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=redis_host, port=kafka_port)
         else:
             self._redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
                                             password=redis_password)
@@ -77,13 +79,23 @@ class RedisCustomer(object):
             try:
                 message = self._redis_quenen.get()
                 if message:
-                    if self.qps != 0:
-                        time.sleep((1 / self.qps) * self.process_num)
-                    if self.is_support_mutil_param:
-                        message = json.loads(message)
-                        if type(message) != dict:
-                            raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
-                    self._threadpool.submit(self._consuming_exception_retry, message)
+                    if isinstance(message, list):
+                        for msg in message:
+                            if self.qps != 0:
+                                time.sleep((1 / self.qps) * self.process_num)
+                            if self.is_support_mutil_param:
+                                message = json.loads(msg)
+                                if type(message) != dict:
+                                    raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
+                            self._threadpool.submit(self._consuming_exception_retry, msg)
+                    else:
+                        if self.qps != 0:
+                            time.sleep((1 / self.qps) * self.process_num)
+                        if self.is_support_mutil_param:
+                            message = json.loads(message)
+                            if type(message) != dict:
+                                raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
+                        self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
                     time.sleep(0.1)
             except:
@@ -121,10 +133,12 @@ class RedisPublish(object):
         :param queue_name: 队列名称(不包含命名空间)
         :param fliter_rep: 队列任务是否去重 True:去重  False:不去重
         :param max_push_size: 使用批量提交时,每次批量提交数量
-        :param middleware: 中间件,默认redis 支持sqlite
+        :param middleware: 中间件,默认redis 支持sqlite,kafka
         """
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
+        elif middleware == KafkaQueue.middleware_name:
+            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=redis_host, port=kafka_port)
         else:
             self._redis_quenen = RedisQueue(queue_name, fliter_rep=fliter_rep, host=redis_host, port=redis_port,
                                             db=redis_db,
@@ -270,3 +284,16 @@ if __name__ == '__main__':
     RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
                   is_support_mutil_param=True,
                   qps=50).start_consuming_message()
+
+    # #### 5.切换任务队列中间件为kafka(默认为redis)
+    # for zz in range(1, 101):
+    #     RedisPublish(queue_name='test5', middleware='kafka').publish_redispy(a=str(zz), b=str(zz), c=str(zz))
+
+
+    # def print_msg_dict3(a, b, c):
+    #     print(f"msg_dict:{a},{b},{c}")
+    #
+    #
+    # RedisCustomer(queue_name='test5', consuming_function=print_msg_dict3, middleware='kafka',
+    #               is_support_mutil_param=True,
+    #               qps=50).start_consuming_message()
