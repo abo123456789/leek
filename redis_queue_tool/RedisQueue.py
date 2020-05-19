@@ -97,17 +97,17 @@ class RedisCustomer(object):
                                 raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
                         self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
-                    time.sleep(0.1)
+                    time.sleep(0.2)
             except:
                 s = traceback.format_exc()
                 logger.error(s)
-                time.sleep(0.1)
+                time.sleep(0.2)
 
     def start_consuming_message(self):
         cpu_count = multiprocessing.cpu_count()
         logger.info(
             f'start consuming message  mutil_process,process_num:{min(self.process_num,cpu_count)},system:{platform.system()}')
-        if platform.system() == 'Darwin' or platform.system() == 'Linux':
+        if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
             for i in range(0, min(self.process_num, cpu_count)):
                 Process(target=self._start_consuming_message_thread).start()
         else:
