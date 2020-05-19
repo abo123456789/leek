@@ -46,7 +46,7 @@ class RedisCustomer(object):
     """reids队列消费类"""
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
-                 max_retry_times=3, is_support_mutil_param=False, qps=0, middleware='redis'):
+                 max_retry_times=3, is_support_mutil_param=False, qps=0, middleware='redis', specify_threadpool=None):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -56,6 +56,7 @@ class RedisCustomer(object):
         :param is_support_mutil_param: 消费函数是否支持多个参数,默认False
         :param qps: 每秒限制消费任务数量,默认0不限
         :param middleware: 消费中间件,默认redis 支持sqlite ,kafka
+        :param specify_threadpool: 外部传入线程池
         """
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
@@ -68,7 +69,7 @@ class RedisCustomer(object):
         self.queue_name = queue_name
         self.process_num = process_num
         self.threads_num = threads_num
-        self._threadpool = CustomThreadPoolExecutor(threads_num)
+        self._threadpool = specify_threadpool if specify_threadpool else CustomThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
         self.is_support_mutil_param = is_support_mutil_param
         self.qps = qps
@@ -278,12 +279,13 @@ if __name__ == '__main__':
 
 
     def print_msg_dict2(a, b, c):
-        print(f"msg_dict:{a},{b},{c}")
+        print(f"msg_dict2:{a},{b},{c}")
 
 
+    customer_thread = CustomThreadPoolExecutor(50)
     RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
                   is_support_mutil_param=True,
-                  qps=50).start_consuming_message()
+                  qps=50, specify_threadpool=customer_thread).start_consuming_message()
 
     # #### 5.切换任务队列中间件为kafka(默认为redis)
     # for zz in range(1, 101):
