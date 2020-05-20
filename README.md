@@ -80,16 +80,18 @@ git clone https://github.com/abo123456789/RedisQueue.git
 ##### 4.切换任务队列中间件为sqlite(默认为redis)
 
 ```python
+    import time
     from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
     for zz in range(1, 101):
         RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=str(zz), b=str(zz), c=str(zz))
 
     def print_msg_dict2(a, b, c):
+        time.sleep(7)
         print(f"msg_dict:{a},{b},{c}")
 
     RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
-                  is_support_mutil_param=True,
+                  is_support_mutil_param=True, func_timeout=6
                   qps=50).start_consuming_message()
 
 ```
@@ -113,6 +115,8 @@ git clone https://github.com/abo123456789/RedisQueue.git
 
 
 ```java
+2020-05-20 新增消费函数超时时间参数
+
 2020-05-10 新增sqlite中间件支持
 
 2020-04-13 消费函数新增自动控制线程数
