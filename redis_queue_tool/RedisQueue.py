@@ -100,6 +100,7 @@ class RedisCustomer(object):
                 else:
                     time.sleep(0.2)
             except:
+                logger.error(message)
                 s = traceback.format_exc()
                 logger.error(s)
                 time.sleep(0.2)
