@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.0.8',
+    version='4.0.9',
     description=(
         'reids高并发队列(高并发爬虫利器)'
     ),
@@ -23,8 +23,7 @@ setup(
         "tomorrow3>=1.1.0",
         "retrying>=1.3.3",
         "loguru>=0.3.2",
-        "persist-queue>=0.5.0",
-        "func-timeout>=4.3.5"
+        "persist-queue>=0.5.0"
     ],
     packages=find_packages(),
     platforms=["all"],

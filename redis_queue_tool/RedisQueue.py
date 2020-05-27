@@ -4,12 +4,12 @@ import multiprocessing
 import os
 import platform
 import threading
-from func_timeout import func_set_timeout
 
 from multiprocessing import Process
 from retrying import retry
 
 from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
+from redis_queue_tool.function_timeout import timeout
 from redis_queue_tool.kafka_queue import KafkaQueue
 from redis_queue_tool.redis_queue import RedisQueue
 from redis_queue_tool.sqllite_queue import SqlliteQueue
@@ -122,7 +122,7 @@ class RedisCustomer(object):
     def _consuming_exception_retry(self, message):
         if self.func_timeout:
             @retry(stop_max_attempt_number=self.max_retry_times)
-            @func_set_timeout(self.func_timeout)
+            @timeout(self.func_timeout)
             def consuming_exception_retry(message):
                 if type(message) == dict:
                     self._consuming_function(**message)
