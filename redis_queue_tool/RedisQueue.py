@@ -120,7 +120,7 @@ class RedisCustomer(object):
             threading.Thread(target=self._start_consuming_message_thread).start()
 
     def _consuming_exception_retry(self, message):
-        if self.func_timeout:
+        if self.func_timeout and False:
             @retry(stop_max_attempt_number=self.max_retry_times)
             @timeout(self.func_timeout)
             def consuming_exception_retry(message):
@@ -292,14 +292,13 @@ if __name__ == '__main__':
 
 
     def print_msg_dict2(a, b, c):
-        time.sleep(7)
         print(f"msg_dict2:{a},{b},{c}")
 
 
     customer_thread = CustomThreadPoolExecutor(50)
     RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
                   is_support_mutil_param=True,
-                  qps=50, specify_threadpool=customer_thread, func_timeout=6).start_consuming_message()
+                  qps=50, specify_threadpool=customer_thread).start_consuming_message()
 
     # #### 5.切换任务队列中间件为kafka(默认为redis)
     # for zz in range(1, 101):
