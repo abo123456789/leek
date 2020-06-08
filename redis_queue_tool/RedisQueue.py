@@ -47,7 +47,7 @@ class RedisCustomer(object):
     """reids队列消费类"""
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
-                 max_retry_times=3, func_timeout=None, is_support_mutil_param=False, qps=0, middleware='redis',
+                 max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0, middleware='redis',
                  specify_threadpool=None):
         """
         redis队列消费程序
@@ -75,7 +75,7 @@ class RedisCustomer(object):
         self._threadpool = specify_threadpool if specify_threadpool else CustomThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
         self.func_timeout = func_timeout
-        self.is_support_mutil_param = is_support_mutil_param
+        self.is_support_mutil_param = True
         self.qps = qps
 
     def _start_consuming_message_thread(self):
@@ -88,7 +88,7 @@ class RedisCustomer(object):
                         for msg in message:
                             if self.qps != 0:
                                 time.sleep((1 / self.qps) * self.process_num)
-                            if self.is_support_mutil_param:
+                            if self.is_support_mutil_param and '{' in message and '}' in message:
                                 message = json.loads(msg)
                                 if type(message) != dict:
                                     raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
@@ -96,7 +96,7 @@ class RedisCustomer(object):
                     else:
                         if self.qps != 0:
                             time.sleep((1 / self.qps) * self.process_num)
-                        if self.is_support_mutil_param:
+                        if self.is_support_mutil_param and '{' in message and '}' in message:
                             message = json.loads(message)
                             if type(message) != dict:
                                 raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
@@ -112,7 +112,7 @@ class RedisCustomer(object):
     def start_consuming_message(self):
         cpu_count = multiprocessing.cpu_count()
         logger.info(
-            f'start consuming message  mutil_process,process_num:{min(self.process_num,cpu_count)},system:{platform.system()}')
+            f'start consuming message  mutil_process,process_num:{min(self.process_num, cpu_count)},system:{platform.system()}')
         if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
             for i in range(0, min(self.process_num, cpu_count)):
                 Process(target=self._start_consuming_message_thread).start()
@@ -263,7 +263,7 @@ if __name__ == '__main__':
         print(f"msg_str:{msg}")
 
 
-    # 消费字符串任务 queue_name消费队列名称 max_retry_times错误最大重试次数
+    # 消费字符串任务 queue_name消费队列名称  process_num进程数(默认值1) threads_num线程数(默认值50) max_retry_times错误最大自动重试次数(默认值3)
     RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
                   max_retry_times=5).start_consuming_message()
 
@@ -277,9 +277,9 @@ if __name__ == '__main__':
         print(f"msg_dict:{a},{b},{c}")
 
 
-    # 消费多参数类型任务 queue_name消费队列名称 is_support_mutil_param=True消费函数支持多参数(默认False) qps每秒消费任务数
+    # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
     RedisCustomer(queue_name='test2', consuming_function=print_msg_dict, process_num=2, threads_num=100,
-                  max_retry_times=5, is_support_mutil_param=True, qps=50).start_consuming_message()
+                  max_retry_times=5, qps=50).start_consuming_message()
 
     # #### 3.批量提交任务
     result = [str(i) for i in range(1, 501)]
@@ -297,18 +297,4 @@ if __name__ == '__main__':
 
     customer_thread = CustomThreadPoolExecutor(50)
     RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
-                  is_support_mutil_param=True,
                   qps=50, specify_threadpool=customer_thread).start_consuming_message()
-
-    # #### 5.切换任务队列中间件为kafka(默认为redis)
-    # for zz in range(1, 101):
-    #     RedisPublish(queue_name='test5', middleware='kafka').publish_redispy(a=str(zz), b=str(zz), c=str(zz))
-
-
-    # def print_msg_dict3(a, b, c):
-    #     print(f"msg_dict:{a},{b},{c}")
-    #
-    #
-    # RedisCustomer(queue_name='test5', consuming_function=print_msg_dict3, middleware='kafka',
-    #               is_support_mutil_param=True,
-    #               qps=50).start_consuming_message()
