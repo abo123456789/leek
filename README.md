@@ -35,7 +35,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
         print(f"msg_str:{msg}")
 
 
-    # 消费字符串任务 queue_name消费队列名称 max_retry_times错误最大重试次数
+    # 消费字符串任务 queue_name消费队列名称  process_num进程数(默认值1) threads_num线程数(默认值50) max_retry_times错误最大自动重试次数(默认值3)
     RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
                   max_retry_times=5).start_consuming_message()
 ```
@@ -57,10 +57,9 @@ git clone https://github.com/abo123456789/RedisQueue.git
         print(f"msg_dict:{a},{b},{c}")
 
 
-    # 消费多参数类型任务 queue_name消费队列名称 is_support_mutil_param=True消费函数支持多参数(默认False) qps每秒消费任务数
-    RedisCustomer(queue_name='test2', consuming_function=print_msg_dict, process_num=2, threads_num=100,
-                  max_retry_times=5, is_support_mutil_param=True, qps=50).start_consuming_message()
-
+    # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
+    RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
+                  qps=50).start_consuming_message()
 ```
 
 ##### 3.批量提交任务
@@ -90,7 +89,6 @@ git clone https://github.com/abo123456789/RedisQueue.git
         print(f"msg_dict:{a},{b},{c}")
 
     RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
-                  is_support_mutil_param=True, func_timeout=6,
                   qps=50).start_consuming_message()
 
 ```

@@ -278,8 +278,8 @@ if __name__ == '__main__':
 
 
     # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
-    RedisCustomer(queue_name='test2', consuming_function=print_msg_dict, process_num=2, threads_num=100,
-                  max_retry_times=5, qps=50).start_consuming_message()
+    RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
+                  qps=50).start_consuming_message()
 
     # #### 3.批量提交任务
     result = [str(i) for i in range(1, 501)]
