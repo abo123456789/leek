@@ -8,11 +8,15 @@ import threading
 from multiprocessing import Process
 from retrying import retry
 
+from redis_queue_tool.custom_gevent import CustomGeventPoolExecutor
 from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
 from redis_queue_tool.function_timeout import timeout
 from redis_queue_tool.kafka_queue import KafkaQueue
 from redis_queue_tool.redis_queue import RedisQueue
 from redis_queue_tool.sqllite_queue import SqlliteQueue
+
+# from gevent import monkey
+# monkey.patch_all()
 
 __author__ = 'cc'
 
@@ -48,18 +52,19 @@ class RedisCustomer(object):
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0, middleware='redis',
-                 specify_threadpool=None):
+                 specify_threadpool=None, customer_type='thread'):
         """
         redis队列消费程序
         :param queue_name: 队列名称
         :param consuming_function: 队列消息取出来后执行的方法
-        :param threads_num: 启动多少个队列线程
+        :param threads_num: 启动多少个线程(档customer_type=gevent时为协程数量)
         :param max_retry_times: 错误重试次数
         :param func_timeout: 函数超时时间(秒)
-        :param is_support_mutil_param: 消费函数是否支持多个参数,默认False
+        :param is_support_mutil_param: 消费函数是否支持多个参数,默认True
         :param qps: 每秒限制消费任务数量,默认0不限
         :param middleware: 消费中间件,默认redis 支持sqlite ,kafka
         :param specify_threadpool: 外部传入线程池
+        :param customer_type: 消费者类型 string 支持('thread','gevent') 默认thread
         """
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
@@ -72,7 +77,10 @@ class RedisCustomer(object):
         self.queue_name = queue_name
         self.process_num = process_num
         self.threads_num = threads_num
-        self._threadpool = specify_threadpool if specify_threadpool else CustomThreadPoolExecutor(threads_num)
+        if customer_type == 'gevent':
+            self._threadpool = CustomGeventPoolExecutor(threads_num)
+        else:
+            self._threadpool = specify_threadpool if specify_threadpool else CustomThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
         self.func_timeout = func_timeout
         self.is_support_mutil_param = True
@@ -282,9 +290,12 @@ if __name__ == '__main__':
                   qps=50).start_consuming_message()
 
     # #### 3.批量提交任务
-    result = [str(i) for i in range(1, 501)]
+    result = [str(i)*10 for i in range(1, 501)]
     # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
     RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
+    # 消费者类型 string 支持('thread','gevent') 默认thread
+    RedisCustomer(queue_name='test3', consuming_function=print_msg_str, customer_type='gevent',
+                  qps=50).start_consuming_message()
 
     # #### 4.切换任务队列中间件为sqlite(默认为redis)
     for zz in range(1, 101):

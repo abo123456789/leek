@@ -70,10 +70,13 @@ git clone https://github.com/abo123456789/RedisQueue.git
     # redis连接配置
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
-    result = [str(i) for i in range(1, 501)]
+    # #### 3.批量提交任务
+    result = [str(i)*10 for i in range(1, 501)]
     # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
     RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
-
+    # 消费者类型 string 支持('thread','gevent') 默认thread，若使用gevent请在代码开头加入：from gevent import monkey monkey.patch_all()
+    RedisCustomer(queue_name='test3', consuming_function=print_msg_str, customer_type='gevent',
+                  qps=50).start_consuming_message()
 ```
 
 ##### 4.切换任务队列中间件为sqlite(默认为redis)
