@@ -86,7 +86,6 @@ git clone https://github.com/abo123456789/RedisQueue.git
 ##### 4.切换任务队列中间件为sqlite(默认为redis)
 
 ```python
-    import time
     from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
     for zz in range(1, 101):
