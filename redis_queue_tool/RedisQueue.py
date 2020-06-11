@@ -77,7 +77,8 @@ class RedisCustomer(object):
         self.queue_name = queue_name
         self.process_num = process_num
         self.threads_num = threads_num
-        if customer_type == 'gevent':
+        self.customer_type = customer_type
+        if self.customer_type == 'gevent':
             self._threadpool = CustomGeventPoolExecutor(threads_num)
         else:
             self._threadpool = specify_threadpool if specify_threadpool else CustomThreadPoolExecutor(threads_num)
@@ -87,7 +88,7 @@ class RedisCustomer(object):
         self.qps = qps
 
     def _start_consuming_message_thread(self):
-        logger.info(f'start consuming message mutil_thread, threads_num:{self.threads_num}')
+        logger.info(f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num}')
         while True:
             try:
                 message = self._redis_quenen.get()
