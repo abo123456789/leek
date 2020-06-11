@@ -62,10 +62,12 @@ git clone https://github.com/abo123456789/RedisQueue.git
                   qps=50).start_consuming_message()
 ```
 
-##### 3.批量提交任务
+##### 3.批量提交任务消费
 
 ```python
     from redis_queue_tool.RedisQueue import RedisPublish, init_redis_config
+    from gevent import monkey 
+    monkey.patch_all()
 
     # redis连接配置
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
