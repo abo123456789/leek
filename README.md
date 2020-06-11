@@ -119,6 +119,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
 
 
 ```java
+2020-06-11 版本4.1.5 新增支持gevent协程消费参数 customer_type='gevent'
 
 2020-05-20 新增消费函数超时时间参数
 
