@@ -245,6 +245,13 @@ class RedisPublish(object):
         """
         self._redis_quenen.clear()
 
+    def qsize(self):
+        """
+        获取当前队列任务数量
+        :return: int 队列中任务数量
+        """
+        self._redis_quenen.qsize()
+
 
 def kill_owner_process():
     try:
