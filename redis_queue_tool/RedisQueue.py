@@ -88,7 +88,6 @@ class RedisCustomer(object):
         self.qps = qps
 
     def _start_consuming_message_thread(self):
-        logger.info(f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num}')
         while True:
             try:
                 message = self._redis_quenen.get()
@@ -120,12 +119,13 @@ class RedisCustomer(object):
 
     def start_consuming_message(self):
         cpu_count = multiprocessing.cpu_count()
-        logger.info(
-            f'start consuming message  mutil_process,process_num:{min(self.process_num, cpu_count)},system:{platform.system()}')
         if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
             for i in range(0, min(self.process_num, cpu_count)):
+                logger.info(
+                    f'start consuming message  process:{i+1},{self.customer_type}_num:{self.threads_num},system:{platform.system()}')
                 Process(target=self._start_consuming_message_thread).start()
         else:
+            logger.info(f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num},system:{platform.system()}')
             threading.Thread(target=self._start_consuming_message_thread).start()
 
     def _consuming_exception_retry(self, message):
