@@ -65,7 +65,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
 ##### 3.批量提交任务消费
 
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish, init_redis_config
+    from redis_queue_tool.RedisQueue import RedisPublish,  RedisCustomer, init_redis_config
     from gevent import monkey 
     monkey.patch_all()
 
@@ -76,8 +76,10 @@ git clone https://github.com/abo123456789/RedisQueue.git
     result = [str(i)*10 for i in range(1, 501)]
     # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
     RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
+    def print_gmsg_str(msg):
+        print(msg)
     # 消费者类型 string 支持('thread','gevent') 默认thread，若使用gevent请在代码开头加入：from gevent import monkey monkey.patch_all()
-    RedisCustomer(queue_name='test3', consuming_function=print_msg_str, customer_type='gevent',
+    RedisCustomer(queue_name='test3', consuming_function=print_gmsg_str, customer_type='gevent',
                   qps=50).start_consuming_message()
 ```
 
