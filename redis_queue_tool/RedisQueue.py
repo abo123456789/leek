@@ -122,10 +122,11 @@ class RedisCustomer(object):
         if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
             for i in range(0, min(self.process_num, cpu_count)):
                 logger.info(
-                    f'start consuming message  process:{i+1},{self.customer_type}_num:{self.threads_num},system:{platform.system()}')
+                    f'start consuming message  process:{i + 1},{self.customer_type}_num:{self.threads_num},system:{platform.system()}')
                 Process(target=self._start_consuming_message_thread).start()
         else:
-            logger.info(f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num},system:{platform.system()}')
+            logger.info(
+                f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num},system:{platform.system()}')
             threading.Thread(target=self._start_consuming_message_thread).start()
 
     def _consuming_exception_retry(self, message):
@@ -285,8 +286,9 @@ if __name__ == '__main__':
 
     # #### 2.发布消费多参数类型任务
     for zz in range(1, 501):
-        # 写入字典任务 {"c":zz,"b":zz,"a":zz}
-        RedisPublish(queue_name='test2').publish_redispy(c=str(zz), b=str(zz), a=str(zz))
+        # 写入字典任务 {"a":zz,"b":zz,"c":zz}
+        param = {"a": zz, "b": zz, "c": zz}
+        RedisPublish(queue_name='test2').publish_redispy(param)
 
 
     def print_msg_dict(a, b, c):
@@ -298,7 +300,7 @@ if __name__ == '__main__':
                   qps=50).start_consuming_message()
 
     # #### 3.批量提交任务
-    result = [str(i)*10 for i in range(1, 501)]
+    result = [str(i) * 10 for i in range(1, 501)]
     # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
     RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
     # 消费者类型 string 支持('thread','gevent') 默认thread
