@@ -84,7 +84,7 @@ class RedisCustomer(object):
             self._threadpool = specify_threadpool if specify_threadpool else CustomThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
         self.func_timeout = func_timeout
-        self.is_support_mutil_param = True
+        self.is_support_mutil_param = is_support_mutil_param
         self.qps = qps
 
     def _start_consuming_message_thread(self):
@@ -251,7 +251,7 @@ class RedisPublish(object):
         获取当前队列任务数量
         :return: int 队列中任务数量
         """
-        self._redis_quenen.qsize()
+        return self._redis_quenen.qsize()
 
 
 def kill_owner_process():
