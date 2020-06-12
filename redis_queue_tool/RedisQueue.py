@@ -229,7 +229,6 @@ class RedisPublish(object):
         if self._pipe is None:
             self._pipe = self._redis_quenen.getdb().pipeline()
         self._local_quenen.put(msg)
-        # logger.info(f'self._local_quenen.size:{self._local_quenen.qsize()}')
         if self._local_quenen.qsize() >= self.max_push_size:
             try:
                 while self._local_quenen.qsize() > 0:
