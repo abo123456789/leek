@@ -28,7 +28,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
 
     for zz in range(1, 501):
         # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
-        RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(str(zz))
+        RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(zz)
 
 
     def print_msg_str(msg):
