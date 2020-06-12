@@ -272,7 +272,8 @@ if __name__ == '__main__':
     # #### 1.发布消费字符串类型任务
     for zz in range(1, 501):
         # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
-        RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(str(zz))
+        msg_str = json.dumps({"zz": zz})
+        RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(msg_str)
 
 
     def print_msg_str(msg):
@@ -281,7 +282,7 @@ if __name__ == '__main__':
 
     # 消费字符串任务 queue_name消费队列名称  process_num进程数(默认值1) threads_num线程数(默认值50) max_retry_times错误最大自动重试次数(默认值3)
     RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
-                  max_retry_times=5).start_consuming_message()
+                  max_retry_times=5, is_support_mutil_param=False).start_consuming_message()
 
     # #### 2.发布消费多参数类型任务
     for zz in range(1, 501):

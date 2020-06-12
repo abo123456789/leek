@@ -37,7 +37,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
 
     # 消费字符串任务 queue_name消费队列名称  process_num进程数(默认值1) threads_num线程数(默认值50) max_retry_times错误最大自动重试次数(默认值3)
     RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
-                  max_retry_times=5).start_consuming_message()
+                  max_retry_times=5, is_support_mutil_param=False).start_consuming_message()
 ```
 
 ##### 2.发布消费多参数类型任务
