@@ -49,8 +49,9 @@ git clone https://github.com/abo123456789/RedisQueue.git
 
 
     for zz in range(1, 501):
-         # 发布多参数任务
-         RedisPublish(queue_name='test2').publish_redispy(c=str(zz), b=str(zz), a=str(zz))
+         # 写入字典任务 {"a":zz,"b":zz,"c":zz}
+         param = {"a": zz, "b": zz, "c": zz}
+         RedisPublish(queue_name='test2').publish_redispy(param)
 
 
     def print_msg_dict(a, b, c):
@@ -73,13 +74,13 @@ git clone https://github.com/abo123456789/RedisQueue.git
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
     # #### 3.批量提交任务
-    result = [str(i)*10 for i in range(1, 501)]
+    result = [{'a': i, 'b': i, 'c': i} for i in range(1, 501)]
     # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
     RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
-    def print_gmsg_str(msg):
-        print(msg)
+    def print_msg_dict1(a, b, c):
+        print(f"msg_dict1:{a},{b},{c}")
     # 消费者类型 string 支持('thread','gevent') 默认thread，若使用gevent请在代码开头加入：from gevent import monkey monkey.patch_all()
-    RedisCustomer(queue_name='test3', consuming_function=print_gmsg_str, customer_type='gevent',
+    RedisCustomer(queue_name='test3', consuming_function=print_msg_dict1, customer_type='gevent',
                   qps=50).start_consuming_message()
 ```
 
@@ -89,7 +90,7 @@ git clone https://github.com/abo123456789/RedisQueue.git
     from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
 
     for zz in range(1, 101):
-        RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=str(zz), b=str(zz), c=str(zz))
+        RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
 
     def print_msg_dict2(a, b, c):
         print(f"msg_dict:{a},{b},{c}")
