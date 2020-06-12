@@ -203,13 +203,13 @@ class RedisPublish(object):
     def publish_redispy_list(self, msgs: list):
         """
         批量写入redis队列
-        :param msgs: 待写入字符串列表
+        :param msgs: 待写入列表数据
         :return: 
         """
         if self.middleware == RedisQueue.middleware_name:
             pipe = self._redis_quenen.getdb().pipeline()
             for id in msgs:
-                pipe.lpush(self._redis_quenen.queue_name, id)
+                pipe.lpush(self._redis_quenen.queue_name, json.dumps(id))
                 if len(pipe) == self.max_push_size:
                     pipe.execute()
                     logger.info(str(self.max_push_size).center(20, '*') + 'commit')
@@ -300,11 +300,11 @@ if __name__ == '__main__':
                   qps=50).start_consuming_message()
 
     # #### 3.批量提交任务
-    result = [str(i) * 10 for i in range(1, 501)]
+    result = [{'a': i, 'b': i, 'c': i} for i in range(1, 501)]
     # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
     RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
     # 消费者类型 string 支持('thread','gevent') 默认thread
-    RedisCustomer(queue_name='test3', consuming_function=print_msg_str, customer_type='gevent',
+    RedisCustomer(queue_name='test3', consuming_function=print_msg_dict(), customer_type='gevent',
                   qps=50).start_consuming_message()
 
     # #### 4.切换任务队列中间件为sqlite(默认为redis)
