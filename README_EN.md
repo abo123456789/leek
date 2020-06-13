@@ -1,149 +1,148 @@
+Redis high concurrency queue
+##### [Introduction document]
 
-redis High Concurrent Queues
- ##### [ Introduction Document]
+* Supported version: Python 3.0+
 
- * Support version: python 3.0
+### Download and install
 
- ### download installation
-
- * pip installation:
+* pip installation:
 ```shell
- pip install redis-queue-tool
+pip install redis-queue-tool
 ```
 
- * Download source code:
+* Download source code:
 
 ```shell
- git clone https://github.com/abo123456789/RedisQueue.git
+git clone https://github.com/abo123456789/RedisQueue.git
 ```
 
- ### DEMO Notes
+### DEMO description
 
- #####1. Publish the consumption string type task
+##### 1. Publish consumer string type tasks
 ```python
- from redis_queue_tool.RedisQueue import RedisPublish,RedisCustomer,init_redis_config
+    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
 
- # redis Connection Configuration
- init_redis_config (host ='127.0.0.1', password=', port=6379, db=8)
+    # redis connection configuration
+    init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
- for zz in range(1,501)：
- # publish string task queue_name publish queue name fliter_rep=True task automatically deid (default False)
- RedisPublish (test1',fliter_rep=False). publish_redispy_str (zz)
-
-
- def print_msg_str (msg):
-  print (f "msg_str :{ msg }")
+    for zz in range(1, 501):
+        # Post string task queue_name post queue name fliter_rep=True task automatically deduplicates (default False)
+        RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(zz)
 
 
- # consumption string task queue_name consumption queue name process_num number of processes (default 1) threads_num number of threads (default 50) maximum number of automatic retry errors (default 3)
- RedisCustomer (queue_name =' test1',consuming_function=print_msg_str,process_num=2, threads_num=100,
- max_retry_times=5, is_support_mutil_parammax_retry_times=False). start_consuming_message()
+    def print_msg_str(msg):
+        print(f"msg_str:{msg}")
+
+
+    # Consumption string task queue_name consumption queue name process_num process number (default value 1) threads_num thread number (default value 50) max_retry_times error maximum number of automatic retries (default value 3)
+    RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
+                  max_retry_times=5, is_support_mutil_param=False).start_consuming_message()
 ```
 
- #####2. Publish consumption multiparameter type tasks
+##### 2. Publish consumption multi-parameter type tasks
 ```python
- from redis_queue_tool.RedisQueue import RedisPublish,RedisCustomer,init_redis_config
+    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
 
- # redis Connection Configuration
- init_redis_config (host ='127.0.0.1', password=', port=6379, db=8)
-
-
- for zz in range(1,501)：
-   # Write dictionary task {a "：zz," b "：zz," c "：zz}"
- param ={ a "：zz," b "：zz," c "：zz}"
-RedisPublish (test2'). publish_redispy (param)
+    # redis connection configuration
+    init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
 
- def print_msg_dict (a, b, c):
- print (f "msg_dict :{ a },{ b },{ c }")
+    for zz in range(1, 501):
+         # Write dictionary task {"a":zz,"b":zz,"c":zz}
+         param = {"a": zz, "b": zz, "c": zz}
+         RedisPublish(queue_name='test2').publish_redispy(param)
 
 
- # Number of consumption tasks per second (no limit by default) qps consumption multiparameter task queue_name consumption queue name
- RedisCustomer =' test2',consuming_function=print_msg_dict, of queue_name
- qps=50). start_consuming_message()
+    def print_msg_dict(a, b, c):
+        print(f"msg_dict:{a},{b},{c}")
+
+
+    # Consumption multi-parameter type task queue_name consumption queue name qps consumption tasks per second (no limit by default)
+    RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
+                  qps=50).start_consuming_message()
 ```
 
- #####3. Bulk task consumption
-
-```python
- from redis_queue_tool.RedisQueue import RedisPublish,RedisCustomer,init_redis_config
- from gevent import monkey
- monkey.patch_all()
-
- # redis Connection Configuration
- init_redis_config (host ='127.0.0.1', password=', port=6379, db=8)
-
- #####3. Bulk submission tasks
-  result =[ a'：i,' b'：i,' c'：i}for i in range(1,501)]]
- # Batch commit task queue_name commit task queue name max_push_size number of batch commit records per time (default value 50)
- RedisPublish (queue_name =' test3',max_push_size=100). publish_redispy_list (result)
- def print_msg_dict1(a, b, c):
- print (f "msg_dict1:{ a },{ b },{ c }")
- # Consumer Type string Support (' thread','gevent') Default thread, If you use it, add from gevent import monkey monkey.patch_all() at the beginning of the code:
- RedisCustomer =' test3',consuming_function=print_msg_dict1,customer_type=' gevent',.
- qps=50). start_consuming_message()
-```
-
- #####4. Switching task queue middleware to sqlite (default redis)
+##### 3. Batch submit task consumption
 
 ```python
-  from redis_queue_tool.RedisQueue import RedisPublish,RedisCustomer
+    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
+    from gevent import monkey
+    monkey.patch_all()
 
- for zz in range(1,101)：
- RedisPublish (queue_name =' test4',middleware='sqlite'). publish_redispy (a =zz,b=zz,c=zz)
+    # redis connection configuration
+    init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
- def print_msg_dict2(a, b, c):
- print (f "msg_dict :{ a },{ b },{ c }")
+    # #### 3. Submit tasks in batches
+    result = [{'a': i,'b': i,'c': i} for i in range(1, 501)]
+    # Batch submit tasks queue_name Submit task queue name max_push_size Number of batch submission records per time (default 50)
+    RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
+    def print_msg_dict1(a, b, c):
+        print(f"msg_dict1:{a},{b},{c}")
+    # Consumer type string support ('thread','gevent') default thread, if you use gevent, please add at the beginning of the code: from gevent import monkey monkey.patch_all()
+    RedisCustomer(queue_name='test3', consuming_function=print_msg_dict1, customer_type='gevent',
+                  qps=50).start_consuming_message()
+```
 
- RedisCustomer =' test4',consuming_function=print_msg_dict2,middleware='sqlite',.
- qps=50). start_consuming_message()
+##### 4. Switch the task queue middleware to sqlite (default is redis)
+
+```python
+    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
+
+    for zz in range(1, 101):
+        RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
+
+    def print_msg_dict2(a, b, c):
+        print(f"msg_dict:{a},{b},{c}")
+
+    RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
+                  qps=50).start_consuming_message()
 
 ```
 
 
- ### use scenarios and features
-###### [1 minute to be proficient in using the framework to crawl data without learning complex documents. Easy extension of middleware]
+### Usage scenarios and features
+###### [Can skillfully use the framework to crawl data in 1 minute, without having to learn complex documents. Easily expand various middlewares]
 
- ```shell
- 1. High Concurrency Distributed Crawler (Verified by Online Data Crawling)
+```shell
+1. Highly concurrent distributed crawler (verified by tens of millions of online data crawling verification)
 
- 2. Distributed Data Cleaning (Automatic Deweighting of Cleaning, Support for Continuous Cleaning after Any Break)
+2. Distributed data cleaning (automatic deduplication of cleaning, support to continue cleaning after interruption at any time)
 
- 3. short video processing (video download upload, bandwidth enough without waiting)
+3. Short video processing (video download and upload, bandwidth is sufficient without waiting)
 
- 4. asynchronous real-time online query interface (up to millisecond speed)
+4. Asynchronous real-time online query interface (speed reaches millisecond level)
 
- 5. other usage scenario extensions
+5. Other usage scenarios are being expanded
 
 ```
 
- ### update note
+### Release Notes
 
 
 ```java
- New support gevent co-process consumption parameter customer_type=' gevent' for version 4.1.5 2020-06-11
+2020-06-11 Version 4.1.5 Added support for gevent coroutine consumption parameter customer_type='gevent'
 
- Time-out Time-out Parameters for New Consumption Function 2020-05-20
+2020-05-20 Added consumption function timeout time parameter
 
- 2020-05-10 New sqlite middleware support
+2020-05-10 Added sqlite middleware support
 
- Number of new automatic control lines in consumption function 2020-04-13
+2020-04-13 The consumption function adds automatic control of the number of threads
 
- 2020-04-10 Consumption Function New Limit Parameters
+2020-04-10 New frequency limiting parameter for consumption function
 
- 2020-01-08 Consumption Function Support Multiparameter Type
+2020-01-08 Consumer function supports multiple parameter types
 
- 2019-12-06 Simplified Multithreaded Consumer Queues
+2019-12-06 Simplified multi-threaded consumer queue class
 
- 2019-10-14 new consumption function error retry mechanism, default retry 3 times
+2019-10-14 Added consumption function error retry mechanism, retry by default 3 times
 
- The 2019-10-12 task ignores the order of parameters
+2019-10-12 Task deduplication ignores parameter order
 
- 2019-09-27 Repair Submission List Task BUG
+2019-09-27 Fix the bug of submitting list task
 
- Dynamic parameters for new add-on tasks 2019-05-25
+2019-05-25 Added dynamic parameter transfer when adding tasks
 
- 2019-04-06 New Crawling Task Auto Removing Function
+2019-04-06 Added automatic deduplication function for crawling tasks
 
- 2019-03-23 New single-thread asynchronous batch submission feature
+2019-03-23 ​​Added single-thread asynchronous batch submission function
 ```
