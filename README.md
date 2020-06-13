@@ -1,5 +1,6 @@
 
-redis高并发队列
+redis高并发队列  
+ [english docs link](https://github.com/abo123456789/RedisQueue/blob/master/README_EN.md "english docs")
 ##### [介绍文档]
 
 * 支持版本: python 3.0+

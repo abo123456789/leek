@@ -1,6 +1,6 @@
 
 redis High Concurrent Queues
- #####[ Introduction Document]
+ ##### [ Introduction Document]
 
  * Support version: python 3.0
 
@@ -17,7 +17,7 @@ redis High Concurrent Queues
  git clone https://github.com/abo123456789/RedisQueue.git
 ```
 
- ###DEMO Notes
+ ### DEMO Notes
 
  #####1. Publish the consumption string type task
 ```python
@@ -102,7 +102,7 @@ RedisPublish (test2'). publish_redispy (param)
 
 
  ### use scenarios and features
-######[1 minute to be proficient in using the framework to crawl data without learning complex documents. Easy extension of middleware]
+###### [1 minute to be proficient in using the framework to crawl data without learning complex documents. Easy extension of middleware]
 
  ```shell
  1. High Concurrency Distributed Crawler (Verified by Online Data Crawling)
