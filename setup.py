@@ -1,18 +1,17 @@
 # -*- coding:utf-8 -*-
 # @Author cc
 # @TIME 2019/5/25 23:26
-# coding=utf-8
 
 from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.2.2',
+    version='4.2.3',
     description=(
         'reids高并发队列(高并发爬虫利器)'
     ),
     long_description_content_type="text/markdown",
-    long_description=open('README.md').read(),
+    long_description=open('README.md', encoding='utf-8').read(),
     author='cc',
     author_email='abcdef123456chen@sohu.com',
     maintainer='cc',
