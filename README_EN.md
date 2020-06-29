@@ -111,10 +111,10 @@ pip install redis-queue-tool
 
 ```
 
-### reids insatll
-[reids insatll](https://www.runoob.com/redis/redis-install.html)
+### reids install
+[reids install](https://www.runoob.com/redis/redis-install.html)
 
-reids docker insatll
+reids docker install
 ```shell
 docker run  -d -p 6379:6379 redis
 ```
