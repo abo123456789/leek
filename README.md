@@ -111,6 +111,14 @@ pip install redis-queue-tool
 
 ```
 
+### reids安装
+[reids 普通安装](https://www.runoob.com/redis/redis-install.html)
+
+reids docker安装
+```shell
+docker run  -d -p 6379:6379 redis
+```
+
 ### 更新说明
 
 
