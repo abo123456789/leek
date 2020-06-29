@@ -1,4 +1,5 @@
-Redis high concurrency queue
+[中文文档](README.md)  | [English Docs](README_EN.md)  
+## Redis high concurrency queue 
 ##### [Introduction document]
 
 * Supported version: Python 3.0+
