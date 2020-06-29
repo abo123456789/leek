@@ -11,12 +11,6 @@
 pip install redis-queue-tool
 ```
 
-* Download source code:
-
-```shell
-git clone https://github.com/abo123456789/RedisQueue.git
-```
-
 ### DEMO description
 
 ##### 1. Publish consumer string type tasks

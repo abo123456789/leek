@@ -11,12 +11,6 @@
 pip install redis-queue-tool
 ```
 
-* 下载源码:
-
-```shell
-git clone https://github.com/abo123456789/RedisQueue.git
-```
-
 ### DEMO说明
 
 ##### 1.发布消费字符串类型任务
