@@ -97,7 +97,9 @@ class RedisCustomer(object):
                     if isinstance(message, list):
                         for msg in message:
                             if self.qps != 0:
-                                time.sleep((1 / self.qps) * self.process_num - get_message_cost)
+                                sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost if (
+                                                                                                                    1 / self.qps) * self.process_num > get_message_cost else 0
+                                time.sleep(sleep_seconds)
                             if self.is_support_mutil_param and '{' in message and '}' in message:
                                 message = json.loads(msg)
                                 if type(message) != dict:
@@ -105,7 +107,9 @@ class RedisCustomer(object):
                             self._threadpool.submit(self._consuming_exception_retry, msg)
                     else:
                         if self.qps != 0:
-                            time.sleep((1 / self.qps) * self.process_num - get_message_cost)
+                            sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost if (
+                                                                                                            1 / self.qps) * self.process_num > get_message_cost else 0
+                            time.sleep(sleep_seconds)
                         if self.is_support_mutil_param and '{' in message and '}' in message:
                             message = json.loads(message)
                             if type(message) != dict:
@@ -114,8 +118,8 @@ class RedisCustomer(object):
                 else:
                     time.sleep(0.5)
             except:
-                logger.error(message)
-                s = traceback.format_exc()
+                # logger.error(message)
+                s = traceback.formatime.st_exc()
                 logger.error(s)
                 time.sleep(0.5)
 
