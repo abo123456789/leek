@@ -105,7 +105,7 @@ class RedisCustomer(object):
                             self._threadpool.submit(self._consuming_exception_retry, msg)
                     else:
                         if self.qps != 0:
-                            time.sleep((1 / self.qps) * self.process_num)
+                            time.sleep((1 / self.qps) * self.process_num - get_message_cost)
                         if self.is_support_mutil_param and '{' in message and '}' in message:
                             message = json.loads(message)
                             if type(message) != dict:
