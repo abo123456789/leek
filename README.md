@@ -1,4 +1,4 @@
- [中文文档](README.md)  | [English Docs](README_EN.md)  
+ [中文文档](https://github.com/abo123456789/RedisQueue/blob/master/README.md)  | [English Docs](https://github.com/abo123456789/RedisQueue/blob/master/README_EN.md)  
 ## redis高并发队列  
 ##### [介绍文档]
 

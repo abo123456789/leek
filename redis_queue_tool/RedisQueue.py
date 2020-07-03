@@ -88,32 +88,51 @@ class RedisCustomer(object):
         self.qps = qps
 
     def _start_consuming_message_thread(self):
+        current_customer_count = 0
+        get_queue_begin_time = time.time()
         while True:
             try:
-                get_queue_begin_time = time.time()
+                time_begin = time.time()
                 message = self._redis_quenen.get()
-                get_message_cost = time.time() - get_queue_begin_time
+                get_message_cost = time.time() - time_begin
                 if message:
                     if isinstance(message, list):
                         for msg in message:
                             if self.qps != 0:
-                                sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost if (
+                                if self.qps < 5:
+                                    sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost if (
                                                                                                                     1 / self.qps) * self.process_num > get_message_cost else 0
-                                time.sleep(sleep_seconds)
+                                    time.sleep(sleep_seconds)
+                                else:
+                                    current_customer_count = current_customer_count + 1
+                                    if current_customer_count == int(self.qps / self.process_num):
+                                        sleep_time = 1 - (time.time() - get_queue_begin_time)
+                                        time.sleep(sleep_time if sleep_time > 0 else 0)
+                                        current_customer_count = 0
+                                        get_queue_begin_time = time.time()
                             if self.is_support_mutil_param and '{' in message and '}' in message:
                                 message = json.loads(msg)
                                 if type(message) != dict:
                                     raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
                             self._threadpool.submit(self._consuming_exception_retry, msg)
                     else:
-                        if self.qps != 0:
-                            sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost if (
-                                                                                                            1 / self.qps) * self.process_num > get_message_cost else 0
-                            time.sleep(sleep_seconds)
                         if self.is_support_mutil_param and '{' in message and '}' in message:
                             message = json.loads(message)
                             if type(message) != dict:
                                 raise Exception('请发布【字典】类型消息,当前消息是【字符串】类型')
+                        if self.qps != 0:
+                            if self.qps < 5:
+                                sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost if (
+                                                                                                                1 / self.qps) * self.process_num > get_message_cost else 0
+                                time.sleep(sleep_seconds)
+                            else:
+                                current_customer_count = current_customer_count + 1
+                                if current_customer_count == int(self.qps / self.process_num):
+                                    sleep_time = 1 - (time.time() - get_queue_begin_time)
+                                    time.sleep(sleep_time if sleep_time > 0 else 0)
+                                    current_customer_count = 0
+                                    get_queue_begin_time = time.time()
+
                         self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
                     time.sleep(0.5)
