@@ -119,6 +119,9 @@ reids docker安装
 docker run  -d -p 6379:6379 redis
 ```
 
+redis web版管理工具 [flask-redisboard](https://github.com/hjlarry/flask-redisboard)
+![avatar](https://s1.ax1x.com/2020/07/07/UAIHFe.jpg)
+
 ### 更新说明
 
 
