@@ -113,7 +113,7 @@ pip install redis-queue-tool
 
 ```
 
-#### reids install
+#### Reids install
 [reids install](https://www.runoob.com/redis/redis-install.html)
 
 reids docker install
