@@ -2,19 +2,19 @@
 ## redis高并发队列  
 #### 功能描述
 
-##### 【比scrapy更灵活,比celery更容易上手。用最少的代码,用最简单的方式,做最多的事情】
+##### 【比scrapy更灵活,比celery更容易上手的分布式爬虫框架。用最少的代码,用最简单的方式,做最多的事情】
 ##### 【1分钟内能熟练运用该框架爬取数据,无需学习复杂文档.轻松扩展各种中间件】
 
 * 支持版本: python 3.0+
 
-### 下载安装
+#### 下载安装
 
 * pip安装:
 ```shell
 pip install redis-queue-tool
 ```
 
-### DEMO说明
+#### DEMO说明
 
 ##### 1.发布消费字符串类型任务
 ```python
@@ -98,7 +98,7 @@ pip install redis-queue-tool
 ```
 
 
-### 使用场景和特色说明
+#### 使用场景和特色说明
 
 ```shell
 1 . 高并发分布式爬虫(经过线上千万级数据爬取验证)
@@ -113,7 +113,7 @@ pip install redis-queue-tool
 
 ```
 
-### reids安装
+#### reids安装
 [reids 普通安装](https://www.runoob.com/redis/redis-install.html)
 
 reids docker安装
@@ -124,7 +124,7 @@ docker run  -d -p 6379:6379 redis
 redis web版管理工具 [flask-redisboard](https://github.com/hjlarry/flask-redisboard)
 ![avatar](https://s1.ax1x.com/2020/07/07/UAIHFe.jpg)
 
-### 更新说明
+#### 更新说明
 
 
 ```java

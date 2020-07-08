@@ -1,17 +1,20 @@
 [中文文档](README.md)  | [English Docs](README_EN.md)  
 ## Redis high concurrency queue 
-##### [Introduction document]
+#### Functional description
+
+##### [A distributed crawler framework that is more flexible than scrapy and easier to use than Celery. Do the most with the least code and the simplest way]
+##### [Can skillfully use the framework to crawl data within 1 minute, without learning complex documents. Easily expand various middleware]
 
 * Supported version: Python 3.0+
 
-### Download and install
+#### Download and install
 
 * pip installation:
 ```shell
 pip install redis-queue-tool
 ```
 
-### DEMO description
+#### DEMO description
 
 ##### 1. Publish consumer string type tasks
 ```python
@@ -95,8 +98,7 @@ pip install redis-queue-tool
 ```
 
 
-### Usage scenarios and features
-###### [Can skillfully use the framework to crawl data in 1 minute, without having to learn complex documents. Easily expand various middlewares]
+#### Usage scenarios and features
 
 ```shell
 1. Highly concurrent distributed crawler (verified by tens of millions of online data crawling verification)
@@ -111,7 +113,7 @@ pip install redis-queue-tool
 
 ```
 
-### reids install
+#### reids install
 [reids install](https://www.runoob.com/redis/redis-install.html)
 
 reids docker install
@@ -122,7 +124,7 @@ docker run  -d -p 6379:6379 redis
 redis web manage tool [flask-redisboard](https://github.com/hjlarry/flask-redisboard)
 ![avatar](https://s1.ax1x.com/2020/07/07/UAIHFe.jpg)
 
-### Release Notes
+#### Release Notes
 
 
 ```java
