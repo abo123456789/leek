@@ -1,6 +1,9 @@
  [中文文档](https://github.com/abo123456789/RedisQueue/blob/master/README.md)  | [English Docs](https://github.com/abo123456789/RedisQueue/blob/master/README_EN.md)  
 ## redis高并发队列  
-##### [介绍文档]
+#### 功能描述
+
+##### 【比scrapy更灵活,比celery更容易上手。用最少的代码,用最简单的方式,做最多的事情】
+##### 【1分钟内能熟练运用该框架爬取数据,无需学习复杂文档.轻松扩展各种中间件】
 
 * 支持版本: python 3.0+
 
@@ -96,7 +99,6 @@ pip install redis-queue-tool
 
 
 ### 使用场景和特色说明
-##### 【1分钟内能熟练运用该框架爬取数据,无需学习复杂文档.轻松扩展各种中间件】
 
 ```shell
 1 . 高并发分布式爬虫(经过线上千万级数据爬取验证)
