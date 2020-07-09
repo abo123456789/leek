@@ -8,9 +8,7 @@
 #### version description
 * Supported version: Python 3.0+
 
-#### Download and install
-
-* pip installation:
+#### Pip installation
 ```shell
 pip install redis-queue-tool
 ```
@@ -99,6 +97,18 @@ pip install redis-queue-tool
 ```
 
 
+#### Reids install
+[reids install](https://www.runoob.com/redis/redis-install.html)
+
+reids docker install
+```shell
+docker run  -d -p 6379:6379 redis
+```
+
+redis web manage tool [flask-redisboard](https://github.com/hjlarry/flask-redisboard)
+![avatar](https://s1.ax1x.com/2020/07/07/UAIHFe.jpg)
+
+
 #### Usage scenarios and features
 
 ```shell
@@ -114,16 +124,6 @@ pip install redis-queue-tool
 
 ```
 
-#### Reids install
-[reids install](https://www.runoob.com/redis/redis-install.html)
-
-reids docker install
-```shell
-docker run  -d -p 6379:6379 redis
-```
-
-redis web manage tool [flask-redisboard](https://github.com/hjlarry/flask-redisboard)
-![avatar](https://s1.ax1x.com/2020/07/07/UAIHFe.jpg)
 
 #### Release Notes
 
