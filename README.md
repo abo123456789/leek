@@ -99,7 +99,19 @@ pip install redis-queue-tool
 ```
 
 
-#### 使用场景和特色说明
+#### reids安装
+[reids 普通安装](https://www.runoob.com/redis/redis-install.html)
+
+reids docker安装
+```shell
+docker run  -d -p 6379:6379 redis
+```
+
+redis web版管理工具 [flask-redisboard](https://github.com/hjlarry/flask-redisboard)
+![avatar](https://s1.ax1x.com/2020/07/07/UAIHFe.jpg)
+
+
+#### 特色说明
 
 ```shell
 1 . 高并发分布式爬虫(经过线上千万级数据爬取验证)
@@ -113,17 +125,6 @@ pip install redis-queue-tool
 5 . 其它使用场景扩展中
 
 ```
-
-#### reids安装
-[reids 普通安装](https://www.runoob.com/redis/redis-install.html)
-
-reids docker安装
-```shell
-docker run  -d -p 6379:6379 redis
-```
-
-redis web版管理工具 [flask-redisboard](https://github.com/hjlarry/flask-redisboard)
-![avatar](https://s1.ax1x.com/2020/07/07/UAIHFe.jpg)
 
 #### 更新说明
 
