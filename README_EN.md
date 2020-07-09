@@ -1,10 +1,11 @@
 [中文文档](README.md)  | [English Docs](README_EN.md)  
-## Redis high concurrency queue 
+## Redis high concurrency queue
+ 
 #### Functional description
+* [A distributed crawler framework that is more flexible than scrapy and easier to use than Celery. Do the most with the least code and the simplest way]
+* [Can skillfully use the framework to crawl data within 1 minute, without learning complex documents. Easily expand various middleware]
 
-##### [A distributed crawler framework that is more flexible than scrapy and easier to use than Celery. Do the most with the least code and the simplest way]
-##### [Can skillfully use the framework to crawl data within 1 minute, without learning complex documents. Easily expand various middleware]
-
+#### version description
 * Supported version: Python 3.0+
 
 #### Download and install
