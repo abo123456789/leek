@@ -1,7 +1,6 @@
 # -*- coding:utf-8 -*-
 import json
 import multiprocessing
-import os
 import platform
 import threading
 
@@ -278,19 +277,7 @@ class RedisPublish(object):
         return self._redis_quenen.qsize()
 
 
-def kill_owner_process():
-    try:
-        cur_file_name = os.path.basename(__file__)
-        if platform.system() == 'Darwin':
-            os.system(f'ps -ef | grep {cur_file_name} | grep -v grep | cut -c  7-11 | xargs kill -9 &')
-        elif platform.system() == 'Linux':
-            os.system(f'ps -ef | grep {cur_file_name} | grep -v grep | cut -c 9-15 | xargs kill -9 &')
-    except:
-        traceback.print_exc()
-
-
 if __name__ == '__main__':
-    # kill_owner_process()
     # 初始化redis连接配置
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 

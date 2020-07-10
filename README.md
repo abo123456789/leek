@@ -16,7 +16,7 @@ pip install redis-queue-tool
 
 ##### 1.发布消费字符串类型任务
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
+    from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
 
     # redis连接配置
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
@@ -37,7 +37,7 @@ pip install redis-queue-tool
 
 ##### 2.发布消费多参数类型任务
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
+    from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
 
     # redis连接配置
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
@@ -61,7 +61,7 @@ pip install redis-queue-tool
 ##### 3.批量提交任务消费
 
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish,  RedisCustomer, init_redis_config
+    from redis_queue_tool import RedisPublish,  RedisCustomer, init_redis_config
     from gevent import monkey 
     monkey.patch_all()
 
@@ -82,7 +82,7 @@ pip install redis-queue-tool
 ##### 4.切换任务队列中间件为sqlite(默认为redis)
 
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
+    from redis_queue_tool import RedisPublish, RedisCustomer
 
     for zz in range(1, 101):
         RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
