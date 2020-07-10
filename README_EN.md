@@ -17,7 +17,7 @@ pip install redis-queue-tool
 
 ##### 1. Publish consumer string type tasks
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
+    from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
 
     # redis connection configuration
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
@@ -38,7 +38,7 @@ pip install redis-queue-tool
 
 ##### 2. Publish consumption multi-parameter type tasks
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
+    from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
 
     # redis connection configuration
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
@@ -62,7 +62,7 @@ pip install redis-queue-tool
 ##### 3. Batch submit task consumption
 
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer, init_redis_config
+    from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
     from gevent import monkey
     monkey.patch_all()
 
@@ -83,7 +83,7 @@ pip install redis-queue-tool
 ##### 4. Switch the task queue middleware to sqlite (default is redis)
 
 ```python
-    from redis_queue_tool.RedisQueue import RedisPublish, RedisCustomer
+    from redis_queue_tool import RedisPublish, RedisCustomer
 
     for zz in range(1, 101):
         RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
