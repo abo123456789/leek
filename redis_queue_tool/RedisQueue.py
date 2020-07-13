@@ -5,6 +5,8 @@ import platform
 import threading
 
 from multiprocessing import Process
+
+from py_log import get_logger
 from retrying import retry
 
 from redis_queue_tool.custom_gevent import CustomGeventPoolExecutor
@@ -22,9 +24,10 @@ __author__ = 'cc'
 import time
 import queue
 import traceback
-from loguru import logger
 from collections import Callable
 from tomorrow3 import threads as tomorrow_threads
+
+logger = get_logger(__name__, formatter_template=2)
 
 # redis配置连接信息
 redis_host = '127.0.0.1'
