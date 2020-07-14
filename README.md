@@ -106,7 +106,7 @@ def f(a, b):
 
 # 发布任务
 for i in range(1, 51):
-    f.publish_redispy(a=1, b=1)
+    f.publish_redispy(a=i, b=i)
 
 # 消费任务
 f.start_consuming_message()

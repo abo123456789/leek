@@ -107,7 +107,7 @@ def f(a, b):
 
 #Post tasks
 for i in range (1, 51):
-     f.publish_redispy(a=1, b=1)
+     f.publish_redispy(a=i, b=i)
 
 #Consumption tasks
 f.start_using_message()
