@@ -16,82 +16,82 @@ pip install redis-queue-tool
 
 ##### 1.发布消费字符串类型任务
 ```python
-    from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
+from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
 
-    # redis连接配置
-    init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+# redis连接配置
+init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
-    for zz in range(1, 501):
-        # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
-        RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(zz)
-
-
-    def print_msg_str(msg):
-        print(f"msg_str:{msg}")
+for zz in range(1, 501):
+    # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
+    RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(zz)
 
 
-    # 消费字符串任务 queue_name消费队列名称  process_num进程数(默认值1) threads_num线程数(默认值50) max_retry_times错误最大自动重试次数(默认值3)
-    RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
-                  max_retry_times=5, is_support_mutil_param=False).start_consuming_message()
+def print_msg_str(msg):
+    print(f"msg_str:{msg}")
+
+
+# 消费字符串任务 queue_name消费队列名称  process_num进程数(默认值1) threads_num线程数(默认值50) max_retry_times错误最大自动重试次数(默认值3)
+RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
+              max_retry_times=5, is_support_mutil_param=False).start_consuming_message()
 ```
 
 ##### 2.发布消费多参数类型任务
 ```python
-    from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
+from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
 
-    # redis连接配置
-    init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
-
-
-    for zz in range(1, 501):
-         # 写入字典任务 {"a":zz,"b":zz,"c":zz}
-         param = {"a": zz, "b": zz, "c": zz}
-         RedisPublish(queue_name='test2').publish_redispy(param)
+# redis连接配置
+init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
 
-    def print_msg_dict(a, b, c):
-        print(f"msg_dict:{a},{b},{c}")
+for zz in range(1, 501):
+    # 写入字典任务 {"a":zz,"b":zz,"c":zz}
+    param = {"a": zz, "b": zz, "c": zz}
+    RedisPublish(queue_name='test2').publish_redispy(param)
 
 
-    # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
-    RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
-                  qps=50).start_consuming_message()
+def print_msg_dict(a, b, c):
+    print(f"msg_dict:{a},{b},{c}")
+
+
+# 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
+RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
+              qps=50).start_consuming_message()
 ```
 
 ##### 3.批量提交任务消费
 
 ```python
-    from redis_queue_tool import RedisPublish,  RedisCustomer, init_redis_config
-    from gevent import monkey 
-    monkey.patch_all()
+from redis_queue_tool import RedisPublish,  RedisCustomer, init_redis_config
+from gevent import monkey 
+monkey.patch_all()
 
-    # redis连接配置
-    init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+# redis连接配置
+init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
-    # #### 3.批量提交任务
-    result = [{'a': i, 'b': i, 'c': i} for i in range(1, 501)]
-    # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
-    RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
-    def print_msg_dict1(a, b, c):
-        print(f"msg_dict1:{a},{b},{c}")
-    # 消费者类型 string 支持('thread','gevent') 默认thread，若使用gevent请在代码开头加入：from gevent import monkey monkey.patch_all()
-    RedisCustomer(queue_name='test3', consuming_function=print_msg_dict1, customer_type='gevent',
-                  qps=50).start_consuming_message()
+# #### 3.批量提交任务
+result = [{'a': i, 'b': i, 'c': i} for i in range(1, 501)]
+# 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
+RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
+def print_msg_dict1(a, b, c):
+    print(f"msg_dict1:{a},{b},{c}")
+# 消费者类型 string 支持('thread','gevent') 默认thread，若使用gevent请在代码开头加入：from gevent import monkey monkey.patch_all()
+RedisCustomer(queue_name='test3', consuming_function=print_msg_dict1, customer_type='gevent',
+              qps=50).start_consuming_message()
 ```
 
 ##### 4.切换任务队列中间件为sqlite(默认为redis)
 
 ```python
-    from redis_queue_tool import RedisPublish, RedisCustomer
+from redis_queue_tool import RedisPublish, RedisCustomer
 
-    for zz in range(1, 101):
-        RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
+for zz in range(1, 101):
+    RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
 
-    def print_msg_dict2(a, b, c):
-        print(f"msg_dict:{a},{b},{c}")
+def print_msg_dict2(a, b, c):
+    print(f"msg_dict:{a},{b},{c}")
 
-    RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
-                  qps=50).start_consuming_message()
+RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
+              qps=50).start_consuming_message()
 
 ```
 
