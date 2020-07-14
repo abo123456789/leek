@@ -99,7 +99,7 @@ RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware
 ```python
 from redis_queue_tool import task_deco, init_redis_config
 
-init_redis_config (host='127.0.0.1', password='', port=6379, db=8)
+init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
 @task_deco('test5') #Add task queue decorator to consumer function
 def f(a, b):
@@ -107,7 +107,7 @@ def f(a, b):
 
 #Post tasks
 for i in range (1, 51):
-     f.publish_redispy (a=1, b=1)
+     f.publish_redispy(a=1, b=1)
 
 #Consumption tasks
 f.start_using_message()

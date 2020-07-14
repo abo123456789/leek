@@ -8,6 +8,7 @@ setup(
     name='redis-queue-tool',
     version='4.3.2',
     description=(
+
         'reids高并发队列(高并发爬虫利器)'
     ),
     long_description_content_type="text/markdown",
