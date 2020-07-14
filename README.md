@@ -95,6 +95,22 @@ RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware
 
 ```
 
+##### 5.消费队列极简模式(强烈推荐使用)
+```python
+from redis_queue_tool import task_deco, init_redis_config
+init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+
+@task_deco('test5') #消费函数上新增任务队列装饰器
+def f(a, b):
+    print(f"a:{a},b:{b}")
+
+# 发布任务
+for i in range(1, 51):
+    f.publish_redispy(a=1, b=1)
+
+# 消费任务
+f.start_consuming_message()
+```
 
 #### reids安装
 [reids 普通安装](https://www.runoob.com/redis/redis-install.html)

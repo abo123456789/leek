@@ -3,6 +3,7 @@ import json
 import multiprocessing
 import platform
 import threading
+from functools import update_wrapper
 
 from multiprocessing import Process
 
@@ -280,9 +281,55 @@ class RedisPublish(object):
         return self._redis_quenen.qsize()
 
 
+def task_deco(queue_name, **consumer_init_kwargs):
+    """
+    support by ydf
+    装饰器方式添加任务，如果有人过于喜欢装饰器方式，例如celery 装饰器方式的任务注册，觉得黑科技，那就可以使用这个装饰器。此种方式不利于ide代码自动补全不推荐。
+    :param queue_name:
+    :param consumer_init_kwargs:
+    :return:
+
+    使用方式例如：
+
+    @task_deco('queue_test_f01', qps=0.2，)
+    def f(a, b):
+        print(a + b)
+
+    f(5, 6)  # 可以直接调用
+
+    for i in range(10, 20):
+        f.pub(a=i, b=i * 2)
+
+    f.consume()
+
+    """
+
+    def _deco(func):
+        cs = RedisCustomer(queue_name, consuming_function=func, **consumer_init_kwargs)
+        if 'consuming_function' in consumer_init_kwargs:
+            consumer_init_kwargs.pop('consuming_function')
+        func.consumer = cs
+        # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
+        func.start_consuming_message = func.consume = func.start = cs.start_consuming_message
+
+        publisher = RedisPublish(queue_name=queue_name, )
+        func.publisher = publisher
+        func.publish = func.pub = func.publish_redispy =publisher.publish_redispy
+        func.publish_list = publisher.publish_redispy_list
+        func.publish_redispy_str = publisher.publish_redispy_str
+
+        def __deco(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return update_wrapper(__deco, func)
+
+    return _deco
+
+
 if __name__ == '__main__':
     # 初始化redis连接配置
     init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+
 
     # #### 1.发布消费字符串类型任务
     for zz in range(1, 501):
@@ -334,3 +381,16 @@ if __name__ == '__main__':
     customer_thread = CustomThreadPoolExecutor(50)
     RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
                   qps=50, specify_threadpool=customer_thread).start_consuming_message()
+
+
+    @task_deco('test5') #消费函数上新增任务队列装饰器
+    def f(a, b):
+        print(f"a:{a},b:{b}")
+
+
+    # 发布任务
+    for i in range(1, 51):
+        f.publish_redispy(a=1, b=1)
+
+    # 消费任务
+    f.start_consuming_message()
