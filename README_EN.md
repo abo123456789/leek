@@ -98,10 +98,10 @@ def f(a, b):
 
 #Post tasks
 for i in range (1, 51):
-     f.publish_redispy(a=i, b=i)
+     f.publish_redispy(a=i, b=i) # or f.pub(a=i, b=i)
 
 #Consumption tasks
-f.start_using_message()
+f.start_using_message() # or f.start()
 ```
 
 #### Reids install

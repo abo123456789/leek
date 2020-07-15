@@ -99,10 +99,10 @@ def f(a, b):
 
 # 发布任务
 for i in range(1, 51):
-    f.publish_redispy(a=i, b=i)
+    f.publish_redispy(a=i, b=i) # 或者 f.pub(a=i, b=i)
 
 # 消费任务
-f.start_consuming_message()
+f.start_consuming_message() # 或者 f.start()
 ```
 
 #### reids安装
