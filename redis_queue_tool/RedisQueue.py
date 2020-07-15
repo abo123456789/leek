@@ -10,6 +10,7 @@ from multiprocessing import Process
 from py_log import get_logger
 from retrying import retry
 
+from redis_queue_tool import default_config
 from redis_queue_tool.custom_gevent import CustomGeventPoolExecutor
 from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
 from redis_queue_tool.function_timeout import timeout
@@ -30,25 +31,27 @@ from tomorrow3 import threads as tomorrow_threads
 
 logger = get_logger(__name__, formatter_template=2)
 
-# redis配置连接信息
-redis_host = '127.0.0.1'
-redis_password = ''
-redis_port = 6379
-redis_db = 0
 # kafka配置连接信息
 kafka_port = 9092
+# redis配置连接信息
+try:
+    import redis_queue_tool_config
+
+    default_config.redis_host = redis_queue_tool_config.redis_host
+    default_config.redis_password = redis_queue_tool_config.redis_password
+    default_config.redis_port = redis_queue_tool_config.redis_port
+    default_config.redis_db = redis_queue_tool_config.redis_db
+    logger.info('读取到redis_queue_tool_config.py配置,使用自定义配置')
+except:
+    logger.warning('未读取redis_queue_tool_config.py自定义配置,使用默认配置')
 
 
 def init_redis_config(host, password, port, db):
-    global redis_host
-    redis_host = host
-    global redis_password
-    redis_password = password
-    global redis_port
-    redis_port = port
-    global redis_db
-    redis_db = db
-
+    default_config.redis_host = host
+    default_config.redis_password = password
+    default_config.redis_port = port
+    default_config.redis_db = db
+    logger.info('使用猴子补丁配置')
 
 class RedisCustomer(object):
     """reids队列消费类"""
@@ -72,10 +75,11 @@ class RedisCustomer(object):
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
         elif middleware == KafkaQueue.middleware_name:
-            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=redis_host, port=kafka_port)
+            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.redis_host, port=kafka_port)
         else:
-            self._redis_quenen = RedisQueue(queue_name, host=redis_host, port=redis_port, db=redis_db,
-                                            password=redis_password)
+            self._redis_quenen = RedisQueue(queue_name, host=default_config.redis_host, port=default_config.redis_port,
+                                            db=default_config.redis_db,
+                                            password=default_config.redis_password)
         self._consuming_function = consuming_function
         self.queue_name = queue_name
         self.process_num = process_num
@@ -190,11 +194,12 @@ class RedisPublish(object):
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
         elif middleware == KafkaQueue.middleware_name:
-            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=redis_host, port=kafka_port)
+            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.redis_host, port=kafka_port)
         else:
-            self._redis_quenen = RedisQueue(queue_name, fliter_rep=fliter_rep, host=redis_host, port=redis_port,
-                                            db=redis_db,
-                                            password=redis_password)
+            self._redis_quenen = RedisQueue(queue_name, fliter_rep=fliter_rep, host=default_config.redis_host,
+                                            port=default_config.redis_port,
+                                            db=default_config.redis_db,
+                                            password=default_config.redis_password)
         self.queue_name = queue_name
         self.max_push_size = max_push_size
         self._local_quenen = None
@@ -314,7 +319,7 @@ def task_deco(queue_name, **consumer_init_kwargs):
 
         publisher = RedisPublish(queue_name=queue_name, )
         func.publisher = publisher
-        func.publish = func.pub = func.publish_redispy =publisher.publish_redispy
+        func.publish = func.pub = func.publish_redispy = publisher.publish_redispy
         func.publish_list = publisher.publish_redispy_list
         func.publish_redispy_str = publisher.publish_redispy_str
 
@@ -328,9 +333,8 @@ def task_deco(queue_name, **consumer_init_kwargs):
 
 if __name__ == '__main__':
     # 初始化redis连接配置
-    init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
-
-
+    # init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+    print(default_config.redis_db)
     # #### 1.发布消费字符串类型任务
     for zz in range(1, 501):
         # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
@@ -383,7 +387,7 @@ if __name__ == '__main__':
                   qps=50, specify_threadpool=customer_thread).start_consuming_message()
 
 
-    @task_deco('test5') #消费函数上新增任务队列装饰器
+    @task_deco('test5')  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
 
