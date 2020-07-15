@@ -17,23 +17,19 @@ pip install redis-queue-tool
 
 ##### 1. Publish consumer string type tasks
 ```python
-from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
+from redis_queue_tool import task_deco
 
-# redis connection configuration
-init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
-
-for zz in range(1, 501):
-    # Post string task queue_name post queue name fliter_rep=True task automatically deduplicates (default False)
-    RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(zz)
+@task_deco('test1')  # Add task queue decorator to consumer function
+def f1(a):
+    print(f"a:{a}")
 
 
-def print_msg_str(msg):
-    print(f"msg_str:{msg}")
+# Post tasks
+for i in range(1, 51):
+    f1.pub(str(i))  # or f1.publish_redispy(str(i))
 
-
-# Consumption string task queue_name consumption queue name process_num process number (default value 1) threads_num thread number (default value 50) max_retry_times error maximum number of automatic retries (default value 3)
-RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
-             max_retry_times=5, is_support_mutil_param=False).start_consuming_message()
+# Consumption tasks
+f1.start()  # or f1.start_consuming_message()
 ```
 
 ##### 2. Publish consumption multi-parameter type tasks

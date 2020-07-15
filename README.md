@@ -16,23 +16,19 @@ pip install redis-queue-tool
 
 ##### 1.发布消费字符串类型任务
 ```python
-from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
+from redis_queue_tool import task_deco
 
-# redis连接配置
-init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
-
-for zz in range(1, 501):
-    # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
-    RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(zz)
+@task_deco('test1')  # 消费函数上新增任务队列装饰器
+def f1(a):
+    print(f"a:{a}")
 
 
-def print_msg_str(msg):
-    print(f"msg_str:{msg}")
+# 发布任务
+for i in range(1, 51):
+    f1.pub(str(i))  # 或者 f1.publish_redispy(str(i))
 
-
-# 消费字符串任务 queue_name消费队列名称  process_num进程数(默认值1) threads_num线程数(默认值50) max_retry_times错误最大自动重试次数(默认值3)
-RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
-              max_retry_times=5, is_support_mutil_param=False).start_consuming_message()
+# 消费任务
+f1.start()  # 或者 f1.start_consuming_message()
 ```
 
 ##### 2.发布消费多参数类型任务
