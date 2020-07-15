@@ -37,10 +37,7 @@ RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=
 
 ##### 2.发布消费多参数类型任务
 ```python
-from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
-
-# redis连接配置
-init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+from redis_queue_tool import RedisPublish, RedisCustomer
 
 
 for zz in range(1, 501):
@@ -61,12 +58,9 @@ RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
 ##### 3.批量提交任务消费
 
 ```python
-from redis_queue_tool import RedisPublish,  RedisCustomer, init_redis_config
+from redis_queue_tool import RedisPublish,  RedisCustomer
 from gevent import monkey 
 monkey.patch_all()
-
-# redis连接配置
-init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
 # #### 3.批量提交任务
 result = [{'a': i, 'b': i, 'c': i} for i in range(1, 501)]
@@ -97,8 +91,7 @@ RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware
 
 ##### 5.消费队列极简模式(强烈推荐使用)
 ```python
-from redis_queue_tool import task_deco, init_redis_config
-init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+from redis_queue_tool import task_deco
 
 @task_deco('test5') #消费函数上新增任务队列装饰器
 def f(a, b):

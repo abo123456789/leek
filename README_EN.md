@@ -38,11 +38,7 @@ RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=
 
 ##### 2. Publish consumption multi-parameter type tasks
 ```python
-from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
-
-# redis connection configuration
-init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
-
+from redis_queue_tool import RedisPublish, RedisCustomer
 
 for zz in range(1, 501):
     # Write dictionary task {"a":zz,"b":zz,"c":zz}
@@ -62,12 +58,9 @@ RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
 ##### 3. Batch submit task consumption
 
 ```python
-from redis_queue_tool import RedisPublish, RedisCustomer, init_redis_config
+from redis_queue_tool import RedisPublish, RedisCustomer
 from gevent import monkey
 monkey.patch_all()
-
-# redis connection configuration
-init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
 
 # #### 3. Submit tasks in batches
 result = [{'a': i,'b': i,'c': i} for i in range(1, 501)]
@@ -97,9 +90,7 @@ RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware
 ```
 ##### 5. Minimal consumption model (strongly recommended)
 ```python
-from redis_queue_tool import task_deco, init_redis_config
-
-init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
+from redis_queue_tool import task_deco
 
 @task_deco('test5') #Add task queue decorator to consumer function
 def f(a, b):
