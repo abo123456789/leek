@@ -18,7 +18,7 @@ pip install redis-queue-tool
 ```python
 from redis_queue_tool import task_deco
 
-@task_deco('test1')  # 消费函数上新增任务队列装饰器
+@task_deco('test1', qps=10, threads_num=10, max_retry_times=3)  # 消费函数上新增任务队列装饰器
 def f1(a):
     print(f"a:{a}")
 
