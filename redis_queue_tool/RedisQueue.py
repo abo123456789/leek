@@ -1,4 +1,5 @@
 # -*- coding:utf-8 -*-
+import inspect
 import json
 import multiprocessing
 import platform
@@ -29,7 +30,7 @@ import traceback
 from collections import Callable
 from tomorrow3 import threads as tomorrow_threads
 
-logger = get_logger(__name__, formatter_template=2)
+logger = get_logger(__name__, formatter_template=5)
 
 # kafka配置连接信息
 kafka_port = 9092
@@ -52,6 +53,7 @@ def init_redis_config(host, password, port, db):
     default_config.redis_port = port
     default_config.redis_db = db
     logger.info('使用猴子补丁配置')
+
 
 class RedisCustomer(object):
     """reids队列消费类"""
@@ -183,13 +185,15 @@ class RedisCustomer(object):
 class RedisPublish(object):
     """redis入队列类"""
 
-    def __init__(self, queue_name, fliter_rep=False, max_push_size=50, middleware='redis'):
+    def __init__(self, queue_name, fliter_rep=False, max_push_size=50, middleware='redis',
+                 consuming_function: Callable = None):
         """
         初始化消息发布队列
         :param queue_name: 队列名称(不包含命名空间)
         :param fliter_rep: 队列任务是否去重 True:去重  False:不去重
         :param max_push_size: 使用批量提交时,每次批量提交数量
         :param middleware: 中间件,默认redis 支持sqlite,kafka
+        :param consuming_function: 消费函数名称
         """
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
@@ -205,6 +209,7 @@ class RedisPublish(object):
         self._local_quenen = None
         self._pipe = None
         self.middleware = middleware
+        self.consuming_function = consuming_function
 
     @tomorrow_threads(50)
     def publish_redispy(self, *args, **kwargs):
@@ -215,12 +220,23 @@ class RedisPublish(object):
         """
         # logger.info(f"args:{args},kwargs:{kwargs}")
         dict_msg = None
-        if kwargs:
-            dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
-        elif args:
-            dict_msg = args[0]
+        if self.consuming_function:
+            keys = inspect.getargspec(self.consuming_function).args[0:]
+            if kwargs:
+                dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
+            if args:
+                param = dict() if dict_msg is None else dict_msg
+                try:
+                    for i in range(0, len(args)):
+                        param[keys[i]] = args[i]
+                    dict_msg = param
+                except:
+                    raise Exception('发布任务和消费函数参数不一致,请仔细核对')
         else:
-            logger.warning('参数非法')
+            if kwargs:
+                dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
+            elif args:
+                dict_msg = args[0]
         if dict_msg:
             self._redis_quenen.put(json.dumps(dict_msg))
 
@@ -317,7 +333,7 @@ def task_deco(queue_name, **consumer_init_kwargs):
         # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
         func.start_consuming_message = func.consume = func.start = cs.start_consuming_message
 
-        publisher = RedisPublish(queue_name=queue_name, )
+        publisher = RedisPublish(queue_name=queue_name, consuming_function=cs._consuming_function)
         func.publisher = publisher
         func.publish = func.pub = func.publish_redispy = publisher.publish_redispy
         func.publish_list = publisher.publish_redispy_list

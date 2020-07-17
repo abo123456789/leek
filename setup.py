@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.3.8',
+    version='4.4.1',
     description=(
 
         'reids高并发队列(高并发爬虫利器)'

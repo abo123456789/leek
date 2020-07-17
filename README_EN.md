@@ -15,18 +15,18 @@ pip install redis-queue-tool
 
 #### DEMO description
 
-##### 1. Publish consumer string type tasks
+##### 1. Publish tasks and consumer tasks
 ```python
 from redis_queue_tool import task_deco
 
 @task_deco('test1', qps=10, threads_num=10, max_retry_times=3)  # Add task queue decorator to consumer function
-def f1(a):
-    print(f"a:{a}")
+def f1(a, b):
+    print(f"a:{a},b:{b}")
 
 
 # Post tasks
 for i in range(1, 51):
-    f1.pub(str(i))  # or f1.publish_redispy(str(i))
+    f1.pub(i, i+1)  # or f1.publish_redispy(i, i+1)
 
 # Consumption tasks
 f1.start()  # or f1.start_consuming_message()

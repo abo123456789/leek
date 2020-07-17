@@ -14,18 +14,18 @@ pip install redis-queue-tool
 
 #### DEMO说明
 
-##### 1.发布消费字符串类型任务
+##### 1.发布任务和消费任务
 ```python
 from redis_queue_tool import task_deco
 
 @task_deco('test1', qps=10, threads_num=10, max_retry_times=3)  # 消费函数上新增任务队列装饰器
-def f1(a):
-    print(f"a:{a}")
+def f1(a, b):
+    print(f"a:{a},b:{b}")
 
 
 # 发布任务
 for i in range(1, 51):
-    f1.pub(str(i))  # 或者 f1.publish_redispy(str(i))
+    f1.pub(i,i+1)  # 或者 f1.publish_redispy(i,i+1)
 
 # 消费任务
 f1.start()  # 或者 f1.start_consuming_message()
