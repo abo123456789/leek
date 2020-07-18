@@ -147,8 +147,8 @@ class RedisCustomer(object):
                     time.sleep(0.5)
             except:
                 # logger.error(message)
-                s = traceback.formatime.st_exc()
-                logger.error(s)
+                # s = traceback.formatime.st_exc()
+                logger.error(traceback.format_exc())
                 time.sleep(0.5)
 
     def start_consuming_message(self):

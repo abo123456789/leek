@@ -21,7 +21,7 @@ def t_demo1():
 def t_demo2():
     from redis_queue_tool import RedisPublish, RedisCustomer
 
-    for zz in range(1, 101):
+    for zz in range(1, 51):
         # 写入字典任务 {"a":zz,"b":zz,"c":zz}
         param = {"a": zz, "b": zz, "c": zz}
         RedisPublish(queue_name='test2').publish_redispy(param)
@@ -40,7 +40,7 @@ def t_demo3():
     monkey.patch_all()
 
     # #### 3.批量提交任务
-    result = [{'a': i, 'b': i, 'c': i} for i in range(1, 101)]
+    result = [{'a': i, 'b': i, 'c': i} for i in range(1, 51)]
     # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
     RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
 
@@ -55,7 +55,7 @@ def t_demo3():
 def t_demo4():
     from redis_queue_tool import RedisPublish, RedisCustomer
 
-    for zz in range(1, 101):
+    for zz in range(1, 51):
         RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
 
     def print_msg_dict2(a, b, c):
@@ -71,6 +71,7 @@ def t_demo5():
     @task_deco('test5')  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
+        raise Exception('测试异常输出'*5)
 
     # 发布任务
     for i in range(1, 51):
@@ -82,8 +83,8 @@ def t_demo5():
 
 if __name__ == '__main__':
     pass
-    t_demo1()
+    # t_demo1()
     # t_demo2()
     # t_demo3()
     # t_demo4()
-    # t_demo5()
+    t_demo5()

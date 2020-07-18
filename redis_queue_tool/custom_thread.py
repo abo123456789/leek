@@ -9,13 +9,16 @@
 import atexit
 import queue
 import threading
+import traceback
 import weakref
 
 import time
 
+from py_log import get_logger
+
 _shutdown = False
 _threads_queues = weakref.WeakKeyDictionary()
-
+logger = get_logger(__name__)
 
 def _python_exit():
     global _shutdown
@@ -40,7 +43,7 @@ class _WorkItem():
         try:
             self.fn(*self.args, **self.kwargs)
         except BaseException as exc:
-            print(f'函数 {self.fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
+            logger.error(f'函数 {self.fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
 
     def __str__(self):
         return f'{(self.fn.__name__, self.args, self.kwargs)}'
