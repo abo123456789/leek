@@ -6,11 +6,14 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.4.2',
+    version='4.4.4',
     description=(
 
-        'reids高并发队列(高并发爬虫利器)'
+        '高并发reids队列,分布式爬虫利器(High concurrency RedisQueue,Distributed crawler weapon)'
     ),
+    keywords=(
+        "redisqueue", "queue-tasks", "redis", "distributed-scraper", "producer-consumer",
+        "distribute-crawler", "web-crawler"),
     long_description_content_type="text/markdown",
     long_description=open('README.md', encoding='utf-8').read(),
     author='cc',
@@ -28,7 +31,7 @@ setup(
     ],
     packages=find_packages(),
     platforms=["all"],
-    url='https://github.com/abo123456789/RedisQueue',
+    url='https://github.com/abo123456789/redis-queue-tool',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
