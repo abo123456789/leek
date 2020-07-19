@@ -18,7 +18,7 @@ pip install redis-queue-tool
 ```python
 from redis_queue_tool import task_deco
 
-@task_deco('test1', qps=10, threads_num=10, max_retry_times=3)  # 消费函数上新增任务队列装饰器
+@task_deco('test1', qps=10, threads_num=10, fliter_rep=True)  # 消费函数上新增任务队列装饰器
 def f1(a, b):
     print(f"a:{a},b:{b}")
 
@@ -90,15 +90,15 @@ RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware
 from redis_queue_tool import task_deco
 
 @task_deco('test5') #消费函数上新增任务队列装饰器
-def f(a, b):
+def f5(a, b):
     print(f"a:{a},b:{b}")
 
 # 发布任务
 for i in range(1, 51):
-    f.publish_redispy(a=i, b=i) # 或者 f.pub(a=i, b=i)
+    f5.publish_redispy(i, i) # 或者 f.pub(i, i)
 
 # 消费任务
-f.start_consuming_message() # 或者 f.start()
+f5.start_consuming_message() # 或者 f.start()
 ```
 
 #### reids安装
