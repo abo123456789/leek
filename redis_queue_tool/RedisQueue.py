@@ -30,6 +30,8 @@ import traceback
 from collections import Callable
 from tomorrow3 import threads as tomorrow_threads
 
+from redis_queue_tool.utils import str_sha256
+
 logger = get_logger(__name__, formatter_template=5)
 
 # kafka配置连接信息
@@ -60,7 +62,7 @@ class RedisCustomer(object):
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0, middleware='redis',
-                 specify_threadpool=None, customer_type='thread'):
+                 specify_threadpool=None, customer_type='thread', fliter_rep=False, ):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -73,6 +75,7 @@ class RedisCustomer(object):
         :param middleware: 消费中间件,默认redis 支持sqlite ,kafka
         :param specify_threadpool: 外部传入线程池
         :param customer_type: 消费者类型 string 支持('thread','gevent') 默认thread
+        :param fliter_rep: 消费任务是否去重 bool True:去重 False:不去重
         """
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
@@ -95,6 +98,7 @@ class RedisCustomer(object):
         self.func_timeout = func_timeout
         self.is_support_mutil_param = is_support_mutil_param
         self.qps = qps
+        self.fliter_rep = fliter_rep
 
     def _start_consuming_message_thread(self):
         current_customer_count = 0
@@ -146,8 +150,6 @@ class RedisCustomer(object):
                 else:
                     time.sleep(0.5)
             except:
-                # logger.error(message)
-                # s = traceback.formatime.st_exc()
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
 
@@ -164,22 +166,21 @@ class RedisCustomer(object):
             threading.Thread(target=self._start_consuming_message_thread).start()
 
     def _consuming_exception_retry(self, message):
-        if self.func_timeout and False:
-            @retry(stop_max_attempt_number=self.max_retry_times)
-            @timeout(self.func_timeout)
-            def consuming_exception_retry(message):
-                if type(message) == dict:
-                    self._consuming_function(**message)
-                else:
-                    self._consuming_function(message)
-        else:
+        try:
             @retry(stop_max_attempt_number=self.max_retry_times)
             def consuming_exception_retry(message):
                 if type(message) == dict:
                     self._consuming_function(**message)
                 else:
                     self._consuming_function(message)
-        consuming_exception_retry(message)
+
+            consuming_exception_retry(message)
+            if self.fliter_rep:
+                hash_value = str_sha256(json.dumps(message) if isinstance(message,dict) else message)
+                # logger.info(f"message:{message},hash_value:{hash_value}")
+                self._redis_quenen.add_customer_task(hash_value)
+        except:
+            logger.error(traceback.format_exc())
 
 
 class RedisPublish(object):
@@ -200,7 +201,7 @@ class RedisPublish(object):
         elif middleware == KafkaQueue.middleware_name:
             self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.redis_host, port=kafka_port)
         else:
-            self._redis_quenen = RedisQueue(queue_name, fliter_rep=fliter_rep, host=default_config.redis_host,
+            self._redis_quenen = RedisQueue(queue_name, host=default_config.redis_host,
                                             port=default_config.redis_port,
                                             db=default_config.redis_db,
                                             password=default_config.redis_password)
@@ -210,8 +211,9 @@ class RedisPublish(object):
         self._pipe = None
         self.middleware = middleware
         self.consuming_function = consuming_function
+        self.fliter_rep = fliter_rep
 
-    @tomorrow_threads(50)
+    # @tomorrow_threads(50)
     def publish_redispy(self, *args, **kwargs):
         """
         将多参数写入消息队列
@@ -237,8 +239,15 @@ class RedisPublish(object):
                 dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
             elif args:
                 dict_msg = args[0]
-        if dict_msg:
-            self._redis_quenen.put(json.dumps(dict_msg))
+        if self.fliter_rep:
+            hash_value = str_sha256(json.dumps(dict_msg) if isinstance(dict_msg, dict) else dict_msg)
+            if dict_msg and self._redis_quenen.check_has_customer(hash_value) is False:
+                self._redis_quenen.put(json.dumps(dict_msg))
+            else:
+                logger.warning(f'{dict_msg} is repeat task!!')
+        else:
+            if dict_msg:
+                self._redis_quenen.put(json.dumps(dict_msg))
 
     @tomorrow_threads(50)
     def publish_redispy_str(self, msg: str):
@@ -333,10 +342,11 @@ def task_deco(queue_name, **consumer_init_kwargs):
         # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
         func.start_consuming_message = func.consume = func.start = cs.start_consuming_message
 
-        publisher = RedisPublish(queue_name=queue_name, consuming_function=cs._consuming_function)
+        publisher = RedisPublish(queue_name=queue_name, consuming_function=cs._consuming_function,
+                                 fliter_rep=cs.fliter_rep)
         func.publisher = publisher
-        func.publish = func.pub = func.publish_redispy = publisher.publish_redispy
-        func.publish_list = publisher.publish_redispy_list
+        func.pub = func.publish = func.publish_redispy = publisher.publish_redispy
+        func.pub_list = func.publish_list = publisher.publish_redispy_list
         func.publish_redispy_str = publisher.publish_redispy_str
 
         def __deco(*args, **kwargs):

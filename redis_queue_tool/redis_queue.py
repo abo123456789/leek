@@ -48,17 +48,24 @@ class RedisQueue(BaseQueue):
             item = item.decode('utf-8')
         return item
 
+    def check_has_customer(self, hash_value):
+        return self.getdb().sismember(self.key_sets, hash_value)
+
+    def add_customer_task(self, hash_value):
+        self.getdb().sadd(self.key_sets, hash_value)
+
 
 if __name__ == '__main__':
     redis_host = '127.0.0.1'
     redis_password = ''
     redis_port = 6379
     redis_db = 0
-    redis_queue = RedisQueue(RedisQueue('test', host=redis_host, port=redis_port, db=redis_db,
-                                        password=redis_password))
-    redis_queue.put('123')
-    print(redis_queue.qsize())
-    redis_queue.put('456')
-    print(redis_queue.get())
-    redis_queue.clear()
-    print(redis_queue.qsize())
+    r_queue = RedisQueue('test', host=redis_host, port=redis_port, db=redis_db,
+                                        password=redis_password)
+    r_queue.put('123')
+    print(r_queue.qsize())
+    r_queue.put('456')
+    print(r_queue.get())
+    r_queue.clear()
+    print(r_queue.qsize())
+    print(r_queue.check_has_customer('123'))

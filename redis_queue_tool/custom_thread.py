@@ -44,6 +44,7 @@ class _WorkItem():
             self.fn(*self.args, **self.kwargs)
         except BaseException as exc:
             logger.error(f'函数 {self.fn.__name__} 中发生错误，错误原因是 {type(exc)} {exc} ')
+            raise Exception(exc)
 
     def __str__(self):
         return f'{(self.fn.__name__, self.args, self.kwargs)}'

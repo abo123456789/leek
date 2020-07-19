@@ -18,10 +18,7 @@ class BaseQueue(metaclass=abc.ABCMeta):
         else:
             self.queue_name = queue_name
         self.fliter_rep = fliter_rep
-        if fliter_rep:
-            self.key_sets = self.queue_name + ':sets'
-        else:
-            self.key_sets = None
+        self.key_sets = queue_name + ':sets'
         self._db = self._getconn(**kwargs)
 
     @abc.abstractmethod
@@ -50,4 +47,10 @@ class BaseQueue(metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def get(self, block=False, timeout=None):
+        pass
+
+    def check_has_customer(self, hash_value):
+        return False
+
+    def add_customer_task(self, hash_value):
         pass
