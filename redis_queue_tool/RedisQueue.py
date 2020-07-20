@@ -1,4 +1,6 @@
 # -*- coding:utf-8 -*-
+# @Author cc
+# @Notice  :Please do not use it for commercial use. All consequences are borne by users
 import inspect
 import json
 import multiprocessing
@@ -14,7 +16,6 @@ from retrying import retry
 from redis_queue_tool import default_config
 from redis_queue_tool.custom_gevent import CustomGeventPoolExecutor
 from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
-from redis_queue_tool.function_timeout import timeout
 from redis_queue_tool.kafka_queue import KafkaQueue
 from redis_queue_tool.redis_queue import RedisQueue
 from redis_queue_tool.sqllite_queue import SqlliteQueue
@@ -175,12 +176,13 @@ class RedisCustomer(object):
                     self._consuming_function(message)
 
             consuming_exception_retry(message)
-            if self.fliter_rep:
-                hash_value = str_sha256(json.dumps(message) if isinstance(message,dict) else message)
-                # logger.info(f"message:{message},hash_value:{hash_value}")
-                self._redis_quenen.add_customer_task(hash_value)
         except:
             logger.error(traceback.format_exc())
+        else:
+            if self.fliter_rep:
+                hash_value = str_sha256(json.dumps(message) if isinstance(message, dict) else message)
+                # logger.info(f"message:{message},hash_value:{hash_value}")
+                self._redis_quenen.add_customer_task(hash_value)
 
 
 class RedisPublish(object):
