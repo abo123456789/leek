@@ -213,7 +213,7 @@ class RedisPublish(object):
         self.consuming_function = consuming_function
         self.fliter_rep = fliter_rep
 
-    # @tomorrow_threads(50)
+    @tomorrow_threads(50)
     def publish_redispy(self, *args, **kwargs):
         """
         将多参数写入消息队列
