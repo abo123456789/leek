@@ -3,7 +3,26 @@
  
 #### Functional description
 * A distributed crawler framework that is more flexible than scrapy and easier to use than Celery. Do the most with the least code and the simplest way
-* Can skillfully use the framework to crawl data within 1 minute, without learning complex documents. Easily expand various middleware
+* Can skillfully use the framework to crawl data within 1 minute, without learning complex documents. Easily expand various middleware  
+Feature description:
+ 
+      Support middleware:
+         Support reids sqlite two kinds of middleware (redis is the first choice, support batch publishing tasks, distributed consumption is lightning fast)
+        
+      Concurrent support:
+         Support process threading gevent three concurrent consumption modes (can be mixed)
+     
+      Frequency control and current limit:
+         Precisely control how many functions are run in 1 second
+     
+      Task deduplication:
+         If you repeatedly push the successfully consumed task, the task will be automatically filtered out
+     
+      Number of retries:
+         When the function fails, it will retry the specified number of times immediately, and the consumption will be confirmed when the maximum number of retries is reached
+     
+      Task visualization:
+         You can view the current task consumption in real time through the redis web version management tool
 
 #### version description
 * Supported version: Python 3.0+
