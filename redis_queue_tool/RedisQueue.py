@@ -63,7 +63,7 @@ class RedisCustomer(object):
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0, middleware='redis',
-                 specify_threadpool=None, customer_type='thread', fliter_rep=False, ):
+                 specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -77,6 +77,7 @@ class RedisCustomer(object):
         :param specify_threadpool: 外部传入线程池
         :param customer_type: 消费者类型 string 支持('thread','gevent') 默认thread
         :param fliter_rep: 消费任务是否去重 bool True:去重 False:不去重
+        :param max_push_size : 每次批量推送任务数量 默认值50
         """
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
@@ -100,6 +101,7 @@ class RedisCustomer(object):
         self.is_support_mutil_param = is_support_mutil_param
         self.qps = qps
         self.fliter_rep = fliter_rep
+        self.max_push_size = max_push_size
 
     def _start_consuming_message_thread(self):
         current_customer_count = 0
@@ -345,11 +347,11 @@ def task_deco(queue_name, **consumer_init_kwargs):
         func.start_consuming_message = func.consume = func.start = cs.start_consuming_message
 
         publisher = RedisPublish(queue_name=queue_name, consuming_function=cs._consuming_function,
-                                 fliter_rep=cs.fliter_rep)
+                                 fliter_rep=cs.fliter_rep, max_push_size=cs.max_push_size)
         func.publisher = publisher
         func.pub = func.publish = func.publish_redispy = publisher.publish_redispy
         func.pub_list = func.publish_list = publisher.publish_redispy_list
-        func.publish_redispy_str = publisher.publish_redispy_str
+        func.pub_str = func.publish_redispy_str = publisher.publish_redispy_str
 
         def __deco(*args, **kwargs):
             return func(*args, **kwargs)
