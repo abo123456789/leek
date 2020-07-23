@@ -1,6 +1,5 @@
 # -*- coding:utf-8 -*-
 # @Author cc
-# @Notice  :Please do not use it for commercial use. All consequences are borne by users
 import inspect
 import json
 import multiprocessing
@@ -363,7 +362,6 @@ def task_deco(queue_name, **consumer_init_kwargs):
 
 if __name__ == '__main__':
     # 初始化redis连接配置
-    # init_redis_config(host='127.0.0.1', password='', port=6379, db=8)
     print(default_config.redis_db)
     # #### 1.发布消费字符串类型任务
     for zz in range(1, 501):
