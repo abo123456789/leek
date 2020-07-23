@@ -24,7 +24,7 @@ def t_demo2():
     for zz in range(1, 51):
         # 写入字典任务 {"a":zz,"b":zz,"c":zz}
         param = {"a": zz, "b": zz, "c": zz}
-        RedisPublish(queue_name='test2', fliter_rep=True).publish_redispy(param)
+        RedisPublish(queue_name='test2', fliter_rep=False).publish_redispy(param)
 
     def print_msg_dict(a, b, c):
         print(f"msg_dict:{a},{b},{c}")
@@ -83,8 +83,8 @@ def t_demo5():
 
 if __name__ == '__main__':
     pass
-    # t_demo1()
-    # t_demo2()
+    t_demo1()
+    t_demo2()
     # t_demo3()
-    # t_demo4()
+    t_demo4()
     t_demo5()
