@@ -17,7 +17,10 @@ Feature description:
      
       Task deduplication:
          If you repeatedly push the successfully consumed task, the task will be automatically filtered out
-     
+      
+      Consumption confirmation:
+        When consumption confirmation is enabled, and the consumption task is stopped manually, the task will not be lost
+      
       Number of retries:
          When the function fails, it will retry the specified number of times immediately, and the consumption will be confirmed when the maximum number of retries is reached
      
@@ -38,7 +41,7 @@ pip install redis-queue-tool
 ```python
 from redis_queue_tool import task_deco
 
-@task_deco('test1', qps=10, threads_num=10, fliter_rep=True)  # Add task queue decorator to consumer function
+@task_deco('test1', qps=10, threads_num=10, fliter_rep=True, ack=True)  # Add task queue decorator to consumer function
 def f1(a, b):
     print(f"a:{a},b:{b}")
 

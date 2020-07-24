@@ -30,7 +30,7 @@ import traceback
 from collections import Callable
 from tomorrow3 import threads as tomorrow_threads
 
-from redis_queue_tool.utils import str_sha256
+from redis_queue_tool.utils import str_sha256, get_now_millseconds, get_day_formate
 
 logger = get_logger(__name__, formatter_template=5)
 
@@ -62,7 +62,7 @@ class RedisCustomer(object):
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0, middleware='redis',
-                 specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50):
+                 specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=False):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -77,6 +77,7 @@ class RedisCustomer(object):
         :param customer_type: 消费者类型 string 支持('thread','gevent') 默认thread
         :param fliter_rep: 消费任务是否去重 bool True:去重 False:不去重
         :param max_push_size : 每次批量推送任务数量 默认值50
+        :param ack : 是否需要确认消费 默认值False
         """
         if middleware == SqlliteQueue.middleware_name:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
@@ -101,6 +102,7 @@ class RedisCustomer(object):
         self.qps = qps
         self.fliter_rep = fliter_rep
         self.max_push_size = max_push_size
+        self.ack = ack
 
     def _start_consuming_message_thread(self):
         current_customer_count = 0
@@ -111,6 +113,8 @@ class RedisCustomer(object):
                 message = self._redis_quenen.get()
                 get_message_cost = time.time() - time_begin
                 if message:
+                    if self.ack:
+                        self._redis_quenen.un_ack(message)
                     if isinstance(message, list):
                         for msg in message:
                             if self.qps != 0:
@@ -156,6 +160,8 @@ class RedisCustomer(object):
                 time.sleep(0.5)
 
     def start_consuming_message(self):
+        if self.ack:
+            threading.Thread(target=self._heartbeat_check).start()
         cpu_count = multiprocessing.cpu_count()
         if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
             for i in range(0, min(self.process_num, cpu_count)):
@@ -177,13 +183,50 @@ class RedisCustomer(object):
                     self._consuming_function(message)
 
             consuming_exception_retry(message)
+            if self.ack:
+                self._redis_quenen.ack(message)
         except:
             logger.error(traceback.format_exc())
         else:
             if self.fliter_rep:
                 hash_value = str_sha256(json.dumps(message) if isinstance(message, dict) else message)
-                # logger.info(f"message:{message},hash_value:{hash_value}")
                 self._redis_quenen.add_customer_task(hash_value)
+
+    def _heartbeat_check(self):
+        """
+        心跳检查用程序
+        """
+        if self._redis_quenen.middleware_name == 'redis':
+            logger.info('启动redis心跳检查程序')
+            while True:
+                try:
+                    if self._redis_quenen.getdb().hexists(self._redis_quenen.heartbeat_key,
+                                                          self._redis_quenen.heartbeat_field) is False:
+                        self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
+                                                        self._redis_quenen.heartbeat_field, get_now_millseconds())
+                    hash_all_data = self._redis_quenen.getdb().hgetall(self._redis_quenen.heartbeat_key)
+                    if hash_all_data:
+                        for key in hash_all_data:
+                            heart_field = key.decode()
+                            heart_value = int(hash_all_data[key].decode())
+                            # logger.info(f"heart_field:{heart_field},heart_value:{heart_value}")
+                            if get_now_millseconds() - heart_value > 10500:
+                                queue_name = heart_field.split(':heartbeat_')[0]
+                                un_ack_sets_name = f"{heart_field}:unack_message"
+                                for i in self._redis_quenen.getdb().sscan_iter(un_ack_sets_name):
+                                    self._redis_quenen.getdb().lpush(queue_name, i.decode())
+                                    self._redis_quenen.getdb().srem(un_ack_sets_name, i)
+                                # self._redis_quenen.getdb().delete(un_ack_sets_name)
+                                self._redis_quenen.getdb().hdel(self._redis_quenen.heartbeat_key, heart_field)
+                            else:
+                                self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
+                                                                heart_field,
+                                                                get_now_millseconds())
+                except Exception as ex:
+                    logger.error(ex)
+                    time.sleep(10)
+                else:
+                    time.sleep(10)
 
 
 class RedisPublish(object):

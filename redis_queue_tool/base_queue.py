@@ -2,6 +2,9 @@
 # @Author cc
 # @TIME 2020/5/10 00:26
 import abc
+import os
+
+from redis_queue_tool.utils import get_host_ip, get_day_str
 
 
 class BaseQueue(metaclass=abc.ABCMeta):
@@ -18,7 +21,11 @@ class BaseQueue(metaclass=abc.ABCMeta):
         else:
             self.queue_name = queue_name
         self.fliter_rep = fliter_rep
-        self.key_sets = queue_name + ':sets'
+        self.key_sets = self.queue_name + ':filter'
+
+        self.heartbeat_field = f"{self.queue_name}:heartbeat_{os.getpid()}_{get_host_ip()}_{get_day_str()}"
+        self.un_ack_sets = f"{self.heartbeat_field}:unack_message"
+        self.heartbeat_key = f"tasks:heartbeat:check"
         self._db = self._getconn(**kwargs)
 
     @abc.abstractmethod
@@ -53,4 +60,10 @@ class BaseQueue(metaclass=abc.ABCMeta):
         return False
 
     def add_customer_task(self, hash_value):
+        pass
+
+    def ack(self, value):
+        pass
+
+    def un_ack(self, value):
         pass

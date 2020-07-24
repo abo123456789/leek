@@ -18,6 +18,9 @@
      任务去重：
         如果重复推送消费成功的任务,自动过滤掉该任务
      
+     消费确认：
+        启用消费确认,消费任务宕机手动终止情况,任务不会丢失
+     
      重试次数：
         当函数运行出错，会立即重试指定的次数，达到最大次重试数后就确认消费了
      
@@ -37,7 +40,7 @@ pip install redis-queue-tool
 ```python
 from redis_queue_tool import task_deco
 
-@task_deco('test1', qps=10, threads_num=10, fliter_rep=True)  # 消费函数上新增任务队列装饰器
+@task_deco('test1', qps=10, threads_num=10, fliter_rep=True, ack=True)  # 消费函数上新增任务队列装饰器
 def f1(a, b):
     print(f"a:{a},b:{b}")
 

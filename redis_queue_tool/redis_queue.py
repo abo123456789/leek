@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 # @Author cc
 # @TIME 2020/5/10 00:42
+import json
 import redis
 
 from redis_queue_tool.base_queue import BaseQueue
@@ -54,6 +55,12 @@ class RedisQueue(BaseQueue):
     def add_customer_task(self, hash_value):
         self.getdb().sadd(self.key_sets, hash_value)
 
+    def ack(self, message):
+        self.getdb().srem(self.un_ack_sets, json.dumps(message) if isinstance(message, dict) else message)
+
+    def un_ack(self, message):
+        self.getdb().sadd(self.un_ack_sets, json.dumps(message) if isinstance(message, dict) else message)
+
 
 if __name__ == '__main__':
     redis_host = '127.0.0.1'
@@ -61,7 +68,7 @@ if __name__ == '__main__':
     redis_port = 6379
     redis_db = 0
     r_queue = RedisQueue('test', host=redis_host, port=redis_port, db=redis_db,
-                                        password=redis_password)
+                         password=redis_password)
     r_queue.put('123')
     print(r_queue.qsize())
     r_queue.put('456')
@@ -69,3 +76,5 @@ if __name__ == '__main__':
     r_queue.clear()
     print(r_queue.qsize())
     print(r_queue.check_has_customer('123'))
+    r_queue.un_ack('66666')
+    # r_queue.ack('123456')
