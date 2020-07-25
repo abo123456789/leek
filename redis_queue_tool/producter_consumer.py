@@ -160,6 +160,9 @@ class RedisCustomer(object):
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
 
+    def start(self):
+        self.start_consuming_message()
+
     def start_consuming_message(self):
         if self.ack:
             threading.Thread(target=self._heartbeat_check).start()
@@ -296,6 +299,8 @@ class RedisPublish(object):
             if dict_msg:
                 self._redis_quenen.put(json.dumps(dict_msg))
 
+    pub = publish_redispy
+
     @tomorrow_threads(50)
     def publish_redispy_str(self, msg: str):
         """
@@ -311,7 +316,7 @@ class RedisPublish(object):
         :param msgs: 待写入列表数据
         :return: 
         """
-        if self.middleware==RedisQueue.middleware_name:
+        if self.middleware == RedisQueue.middleware_name:
             pipe = self._redis_quenen.getdb().pipeline()
             for id in msgs:
                 pipe.lpush(self._redis_quenen.queue_name, json.dumps(id))
@@ -322,6 +327,8 @@ class RedisPublish(object):
                 pipe.execute()
         else:
             raise Exception('sqlite 不支持批量提交,请使用单个提交方法')
+
+    pub_list = publish_redispy_list
 
     def publish_redispy_mutil(self, msg: str):
         """
@@ -405,68 +412,28 @@ def task_deco(queue_name, **consumer_init_kwargs):
 
 
 if __name__ == '__main__':
-    # 初始化redis连接配置
-    print(default_config.redis_db)
-    # #### 1.发布消费字符串类型任务
-    for zz in range(1, 501):
-        # 发布字符串任务 queue_name发布队列名称 fliter_rep=True任务自动去重(默认False)
-        msg_str = json.dumps({"zz": zz})
-        RedisPublish(queue_name='test1', fliter_rep=False).publish_redispy_str(msg_str)
-
-
-    def print_msg_str(msg):
-        print(f"msg_str:{msg}")
-
-
-    # 消费字符串任务 queue_name消费队列名称  process_num进程数(默认值1) threads_num线程数(默认值50) max_retry_times错误最大自动重试次数(默认值3)
-    RedisCustomer(queue_name='test1', consuming_function=print_msg_str, process_num=2, threads_num=100,
-                  max_retry_times=5, is_support_mutil_param=False).start_consuming_message()
-
-    # #### 2.发布消费多参数类型任务
-    for zz in range(1, 501):
-        # 写入字典任务 {"a":zz,"b":zz,"c":zz}
-        param = {"a": zz, "b": zz, "c": zz}
-        RedisPublish(queue_name='test2').publish_redispy(param)
-
-
-    def print_msg_dict(a, b, c):
-        print(f"msg_dict:{a},{b},{c}")
-
-
-    # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
-    RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
-                  qps=50).start_consuming_message()
-
-    # #### 3.批量提交任务
-    result = [{'a': i, 'b': i, 'c': i} for i in range(1, 501)]
-    # 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
-    RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
-    # 消费者类型 string 支持('thread','gevent') 默认thread
-    RedisCustomer(queue_name='test3', consuming_function=print_msg_dict, customer_type='gevent',
-                  qps=50).start_consuming_message()
-
-    # #### 4.切换任务队列中间件为sqlite(默认为redis)
-    for zz in range(1, 101):
-        RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=str(zz), b=str(zz), c=str(zz))
-
-
-    def print_msg_dict2(a, b, c):
-        print(f"msg_dict2:{a},{b},{c}")
-
-
-    customer_thread = CustomThreadPoolExecutor(50)
-    RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
-                  qps=50, specify_threadpool=customer_thread).start_consuming_message()
-
-
-    @task_deco('test5')  # 消费函数上新增任务队列装饰器
+    # #装饰器使用方式
+    @task_deco('test1')  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
 
 
     # 发布任务
     for i in range(1, 51):
-        f.publish_redispy(a=1, b=1)
+        f.pub(a=1, b=1)
 
     # 消费任务
-    f.start_consuming_message()
+    f.start()
+
+    # #非装饰器版使用demo
+    for zz in range(1, 51):
+        RedisPublish(queue_name='test2').pub(a=zz, b=zz, c=zz)
+
+
+    def f2(a, b, c):
+        print(f"f2:{a},{b},{c}")
+
+
+    # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
+    RedisCustomer(queue_name='test2', consuming_function=f2,
+                  qps=50).start()
