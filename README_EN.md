@@ -37,29 +37,43 @@ pip install redis-queue-tool
 
 #### DEMO description
 
-##### 1. Publish tasks and consumer tasks
+##### 0. Release tasks and consumer tasks (decorator version)
 ```python
 from redis_queue_tool import task_deco
 
-@task_deco('test1', qps=10, threads_num=10, fliter_rep=True, ack=True)  # Add task queue decorator to consumer function
-def f1(a, b):
-    print(f"a:{a},b:{b}")
+@task_deco('test0') # Added task queue decorator on consumption function
+def f0(a, b):
+    print(f"t_demo0,a:{a},b:{b}")
 
-
-# Post tasks
+# Post task
 for i in range(1, 51):
-    f1.pub(i, i+1)  # or f1.publish_redispy(i, i+1)
+    f0.pub(i, i)
 
-# Consumption tasks
-f1.start()  # or f1.start_consuming_message()
+# Consumer task
+f0.start()
+```
+##### 1. Publish consumer tasks (use extra parameters)
+```python
+from redis_queue_tool import task_deco
+
+@task_deco('test1', qps=30, threads_num=30, max_retry_times=3, ack=True)
+def f1(a, b):
+    print(f"t_demo1,a:{a},b:{b}")
+
+# Post task
+for i in range(1, 31):
+    f1.pub(i, i + 1) # or f1.publish_redispy(i,i+1)
+
+# Consumer task
+f1.start()
 ```
 
-##### 2. Publish consumption multi-parameter type tasks
+##### 2. Publish consumer tasks (non-decorator version)
 ```python
 from redis_queue_tool import RedisPublish, RedisCustomer
 
+
 for zz in range(1, 501):
-    # Write dictionary task {"a":zz,"b":zz,"c":zz}
     param = {"a": zz, "b": zz, "c": zz}
     RedisPublish(queue_name='test2').publish_redispy(param)
 
@@ -68,58 +82,47 @@ def print_msg_dict(a, b, c):
     print(f"msg_dict:{a},{b},{c}")
 
 
-# Consumption multi-parameter type task queue_name consumption queue name qps consumption tasks per second (no limit by default)
+# Consumption of multi-parameter type tasks queue_name Consumption queue name qps The number of consumption tasks per second (there is no limit by default)
 RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
               qps=50).start_consuming_message()
 ```
 
-##### 3. Batch submit task consumption
+##### 3. Batch submit task consumption(consumption using coroutine)
 
-```python
-from redis_queue_tool import RedisPublish, RedisCustomer
+```python 
+from redis_queue_tool import task_deco
 from gevent import monkey
 monkey.patch_all()
 
 # #### 3. Submit tasks in batches
-result = [{'a': i,'b': i,'c': i} for i in range(1, 501)]
-# Batch submit tasks queue_name Submit task queue name max_push_size Number of batch submission records per time (default 50)
-RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
-def print_msg_dict1(a, b, c):
-    print(f"msg_dict1:{a},{b},{c}")
-# Consumer type string support ('thread','gevent') default thread, if you use gevent, please add at the beginning of the code: from gevent import monkey monkey.patch_all()
-RedisCustomer(queue_name='test3', consuming_function=print_msg_dict1, customer_type='gevent',
-              qps=50).start_consuming_message()
+result = [{'a': i,'b': i,'c': i} for i in range(1, 51)]
+
+# customer_type Consumer type (default thread), max_push_size the number of records submitted in batches each time (default value 50)
+# If you use gevent, please add at the beginning of the code: from gevent import monkey monkey.patch_all()
+@task_deco('test3', qps=50, customer_type='gevent', max_push_size=100) # Added task queue decorator on the consumption function
+def f3(a, b, c):
+    print(f"t_demo3:{a},{b},{c}")
+
+# Post task
+f3.pub_list(result)
+
+# Consumer task
+f3.start()
 ```
 
-##### 4. Switch the task queue middleware to sqlite (default is redis)
+##### 4. Switch task queue middleware to sqlite (default is redis)
 
-```python
-from redis_queue_tool import RedisPublish, RedisCustomer
-
-for zz in range(1, 101):
-    RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
-
-def print_msg_dict2(a, b, c):
-    print(f"msg_dict:{a},{b},{c}")
-
-RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
-              qps=50).start_consuming_message()
-
-```
-##### 5. Minimal consumption model (strongly recommended)
 ```python
 from redis_queue_tool import task_deco
 
-@task_deco('test5') #Add task queue decorator to consumer function
-def f(a, b):
-     print(f" a: {a}, b: {b}")
+@task_deco('test4', middleware='sqlite', qps=10)
+def f4(a, b, c):
+    print(f"t_demo4:{a},{b},{c}")
 
-#Post tasks
-for i in range (1, 51):
-     f.publish_redispy(a=i, b=i) # or f.pub(a=i, b=i)
+for zz in range(1, 51):
+    f4.pub(zz, zz, zz)
 
-#Consumption tasks
-f.start_using_message() # or f.start()
+f4.start()
 ```
 
 #### Reids install

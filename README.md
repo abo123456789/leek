@@ -36,30 +36,43 @@ pip install redis-queue-tool
 
 #### DEMO说明
 
-##### 1.发布任务和消费任务
+##### 0.发布任务和消费任务(装饰器版)
 ```python
 from redis_queue_tool import task_deco
 
-@task_deco('test1', qps=10, threads_num=10, fliter_rep=True, ack=True)  # 消费函数上新增任务队列装饰器
-def f1(a, b):
-    print(f"a:{a},b:{b}")
-
+@task_deco('test0')  # 消费函数上新增任务队列装饰器
+def f0(a, b):
+    print(f"t_demo0,a:{a},b:{b}")
 
 # 发布任务
 for i in range(1, 51):
-    f1.pub(i,i+1)  # 或者 f1.publish_redispy(i,i+1)
+    f0.pub(i, i)
 
 # 消费任务
-f1.start()  # 或者 f1.start_consuming_message()
+f0.start()
+```
+##### 1.发布消费任务(额外参数)
+```python
+from redis_queue_tool import task_deco
+
+@task_deco('test1', qps=30, threads_num=30, max_retry_times=3, ack=True)
+def f1(a, b):
+    print(f"t_demo1,a:{a},b:{b}")
+
+# 发布任务
+for i in range(1, 31):
+    f1.pub(i, i + 1)  # 或者 f1.publish_redispy(i,i+1)
+
+# 消费任务
+f1.start()
 ```
 
-##### 2.发布消费多参数类型任务
+##### 2.发布消费任务(非装饰器版)
 ```python
 from redis_queue_tool import RedisPublish, RedisCustomer
 
 
 for zz in range(1, 501):
-    # 写入字典任务 {"a":zz,"b":zz,"c":zz}
     param = {"a": zz, "b": zz, "c": zz}
     RedisPublish(queue_name='test2').publish_redispy(param)
 
@@ -73,54 +86,42 @@ RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
               qps=50).start_consuming_message()
 ```
 
-##### 3.批量提交任务消费
+##### 3.批量提交任务(使用协程消费)
 
 ```python
-from redis_queue_tool import RedisPublish,  RedisCustomer
-from gevent import monkey 
+from redis_queue_tool import task_deco
+from gevent import monkey
 monkey.patch_all()
 
 # #### 3.批量提交任务
-result = [{'a': i, 'b': i, 'c': i} for i in range(1, 501)]
-# 批量提交任务 queue_name提交任务队列名称 max_push_size每次批量提交记录数(默认值50)
-RedisPublish(queue_name='test3', max_push_size=100).publish_redispy_list(result)
-def print_msg_dict1(a, b, c):
-    print(f"msg_dict1:{a},{b},{c}")
-# 消费者类型 string 支持('thread','gevent') 默认thread，若使用gevent请在代码开头加入：from gevent import monkey monkey.patch_all()
-RedisCustomer(queue_name='test3', consuming_function=print_msg_dict1, customer_type='gevent',
-              qps=50).start_consuming_message()
+result = [{'a': i, 'b': i, 'c': i} for i in range(1, 51)]
+
+# customer_type 消费者类型(默认thread)，max_push_size每次批量提交记录数(默认值50)
+# 若使用gevent请在代码开头加入：from gevent import monkey monkey.patch_all()
+@task_deco('test3', qps=50, customer_type='gevent', max_push_size=100)  # 消费函数上新增任务队列装饰器
+def f3(a, b, c):
+    print(f"t_demo3:{a},{b},{c}")
+
+# 发布任务
+f3.pub_list(result)
+
+# 消费任务
+f3.start()
 ```
 
 ##### 4.切换任务队列中间件为sqlite(默认为redis)
 
 ```python
-from redis_queue_tool import RedisPublish, RedisCustomer
-
-for zz in range(1, 101):
-    RedisPublish(queue_name='test4', middleware='sqlite').publish_redispy(a=zz, b=zz, c=zz)
-
-def print_msg_dict2(a, b, c):
-    print(f"msg_dict:{a},{b},{c}")
-
-RedisCustomer(queue_name='test4', consuming_function=print_msg_dict2, middleware='sqlite',
-              qps=50).start_consuming_message()
-
-```
-
-##### 5.消费队列极简模式(强烈推荐使用)
-```python
 from redis_queue_tool import task_deco
 
-@task_deco('test5') #消费函数上新增任务队列装饰器
-def f5(a, b):
-    print(f"a:{a},b:{b}")
+@task_deco('test4', middleware='sqlite', qps=10)
+def f4(a, b, c):
+    print(f"t_demo4:{a},{b},{c}")
 
-# 发布任务
-for i in range(1, 51):
-    f5.publish_redispy(i, i) # 或者 f.pub(i, i)
+for zz in range(1, 51):
+    f4.pub(zz, zz, zz)
 
-# 消费任务
-f5.start_consuming_message() # 或者 f.start()
+f4.start()
 ```
 
 #### reids安装

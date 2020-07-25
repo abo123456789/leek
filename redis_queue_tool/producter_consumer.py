@@ -103,6 +103,7 @@ class RedisCustomer(object):
         self.fliter_rep = fliter_rep
         self.max_push_size = max_push_size
         self.ack = ack
+        self.middleware = middleware
 
     def _start_consuming_message_thread(self):
         current_customer_count = 0
@@ -196,7 +197,7 @@ class RedisCustomer(object):
         """
         心跳检查用程序
         """
-        if self._redis_quenen.middleware_name == 'redis':
+        if self.middleware == 'redis':
             logger.info('启动redis心跳检查程序')
             while True:
                 try:
@@ -310,7 +311,7 @@ class RedisPublish(object):
         :param msgs: 待写入列表数据
         :return: 
         """
-        if self.middleware == RedisQueue.middleware_name:
+        if self.middleware == self.middleware:
             pipe = self._redis_quenen.getdb().pipeline()
             for id in msgs:
                 pipe.lpush(self._redis_quenen.queue_name, json.dumps(id))
@@ -389,7 +390,7 @@ def task_deco(queue_name, **consumer_init_kwargs):
         func.start_consuming_message = func.consume = func.start = cs.start_consuming_message
 
         publisher = RedisPublish(queue_name=queue_name, consuming_function=cs._consuming_function,
-                                 fliter_rep=cs.fliter_rep, max_push_size=cs.max_push_size)
+                                 fliter_rep=cs.fliter_rep, max_push_size=cs.max_push_size, middleware=cs.middleware)
         func.publisher = publisher
         func.pub = func.publish = func.publish_redispy = publisher.publish_redispy
         func.pub_list = func.publish_list = publisher.publish_redispy_list
