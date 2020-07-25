@@ -88,8 +88,8 @@ def t_demo4():
 
 if __name__ == '__main__':
     pass
-    t_demo0()
-    t_demo1()
-    t_demo2()
-    # t_demo3()
-    t_demo4()
+    # t_demo0()
+    # t_demo1()
+    # t_demo2()
+    t_demo3()
+    # t_demo4()

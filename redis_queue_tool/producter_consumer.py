@@ -311,7 +311,7 @@ class RedisPublish(object):
         :param msgs: 待写入列表数据
         :return: 
         """
-        if self.middleware == self.middleware:
+        if self.middleware==RedisQueue.middleware_name:
             pipe = self._redis_quenen.getdb().pipeline()
             for id in msgs:
                 pipe.lpush(self._redis_quenen.queue_name, json.dumps(id))
