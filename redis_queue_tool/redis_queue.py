@@ -9,7 +9,6 @@ from redis_queue_tool.base_queue import BaseQueue
 
 class RedisQueue(BaseQueue):
     redis_conn_instance = {}
-    middleware_name = 'redis'
 
     def _getconn(self, **kwargs):
         if 'redis_conn' in self.redis_conn_instance:

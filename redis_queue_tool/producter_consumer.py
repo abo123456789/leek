@@ -16,6 +16,7 @@ from redis_queue_tool import default_config
 from redis_queue_tool.custom_gevent import CustomGeventPoolExecutor
 from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
 from redis_queue_tool.kafka_queue import KafkaQueue
+from redis_queue_tool.middleware_eum import MiddlewareEum
 from redis_queue_tool.redis_queue import RedisQueue
 from redis_queue_tool.sqllite_queue import SqlliteQueue
 
@@ -34,9 +35,7 @@ from redis_queue_tool.utils import str_sha256, get_now_millseconds, get_day_form
 
 logger = get_logger(__name__, formatter_template=5)
 
-# kafka配置连接信息
-kafka_port = 9092
-# redis配置连接信息
+# 配置连接信息
 try:
     import redis_queue_tool_config
 
@@ -44,6 +43,10 @@ try:
     default_config.redis_password = redis_queue_tool_config.redis_password
     default_config.redis_port = redis_queue_tool_config.redis_port
     default_config.redis_db = redis_queue_tool_config.redis_db
+    default_config.kafka_host = redis_queue_tool_config.kafka_host
+    default_config.kafka_port = redis_queue_tool_config.kafka_port
+    default_config.kafka_username = redis_queue_tool_config.kafka_port
+    default_config.kafka_password = redis_queue_tool_config.kafka_password
     logger.info('读取到redis_queue_tool_config.py配置,使用自定义配置')
 except:
     logger.warning('未读取redis_queue_tool_config.py自定义配置,使用默认配置')
@@ -61,7 +64,8 @@ class RedisCustomer(object):
     """reids队列消费类"""
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
-                 max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0, middleware='redis',
+                 max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0,
+                 middleware=MiddlewareEum.REDIS,
                  specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=False):
         """
         redis队列消费程序
@@ -79,10 +83,11 @@ class RedisCustomer(object):
         :param max_push_size : 每次批量推送任务数量 默认值50
         :param ack : 是否需要确认消费 默认值False
         """
-        if middleware == SqlliteQueue.middleware_name:
+        if middleware == MiddlewareEum.SQLITE:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
-        elif middleware == KafkaQueue.middleware_name:
-            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.redis_host, port=kafka_port)
+        elif middleware == MiddlewareEum.KAFKA:
+            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.kafka_host,
+                                            port=default_config.kafka_port)
         else:
             self._redis_quenen = RedisQueue(queue_name, host=default_config.redis_host, port=default_config.redis_port,
                                             db=default_config.redis_db,
@@ -184,7 +189,7 @@ class RedisCustomer(object):
                 if type(message) == dict:
                     self._consuming_function(**message)
                 else:
-                    self._consuming_function(message)
+                    self._consuming_function(**json.loads(message))
 
             consuming_exception_retry(message)
             if self.ack:
@@ -193,14 +198,15 @@ class RedisCustomer(object):
             logger.error(traceback.format_exc())
         else:
             if self.fliter_rep:
-                hash_value = str_sha256(json.dumps(message) if isinstance(message, dict) else message)
-                self._redis_quenen.add_customer_task(hash_value)
+                if self.middleware == MiddlewareEum.REDIS:
+                    hash_value = str_sha256(json.dumps(message) if isinstance(message, dict) else message)
+                    self._redis_quenen.add_customer_task(hash_value)
 
     def _heartbeat_check(self):
         """
         心跳检查用程序
         """
-        if self.middleware == 'redis':
+        if self.middleware == MiddlewareEum.REDIS:
             logger.info('启动redis心跳检查程序')
             while True:
                 try:
@@ -213,14 +219,12 @@ class RedisCustomer(object):
                         for key in hash_all_data:
                             heart_field = key.decode()
                             heart_value = int(hash_all_data[key].decode())
-                            # logger.info(f"heart_field:{heart_field},heart_value:{heart_value}")
                             if get_now_millseconds() - heart_value > 10500:
                                 queue_name = heart_field.split(':heartbeat_')[0]
                                 un_ack_sets_name = f"{heart_field}:unack_message"
                                 for i in self._redis_quenen.getdb().sscan_iter(un_ack_sets_name):
                                     self._redis_quenen.getdb().lpush(queue_name, i.decode())
                                     self._redis_quenen.getdb().srem(un_ack_sets_name, i)
-                                # self._redis_quenen.getdb().delete(un_ack_sets_name)
                                 self._redis_quenen.getdb().hdel(self._redis_quenen.heartbeat_key, heart_field)
                             else:
                                 self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
@@ -236,7 +240,7 @@ class RedisCustomer(object):
 class RedisPublish(object):
     """redis入队列类"""
 
-    def __init__(self, queue_name, fliter_rep=False, max_push_size=50, middleware='redis',
+    def __init__(self, queue_name, fliter_rep=False, max_push_size=50, middleware=MiddlewareEum.REDIS,
                  consuming_function: Callable = None):
         """
         初始化消息发布队列
@@ -246,10 +250,11 @@ class RedisPublish(object):
         :param middleware: 中间件,默认redis 支持sqlite,kafka
         :param consuming_function: 消费函数名称
         """
-        if middleware == SqlliteQueue.middleware_name:
+        if middleware == MiddlewareEum.SQLITE:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
-        elif middleware == KafkaQueue.middleware_name:
-            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.redis_host, port=kafka_port)
+        elif middleware == MiddlewareEum.KAFKA:
+            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.kafka_host,
+                                            port=default_config.kafka_port)
         else:
             self._redis_quenen = RedisQueue(queue_name, host=default_config.redis_host,
                                             port=default_config.redis_port,
@@ -284,6 +289,7 @@ class RedisPublish(object):
                     dict_msg = param
                 except:
                     raise Exception('发布任务和消费函数参数不一致,请仔细核对')
+            dict_msg = dict(sorted(dict_msg.items(), key=lambda d: d[0]))
         else:
             if kwargs:
                 dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))

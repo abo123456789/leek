@@ -10,7 +10,6 @@ from redis_queue_tool.base_queue import BaseQueue
 
 
 class SqlliteQueue(BaseQueue):
-    middleware_name = 'sqlite'
 
     def qsize(self):
         return self._db._count()

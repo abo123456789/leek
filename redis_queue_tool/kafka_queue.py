@@ -7,6 +7,8 @@ import time
 import traceback
 
 from kafka import KafkaConsumer, KafkaProducer
+from redis_queue_tool import default_config
+
 from redis_queue_tool.base_queue import BaseQueue
 
 kafka_conn_instance = {}
@@ -25,9 +27,18 @@ class Kafka_consumer(object):
         if kafka_conn_instance.get(key):
             self.consumer = kafka_conn_instance.get(key)
         else:
-            self.consumer = KafkaConsumer(self.kafkatopic
-                                          , group_id=groupid,
-                                          bootstrap_servers=self.bootstrap_servers, enable_auto_commit=True)
+            if default_config.kafka_username and default_config.kafka_password:
+                self.consumer = KafkaConsumer(self.kafkatopic
+                                              , group_id=groupid,
+                                              sasl_mechanism='PLAIN',
+                                              security_protocol='SASL_PLAINTEXT',
+                                              sasl_plain_username=default_config.kafka_username,
+                                              sasl_plain_password=default_config.kafka_password,
+                                              bootstrap_servers=self.bootstrap_servers, enable_auto_commit=True)
+            else:
+                self.consumer = KafkaConsumer(self.kafkatopic
+                                              , group_id=groupid,
+                                              bootstrap_servers=self.bootstrap_servers, enable_auto_commit=True)
             kafka_conn_instance[key] = self.consumer
 
     def get_msg(self):
@@ -46,7 +57,14 @@ class Kafka_producer(object):
         if kafka_conn_instance.get(key):
             self.producer = kafka_conn_instance.get(key)
         else:
-            self.producer = KafkaProducer(bootstrap_servers=self.bootstrap_servers)
+            if default_config.kafka_username and default_config.kafka_password:
+                self.producer = KafkaProducer(sasl_mechanism='PLAIN',
+                                              security_protocol='SASL_PLAINTEXT',
+                                              sasl_plain_username=default_config.kafka_username,
+                                              sasl_plain_password=default_config.kafka_password,
+                                              bootstrap_servers=self.bootstrap_servers)
+            else:
+                self.producer = KafkaProducer(bootstrap_servers=self.bootstrap_servers)
             kafka_conn_instance[key] = self.producer
 
     def send_msg(self, params):
@@ -55,15 +73,12 @@ class Kafka_producer(object):
 
 
 class KafkaQueue(BaseQueue):
-    middleware_name = 'kafka'
 
     def put(self, item):
         try:
             self.producer_k.send_msg(item)
-            print('kafka 发送消息成功')
         except:
             traceback.print_exc()
-            print('kafka 发送消息失败')
 
     def getdb(self):
         super().getdb()
@@ -77,7 +92,7 @@ class KafkaQueue(BaseQueue):
             result = []
             for key in rs:
                 for record in rs[key]:
-                    result.append(json.loads(record.value.decode())[0])
+                    result.append(json.loads(record.value.decode()))
         except:
             traceback.print_exc()
             return None
@@ -96,10 +111,6 @@ class KafkaQueue(BaseQueue):
 
 if __name__ == '__main__':
     kafka_queue = KafkaQueue(queue_name='test5', host='127.0.0.1', port=9092)
-    # while True:
-    #     kafka_queue.put('123456789')
-    #     time.sleep(3)
     while True:
-            s = kafka_queue.get()
-            print(s)
-            time.sleep(3)
+        kafka_queue.put('123456789')
+        time.sleep(3)

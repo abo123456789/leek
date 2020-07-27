@@ -8,13 +8,13 @@ import time
 def t_demo0():
     from redis_queue_tool import task_deco
 
-    @task_deco('test0')  # 消费函数上新增任务队列装饰器
+    @task_deco('test0', fliter_rep=True)  # 消费函数上新增任务队列装饰器
     def f0(a, b):
         print(f"t_demo0,a:{a},b:{b}")
 
     # 发布任务
     for i in range(1, 51):
-        f0.pub(i, i)
+        f0.pub(i, i + 1)
 
     # 消费任务
     f0.start()
@@ -49,7 +49,7 @@ def t_demo2():
 
     # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
     RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
-                  qps=50, fliter_rep=True ).start_consuming_message()
+                  qps=50, fliter_rep=True).start_consuming_message()
 
 
 def t_demo3():
@@ -86,10 +86,24 @@ def t_demo4():
     f4.start()
 
 
+def t_demo5():
+        from redis_queue_tool import task_deco, MiddlewareEum
+
+        @task_deco('test5', middleware=MiddlewareEum.KAFKA, fliter_rep=True)
+        def f5(a, b, c):
+            print(f"t_demo5:{a},{b},{c}")
+
+        for zz in range(1, 51):
+            f5.pub(zz, zz, zz)
+
+        f5.start()
+
+
 if __name__ == '__main__':
     pass
-    # t_demo0()
-    # t_demo1()
-    # t_demo2()
-    t_demo3()
-    # t_demo4()
+    t_demo0()
+    t_demo1()
+    t_demo2()
+    # t_demo3()
+    t_demo4()
+    t_demo5()

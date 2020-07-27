@@ -19,6 +19,12 @@ config_file_content = '''# -*- coding: utf-8 -*-
 #redis_password = ''
 #redis_port = 6379
 #redis_db = 0
+
+# kafka配置连接信息
+#kafka_port = 9092
+#kafka_host = '127.0.0.1'
+#kafka_username = ''
+#kafka_password = ''
 '''
 
 
