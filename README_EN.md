@@ -133,7 +133,7 @@ reids docker install
 docker run  -d -p 6379:6379 redis
 ```
 
-redis web manage tool [flask-redisboard](https://github.com/hjlarry/flask-redisboard)
+redis web manage tool [redisweb](https://github.com/abo123456789/redisweb)
 ![avatar](https://s1.ax1x.com/2020/07/07/UAIHFe.jpg)
 
 
