@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.5.2',
+    version='4.5.4',
     description=(
 
         '高并发reids队列,分布式爬虫利器(High concurrency RedisQueue,Distributed crawler weapon)'
@@ -27,7 +27,8 @@ setup(
         "retrying>=1.3.3",
         "py-log>=1.9",
         "persist-queue>=0.5.0",
-        "gevent>=1.4.0"
+        "gevent>=1.4.0",
+        "pypattyrn"
     ],
     packages=find_packages(),
     platforms=["all"],

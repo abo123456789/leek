@@ -6,8 +6,6 @@ from queue import Queue
 
 from pypattyrn.structural.flyweight import FlyweightMeta
 
-from redis_queue_tool.base_queue import BaseQueue
-
 
 class MemoryQueue(metaclass=FlyweightMeta):
 
