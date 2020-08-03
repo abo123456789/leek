@@ -5,6 +5,7 @@
 
 
 class MiddlewareEum(object):
+    MEMORY = 'memory'
     REDIS = 'redis'
     KAFKA = 'kafka'
     SQLITE = 'sqlite'

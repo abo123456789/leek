@@ -16,6 +16,7 @@ from redis_queue_tool import default_config
 from redis_queue_tool.custom_gevent import CustomGeventPoolExecutor
 from redis_queue_tool.custom_thread import CustomThreadPoolExecutor
 from redis_queue_tool.kafka_queue import KafkaQueue
+from redis_queue_tool.memery_queue import MemoryQueue
 from redis_queue_tool.middleware_eum import MiddlewareEum
 from redis_queue_tool.redis_queue import RedisQueue
 from redis_queue_tool.sqllite_queue import SqlliteQueue
@@ -88,6 +89,8 @@ class RedisCustomer(object):
         elif middleware == MiddlewareEum.KAFKA:
             self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.kafka_host,
                                             port=default_config.kafka_port)
+        elif middleware == MiddlewareEum.MEMORY:
+            self._redis_quenen = MemoryQueue(queue_name=queue_name)
         else:
             self._redis_quenen = RedisQueue(queue_name, host=default_config.redis_host, port=default_config.redis_port,
                                             db=default_config.redis_db,
@@ -255,6 +258,8 @@ class RedisPublish(object):
         elif middleware == MiddlewareEum.KAFKA:
             self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.kafka_host,
                                             port=default_config.kafka_port)
+        elif middleware == MiddlewareEum.MEMORY:
+            self._redis_quenen = MemoryQueue(queue_name=queue_name)
         else:
             self._redis_quenen = RedisQueue(queue_name, host=default_config.redis_host,
                                             port=default_config.redis_port,

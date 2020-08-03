@@ -99,6 +99,19 @@ def t_demo5():
         f5.start()
 
 
+def t_demo6():
+    from redis_queue_tool import task_deco, MiddlewareEum
+
+    @task_deco('test6', middleware=MiddlewareEum.MEMORY)
+    def f6(a, b, c):
+        print(f"t_demo6:{a},{b},{c}")
+
+    for zz in range(1, 51):
+        f6.pub(zz, zz, zz)
+
+    f6.start()
+
+
 if __name__ == '__main__':
     pass
     t_demo0()
@@ -107,3 +120,4 @@ if __name__ == '__main__':
     # t_demo3()
     t_demo4()
     t_demo5()
+    t_demo6()

@@ -7,7 +7,7 @@
 特色说明： 
  
      支持中间件：
-        支持reids sqlite kafka 三种中间件(首推redis,支持批量发布任务,分布式消费快如闪电)
+        支持reids kafka sqlite memory 四种中间件(首推redis,支持批量发布任务,分布式消费快如闪电)
         
      并发支持：
         支持process threading gevent三种并发消费模式(可混合使用)

@@ -7,7 +7,7 @@
 Feature description:
  
       Support middleware:
-         Support reids sqlite kafka three kinds of middleware (redis is the first choice, support batch publishing tasks, distributed consumption is lightning fast)
+         Support reids kafka sqlite memory  four kinds of middleware (redis is the first choice, support batch publishing tasks, distributed consumption is lightning fast)
         
       Concurrent support:
          Support process threading gevent three concurrent consumption modes (can be mixed)
