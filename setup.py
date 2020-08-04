@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.5.4',
+    version='4.5.5',
     description=(
 
         '高并发reids队列,分布式爬虫利器(High concurrency RedisQueue,Distributed crawler weapon)'

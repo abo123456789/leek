@@ -5,4 +5,4 @@
 import warnings
 
 warnings.warn("RedisQueue is deprecated", DeprecationWarning)
-from redis_queue_tool import task_deco, RedisPublish, RedisCustomer
+from redis_queue_tool import task_deco, RedisPublish, RedisCustomer, init_redis_config

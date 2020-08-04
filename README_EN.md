@@ -113,9 +113,9 @@ f3.start()
 ##### 4. Switch task queue middleware to sqlite (default is redis)
 
 ```python
-from redis_queue_tool import task_deco
+from redis_queue_tool import task_deco, MiddlewareEum
 
-@task_deco('test4', middleware='sqlite', qps=10)
+@task_deco('test4', middleware=MiddlewareEum.SQLITE, qps=10)
 def f4(a, b, c):
     print(f"t_demo4:{a},{b},{c}")
 
