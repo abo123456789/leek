@@ -44,10 +44,13 @@ def get_host_ip():
     查询本机ip地址
     :return: ip
     """
+    ip = '127.0.0.1'
     s = socket.socket(type=socket.SOCK_DGRAM)
     try:
         s.connect(('8.8.8.8', 80))
         ip = s.getsockname()[0]
+    except Exception:
+        pass
     finally:
         s.close()
     return ip
