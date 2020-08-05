@@ -2,6 +2,7 @@
 # @Time    : 2020/7/17 19:30
 # @Author  : CC
 # @Desc    : t_queue.py
+import json
 import time
 
 
@@ -87,16 +88,16 @@ def t_demo4():
 
 
 def t_demo5():
-        from redis_queue_tool import task_deco, MiddlewareEum
+    from redis_queue_tool import task_deco, MiddlewareEum
 
-        @task_deco('test5', middleware=MiddlewareEum.KAFKA, fliter_rep=True)
-        def f5(a, b, c):
-            print(f"t_demo5:{a},{b},{c}")
+    @task_deco('test5', middleware=MiddlewareEum.KAFKA, fliter_rep=True)
+    def f5(a, b, c):
+        print(f"t_demo5:{a},{b},{c}")
 
-        for zz in range(1, 51):
-            f5.pub(zz, zz, zz)
+    for zz in range(1, 51):
+        f5.pub(zz, zz, zz)
 
-        f5.start()
+    f5.start()
 
 
 def t_demo6():
@@ -112,12 +113,30 @@ def t_demo6():
     f6.start()
 
 
+def t_demo7():
+    from redis_queue_tool import task_deco
+
+    @task_deco('test7')
+    def f7(a):
+        print(f"t_demo7:{a}")
+
+    list_result = []
+    for zz in range(1, 51):
+        list_result.append(json.dumps({"a": zz, "b": zz, "c": zz}))
+        list_result.append(str(zz))
+        f7.pub(str(zz+100))
+    f7.pub_list(list_result)
+
+    f7.start()
+
+
 if __name__ == '__main__':
     pass
-    t_demo0()
-    t_demo1()
-    t_demo2()
+    # t_demo0()
+    # t_demo1()
+    # t_demo2()
     # t_demo3()
-    t_demo4()
-    t_demo5()
-    t_demo6()
+    # t_demo4()
+    # t_demo5()
+    # t_demo6()
+    t_demo7()
