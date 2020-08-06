@@ -45,7 +45,7 @@ class RedisQueue(BaseQueue):
         else:
             item = self.__db.rpop(self.queue_name)
         if item:
-            item = item.decode('utf-8')
+            item = item[1].decode('utf-8') if isinstance(item, tuple) else item.decode('utf-8')
         return item
 
     def check_has_customer(self, hash_value):

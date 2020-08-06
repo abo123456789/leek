@@ -119,7 +119,7 @@ class RedisCustomer(object):
         while True:
             try:
                 time_begin = time.time()
-                message = self._redis_quenen.get()
+                message = self._redis_quenen.get(block=True, timeout=20)
                 get_message_cost = time.time() - time_begin
                 if message:
                     if self.ack:
@@ -155,7 +155,8 @@ class RedisCustomer(object):
 
                         self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
-                    time.sleep(0.5)
+                    if self.middleware != MiddlewareEum.REDIS:
+                        time.sleep(0.5)
             except:
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)

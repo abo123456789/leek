@@ -9,7 +9,7 @@ import time
 def t_demo0():
     from redis_queue_tool import task_deco
 
-    @task_deco('test0', fliter_rep=True)  # 消费函数上新增任务队列装饰器
+    @task_deco('test0', fliter_rep=False)  # 消费函数上新增任务队列装饰器
     def f0(a, b):
         print(f"t_demo0,a:{a},b:{b}")
 
@@ -132,11 +132,11 @@ def t_demo7():
 
 if __name__ == '__main__':
     pass
-    # t_demo0()
-    # t_demo1()
-    # t_demo2()
+    t_demo0()
+    t_demo1()
+    t_demo2()
     # t_demo3()
-    # t_demo4()
-    # t_demo5()
-    # t_demo6()
+    t_demo4()
+    t_demo5()
+    t_demo6()
     t_demo7()
