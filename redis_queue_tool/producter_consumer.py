@@ -155,8 +155,7 @@ class RedisCustomer(object):
 
                         self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
-                    if self.middleware != MiddlewareEum.REDIS:
-                        time.sleep(0.5)
+                    time.sleep(0.3)
             except:
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
