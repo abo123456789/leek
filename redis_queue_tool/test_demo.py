@@ -9,7 +9,7 @@ import time
 def t_demo0():
     from redis_queue_tool import task_deco
 
-    @task_deco('test0', fliter_rep=False)  # 消费函数上新增任务队列装饰器
+    @task_deco('test0', fliter_rep=True)  # 消费函数上新增任务队列装饰器
     def f0(a, b):
         print(f"t_demo0,a:{a},b:{b}")
 
@@ -124,7 +124,7 @@ def t_demo7():
     for zz in range(1, 51):
         list_result.append(json.dumps({"a": zz, "b": zz, "c": zz}))
         list_result.append(str(zz))
-        f7.pub(str(zz+100))
+        f7.pub(str(zz + 100))
     f7.pub_list(list_result)
 
     f7.start()

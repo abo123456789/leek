@@ -2,6 +2,7 @@
 # @Author cc
 # @TIME 2020/5/10 00:41
 import json
+import os
 import traceback
 
 import persistqueue
@@ -18,13 +19,14 @@ class SqlliteQueue(BaseQueue):
         return True if self.qsize() == 0 else False
 
     def _getconn(self, **kwargs):
-        return persistqueue.SQLiteAckQueue(path='/root/sqllite_queues', name=self.queue_name, auto_commit=True,
+        current_path = os.path.abspath(os.path.dirname(__file__))
+        return persistqueue.SQLiteAckQueue(path=f'{current_path}/sqllite_queues', name=self.queue_name,
+                                           auto_commit=True,
                                            multithreading=True, serializer=json)
 
     def clear(self):
         try:
             sql = f'{"DELETE"}  {"FROM"} ack_queue_{self.queue_name}'
-            print(sql)
             self._db._getter.execute(sql)
             self._db._getter.commit()
             self._db.total = 0
