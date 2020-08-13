@@ -280,7 +280,7 @@ class RedisPublish(object):
         # logger.info(f"args:{args},kwargs:{kwargs}")
         dict_msg = None
         if self.consuming_function:
-            keys = inspect.getargspec(self.consuming_function).args[0:]
+            keys = inspect.getfullargspec(self.consuming_function).args[0:]
             if kwargs:
                 dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
             if args:

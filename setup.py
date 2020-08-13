@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.6.3',
+    version='4.6.4',
     # name='olion',
     # version='1.0.1',
     description=(

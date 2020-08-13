@@ -30,7 +30,7 @@ def t_demo1():
         print(f"t_demo1,a:{a},b:{b}")
 
     # 发布任务
-    for i in range(1, 31):
+    for i in range(1, 51):
         f1.pub(i, i + 1)  # 或者 f1.publish_redispy(i,i+1)
 
     # 消费任务
@@ -130,6 +130,21 @@ def t_demo7():
     f7.start()
 
 
+def t_demo9():
+    from redis_queue_tool import task_deco
+
+    @task_deco('test9', fliter_rep=False)  # 消费函数上新增任务队列装饰器
+    def f9(a: int = 1):
+        print(f"t_demo9,a:{a}")
+
+    # 发布任务
+    for i in range(50):
+        f9.pub(i)
+
+    # 消费任务
+    f9.start()
+
+
 if __name__ == '__main__':
     pass
     t_demo0()
@@ -140,3 +155,4 @@ if __name__ == '__main__':
     t_demo5()
     t_demo6()
     t_demo7()
+    t_demo9()
