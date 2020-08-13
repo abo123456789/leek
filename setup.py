@@ -7,8 +7,8 @@ from setuptools import setup, find_packages
 setup(
     name='redis-queue-tool',
     version='4.6.4',
-    # name='olion',
-    # version='1.0.1',
+    # name='leek',
+    # version='1.0.3',
     description=(
         '高并发reids队列,分布式爬虫利器(High concurrency RedisQueue,Distributed crawler weapon)'
     ),
@@ -17,7 +17,7 @@ setup(
         "distribute-crawler", "web-crawler"),
     long_description_content_type="text/markdown",
     long_description=open('README.md', encoding='utf-8').read(),
-    # long_description=open('README_OLION.md', encoding='utf-8').read(),
+    # long_description=open('README_LEEK.md', encoding='utf-8').read(),
     author='cc',
     author_email='abcdef123456chen@sohu.com',
     maintainer='cc',
