@@ -10,7 +10,6 @@ setup(
     # name='olion',
     # version='1.0.1',
     description=(
-
         '高并发reids队列,分布式爬虫利器(High concurrency RedisQueue,Distributed crawler weapon)'
     ),
     keywords=(
