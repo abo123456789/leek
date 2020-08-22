@@ -10,7 +10,7 @@ from pypattyrn.structural.flyweight import FlyweightMeta
 class MemoryQueue(metaclass=FlyweightMeta):
 
     def __init__(self, queue_name, fliter_rep=False, namespace='', **kwargs):
-        self.queue = Queue()
+        self.queue = Queue(maxsize=100000)
         self.queue_set = set()
 
     def _getconn(self, **kwargs):
