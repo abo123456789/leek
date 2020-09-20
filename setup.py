@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.6.4',
+    version='4.6.5',
     # name='leek',
     # version='1.0.3',
     description=(
@@ -30,6 +30,7 @@ setup(
         "py-log>=1.9",
         "persist-queue>=0.5.0",
         "gevent>=1.4.0",
+        "kafka-python>=2.0.1",
         "pypattyrn"
     ],
     packages=find_packages(),
