@@ -160,8 +160,7 @@ class RedisCustomer(object):
             except KeyboardInterrupt:
                 pid = os.getpid()
                 logger.error(f'{pid} process is KeyboardInterrupt and kill')
-                os.system(f'kill -9 {pid}')
-                # break
+                break
             except:
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
