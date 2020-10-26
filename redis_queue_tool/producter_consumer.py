@@ -5,6 +5,7 @@ import json
 import multiprocessing
 import os
 import platform
+import signal
 import threading
 from functools import update_wrapper
 
@@ -64,6 +65,8 @@ def init_redis_config(host, password, port, db):
 
 class RedisCustomer(object):
     """reids队列消费类"""
+
+    process_ids = []
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0,
@@ -158,10 +161,7 @@ class RedisCustomer(object):
                 else:
                     time.sleep(0.3)
             except KeyboardInterrupt:
-                pid = os.getpid()
-                logger.error(f'{pid} process is KeyboardInterrupt and kill')
-                os.system(f'kill -9 {pid}')
-                # break
+                self._clear_process()
             except:
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
@@ -177,7 +177,10 @@ class RedisCustomer(object):
             for i in range(0, min(self.process_num, cpu_count)):
                 logger.info(
                     f'start consuming message  process:{i + 1},{self.customer_type}_num:{self.threads_num},system:{platform.system()}')
-                Process(target=self._start_consuming_message_thread).start()
+                p = Process(target=self._start_consuming_message_thread)
+                p.start()
+                self.process_ids.append(p.pid)
+                logger.info(self.process_ids)
         else:
             logger.info(
                 f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num},system:{platform.system()}')
@@ -240,6 +243,11 @@ class RedisCustomer(object):
                     time.sleep(10)
                 else:
                     time.sleep(10)
+
+    def _clear_process(self):
+        pid = os.getpid()
+        logger.warning(f'{pid} process is KeyboardInterrupt and kill')
+        os.kill(pid, signal.SIGTERM)
 
 
 class RedisPublish(object):
