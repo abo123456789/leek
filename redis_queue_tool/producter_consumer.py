@@ -3,6 +3,7 @@
 import inspect
 import json
 import multiprocessing
+import os
 import platform
 import threading
 from functools import update_wrapper
@@ -157,8 +158,10 @@ class RedisCustomer(object):
                 else:
                     time.sleep(0.3)
             except KeyboardInterrupt:
-                logger.error('process is KeyboardInterrupt and down')
-                break
+                pid = os.getpid()
+                logger.error(f'{pid} process is KeyboardInterrupt and kill')
+                os.system(f'kill -9 {pid}')
+                # break
             except:
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
