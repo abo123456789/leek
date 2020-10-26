@@ -156,6 +156,9 @@ class RedisCustomer(object):
                         self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
                     time.sleep(0.3)
+            except KeyboardInterrupt:
+                logger.error('process is KeyboardInterrupt and down')
+                break
             except:
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
@@ -429,7 +432,7 @@ def task_deco(queue_name, process_num=1, threads_num=50,
 
 if __name__ == '__main__':
     # #装饰器使用方式
-    @task_deco('test1')  # 消费函数上新增任务队列装饰器
+    @task_deco('test1', process_num=3)  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
 
@@ -441,15 +444,15 @@ if __name__ == '__main__':
     # 消费任务
     f.start()
 
-    # #非装饰器版使用demo
-    for zz in range(1, 51):
-        RedisPublish(queue_name='test2').pub(a=zz, b=zz, c=zz)
-
-
-    def f2(a, b, c):
-        print(f"f2:{a},{b},{c}")
-
-
-    # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
-    RedisCustomer(queue_name='test2', consuming_function=f2,
-                  qps=50).start()
+    # # #非装饰器版使用demo
+    # for zz in range(1, 51):
+    #     RedisPublish(queue_name='test2').pub(a=zz, b=zz, c=zz)
+    #
+    #
+    # def f2(a, b, c):
+    #     print(f"f2:{a},{b},{c}")
+    #
+    #
+    # # 消费多参数类型任务 queue_name消费队列名称 qps每秒消费任务数(默认没有限制)
+    # RedisCustomer(queue_name='test2', consuming_function=f2,
+    #               qps=50).start()
