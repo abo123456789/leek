@@ -5,5 +5,4 @@ py-log==1.9
 persist-queue==0.5.0
 kafka-python==2.0.1
 gevent==1.4.0
-kafka-python==2.0.1
 pypattyrn
