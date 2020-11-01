@@ -34,7 +34,7 @@ import traceback
 from collections import Callable
 from tomorrow3 import threads as tomorrow_threads
 
-from redis_queue_tool.utils import str_sha256, get_now_millseconds, get_day_formate
+from redis_queue_tool.utils import str_sha256, get_now_millseconds
 
 logger = get_logger(__name__, formatter_template=5)
 
@@ -367,7 +367,7 @@ class RedisPublish(object):
         if self._local_quenen.qsize() >= self.max_push_size:
             try:
                 while self._local_quenen.qsize() > 0:
-                    self._pipe.lpush(self._redis_quenen.key, self._local_quenen.get_nowait())
+                    self._pipe.lpush(self._redis_quenen.queue_name, self._local_quenen.get_nowait())
             except:
                 logger.error(traceback.format_exc())
             self._pipe.execute()

@@ -9,7 +9,7 @@ import socket
 import time
 
 
-def str_sha256(text: str) -> bytes:
+def str_sha256(text: str) -> str:
     """
     获取字符串hash256值
     :param text: 待hash原始字符串
@@ -20,7 +20,7 @@ def str_sha256(text: str) -> bytes:
     return hash_obj.hexdigest()
 
 
-def str_sha512(text: str) -> bytes:
+def str_sha512(text: str) -> str:
     """
     获取字符串hash512值
     :param text: 待hash原始字符串
@@ -63,7 +63,7 @@ def get_host_name():
 def get_day_formate(millseconds: float):
     """
     将毫秒转换成日期
-    :param seconds: 毫秒
+    :param millseconds: 毫秒
     :return: 220-04-08 12:34:56
     """
     return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(millseconds / 1000))
@@ -71,6 +71,7 @@ def get_day_formate(millseconds: float):
 
 if __name__ == '__main__':
     for st in ['我的地盘', '123', 'abcdefg', '中1abcd']:
+        print(type(str_sha256(st)))
         print(str_sha256(st))
     print(get_day_str())
     print(get_host_ip())

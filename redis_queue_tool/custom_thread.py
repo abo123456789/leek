@@ -9,7 +9,6 @@
 import atexit
 import queue
 import threading
-import traceback
 import weakref
 
 import time
