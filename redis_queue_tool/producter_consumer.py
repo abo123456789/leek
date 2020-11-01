@@ -66,8 +66,6 @@ def init_redis_config(host, password, port, db):
 class RedisCustomer(object):
     """reids队列消费类"""
 
-    process_ids = []
-
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0,
                  middleware=MiddlewareEum.REDIS,
@@ -161,6 +159,9 @@ class RedisCustomer(object):
                 else:
                     time.sleep(0.3)
             except KeyboardInterrupt:
+                if self._redis_quenen.getdb().setnx(f"_heartbeat_check_common:{self._redis_quenen.queue_name}",
+                                                    1):
+                    self._heartbeat_check_common(is_break=True)
                 self._clear_process()
             except:
                 logger.error(traceback.format_exc())
@@ -179,8 +180,6 @@ class RedisCustomer(object):
                     f'start consuming message  process:{i + 1},{self.customer_type}_num:{self.threads_num},system:{platform.system()}')
                 p = Process(target=self._start_consuming_message_thread)
                 p.start()
-                self.process_ids.append(p.pid)
-                logger.info(self.process_ids)
         else:
             logger.info(
                 f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num},system:{platform.system()}')
@@ -223,31 +222,41 @@ class RedisCustomer(object):
             logger.info('启动redis心跳检查程序')
             while True:
                 try:
-                    if self._redis_quenen.getdb().hexists(self._redis_quenen.heartbeat_key,
-                                                          self._redis_quenen.heartbeat_field) is False:
-                        self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
-                                                        self._redis_quenen.heartbeat_field, get_now_millseconds())
-                    hash_all_data = self._redis_quenen.getdb().hgetall(self._redis_quenen.heartbeat_key)
-                    if hash_all_data:
-                        for key in hash_all_data:
-                            heart_field = key.decode()
-                            heart_value = int(hash_all_data[key].decode())
-                            if get_now_millseconds() - heart_value > 10500:
-                                queue_name = heart_field.split(':heartbeat_')[0]
-                                un_ack_sets_name = f"{heart_field}:unack_message"
-                                for i in self._redis_quenen.getdb().sscan_iter(un_ack_sets_name):
-                                    self._redis_quenen.getdb().lpush(queue_name, i.decode())
-                                    self._redis_quenen.getdb().srem(un_ack_sets_name, i)
-                                self._redis_quenen.getdb().hdel(self._redis_quenen.heartbeat_key, heart_field)
-                            else:
-                                self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
-                                                                heart_field,
-                                                                get_now_millseconds())
+                    self._heartbeat_check_common()
+                except KeyboardInterrupt:
+                    logger.info('redis队列心跳检查程序退出')
                 except Exception as ex:
                     logger.error(ex)
                     time.sleep(10)
                 else:
                     time.sleep(10)
+
+    def _heartbeat_check_common(self, is_break=False):
+        logger.info('_heartbeat_check_common')
+        if self._redis_quenen.getdb().hexists(self._redis_quenen.heartbeat_key,
+                                              self._redis_quenen.heartbeat_field) is False:
+            self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
+                                            self._redis_quenen.heartbeat_field, get_now_millseconds())
+        hash_all_data = self._redis_quenen.getdb().hgetall(self._redis_quenen.heartbeat_key)
+        if hash_all_data:
+            for key in hash_all_data:
+                heart_field = key.decode()
+                heart_value = int(hash_all_data[key].decode())
+                if is_break or get_now_millseconds() - heart_value > 10500:
+                    queue_name = heart_field.split(':heartbeat_')[0]
+                    un_ack_sets_name = f"{heart_field}:unack_message"
+                    # un_ack_sets_message = self._redis_quenen.getdb().sscan_iter(un_ack_sets_name)
+                    un_ack_sets_message = self._redis_quenen.getdb().smembers(un_ack_sets_name)
+                    dlq_queue_name = f"dlq:{queue_name}"
+                    for i in un_ack_sets_message:
+                        # self._redis_quenen.getdb().lpush(queue_name, i.decode())
+                        self._redis_quenen.getdb().lpush(dlq_queue_name, i.decode())
+                        self._redis_quenen.getdb().srem(un_ack_sets_name, i)
+                    self._redis_quenen.getdb().hdel(self._redis_quenen.heartbeat_key, heart_field)
+                else:
+                    self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
+                                                    heart_field,
+                                                    get_now_millseconds())
 
     def _clear_process(self):
         pid = os.getpid()
@@ -465,6 +474,7 @@ if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
         # raise Exception('test1 exception')
+        time.sleep(30)
 
 
     # 发布任务
