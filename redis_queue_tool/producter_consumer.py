@@ -204,6 +204,11 @@ class RedisCustomer(object):
                 self._redis_quenen.ack(message)
         except:
             logger.error(traceback.format_exc())
+            if self.ack:
+                if self.middleware == MiddlewareEum.REDIS:
+                    dlq_message = json.dumps(message) if isinstance(message, dict) else message
+                    self._redis_quenen.getdb().lpush(f'dlq:{self._redis_quenen.queue_name}', dlq_message)
+            logger.warning('consuming_exception_retry faliture')
         else:
             if self.fliter_rep:
                 if self.middleware == MiddlewareEum.REDIS:
@@ -388,14 +393,27 @@ class RedisPublish(object):
         return self._redis_quenen.qsize()
 
 
-def task_deco(queue_name, process_num=1, threads_num=50,
+def task_deco(queue_name, process_num=1,
+              threads_num=50,
               max_retry_times=3, qps=0,
               middleware=MiddlewareEum.REDIS,
-              specify_threadpool=None, customer_type='thread', fliter_rep=False, ack=False, *consumer_args,
+              specify_threadpool=None,
+              customer_type='thread',
+              fliter_rep=False,
+              ack=False, *consumer_args,
               **consumer_init_kwargs):
     """
     support by ydf
     装饰器方式添加任务，如果有人过于喜欢装饰器方式，例如celery 装饰器方式的任务注册，觉得黑科技，那就可以使用这个装饰器。此种方式不利于ide代码自动补全不推荐。
+    :param process_num:
+    :param threads_num:
+    :param max_retry_times:
+    :param qps:
+    :param middleware:
+    :param specify_threadpool:
+    :param customer_type:
+    :param fliter_rep:
+    :param ack:
     :param queue_name:
     :param consumer_init_kwargs:
     :return:
@@ -443,13 +461,14 @@ def task_deco(queue_name, process_num=1, threads_num=50,
 
 if __name__ == '__main__':
     # #装饰器使用方式
-    @task_deco('test1', process_num=3)  # 消费函数上新增任务队列装饰器
+    @task_deco('test1', process_num=3, ack=True)  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
+        # raise Exception('test1 exception')
 
 
     # 发布任务
-    for i in range(1, 51):
+    for i in range(1, 2):
         f.pub(a=1, b=1)
 
     # 消费任务

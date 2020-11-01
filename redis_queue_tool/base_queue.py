@@ -67,3 +67,6 @@ class BaseQueue(metaclass=abc.ABCMeta):
 
     def un_ack(self, value):
         pass
+
+    def dlq_re_consume(self):
+        pass

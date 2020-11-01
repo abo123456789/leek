@@ -60,20 +60,30 @@ class RedisQueue(BaseQueue):
     def un_ack(self, message):
         self.getdb().sadd(self.un_ack_sets, json.dumps(message) if isinstance(message, dict) else message)
 
+    def dlq_re_consume(self):
+        dlq_queue_name = f'dlq:{self.queue_name}'
+        dlq_queue_length = self.getdb().llen(dlq_queue_name)
+        print(dlq_queue_length)
+        for i in range(0, dlq_queue_length):
+            dql_message = self.getdb().rpop(dlq_queue_name)
+            print(dql_message)
+            self.getdb().lpush(self.queue_name, dql_message)
+
 
 if __name__ == '__main__':
     redis_host = '127.0.0.1'
     redis_password = ''
     redis_port = 6379
     redis_db = 0
-    r_queue = RedisQueue('test', host=redis_host, port=redis_port, db=redis_db,
+    r_queue = RedisQueue('test1', host=redis_host, port=redis_port, db=redis_db,
                          password=redis_password)
-    r_queue.put('123')
-    print(r_queue.qsize())
-    r_queue.put('456')
-    print(r_queue.get())
-    r_queue.clear()
-    print(r_queue.qsize())
-    print(r_queue.check_has_customer('123'))
-    r_queue.un_ack('66666')
+    # r_queue.put('123')
+    # print(r_queue.qsize())
+    # r_queue.put('456')
+    # print(r_queue.get())
+    # r_queue.clear()
+    # print(r_queue.qsize())
+    # print(r_queue.check_has_customer('123'))
+    # r_queue.un_ack('66666')
     # r_queue.ack('123456')
+    r_queue.dlq_re_consume()
