@@ -159,8 +159,9 @@ class RedisCustomer(object):
                 else:
                     time.sleep(0.3)
             except KeyboardInterrupt:
-                if self._redis_quenen.getdb().setnx(f"_heartbeat_check_common:{self._redis_quenen.queue_name}",
-                                                    1):
+                heartbeat_check_queue_name = f"_heartbeat_check_common:{self._redis_quenen.queue_name}"
+                if self._redis_quenen.getdb().setnx(heartbeat_check_queue_name, 1):
+                    self._redis_quenen.getdb().expire(heartbeat_check_queue_name, 10)
                     self._heartbeat_check_common(is_break=True)
                 self._clear_process()
             except:
@@ -245,11 +246,8 @@ class RedisCustomer(object):
                 if is_break or get_now_millseconds() - heart_value > 10500:
                     queue_name = heart_field.split(':heartbeat_')[0]
                     un_ack_sets_name = f"{heart_field}:unack_message"
-                    # un_ack_sets_message = self._redis_quenen.getdb().sscan_iter(un_ack_sets_name)
-                    un_ack_sets_message = self._redis_quenen.getdb().smembers(un_ack_sets_name)
                     dlq_queue_name = f"dlq:{queue_name}"
-                    for i in un_ack_sets_message:
-                        # self._redis_quenen.getdb().lpush(queue_name, i.decode())
+                    for i in self._redis_quenen.getdb().sscan_iter(un_ack_sets_name):
                         self._redis_quenen.getdb().lpush(dlq_queue_name, i.decode())
                         self._redis_quenen.getdb().srem(un_ack_sets_name, i)
                     self._redis_quenen.getdb().hdel(self._redis_quenen.heartbeat_key, heart_field)
