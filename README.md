@@ -65,6 +65,9 @@ for i in range(1, 31):
 
 # 消费任务
 f1.start()
+
+# DLQ消息重入消费队列
+f1.publisher.dlq_re_queue()
 ```
 
 ##### 2.发布消费任务(非装饰器版)

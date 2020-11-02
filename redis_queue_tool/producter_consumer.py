@@ -399,6 +399,12 @@ class RedisPublish(object):
         """
         return self._redis_quenen.qsize()
 
+    def dlq_re_queue(self):
+        if self.middleware == MiddlewareEum.REDIS:
+            self._redis_quenen.dlq_re_consume()
+        else:
+            pass
+
 
 def task_deco(queue_name, process_num=1,
               threads_num=50,
@@ -481,6 +487,8 @@ if __name__ == '__main__':
 
     # 消费任务
     f.start()
+
+    f.publisher.dlq_re_queue()
 
     # # #非装饰器版使用demo
     # for zz in range(1, 51):

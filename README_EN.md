@@ -66,6 +66,9 @@ for i in range(1, 31):
 
 # Consumer task
 f1.start()
+
+# DLQ message re queue
+f1.publisher.dlq_re_queue()
 ```
 
 ##### 2. Publish consumer tasks (non-decorator version)
