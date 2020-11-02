@@ -155,6 +155,8 @@ redis web版管理工具 [redisweb](https://github.com/abo123456789/redisweb)
 
 
 ```java
+2020-11-01 版本4.6.9 新增支持DLQ死信队列支持,当ack=True消费失败消息都会进入死信队列
+
 2020-06-11 版本4.1.5 新增支持gevent协程消费参数 customer_type='gevent'
 
 2020-05-20 新增消费函数超时时间参数
