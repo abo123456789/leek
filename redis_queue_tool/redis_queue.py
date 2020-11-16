@@ -70,7 +70,10 @@ class RedisQueue(BaseQueue):
 
     def get(self, block=False, timeout=None):
         if block:
-            item = self.__db.brpop(self._init_queues, timeout=timeout)
+            if self.priority is not None:
+                item = self.__db.brpop(self._init_queues, timeout=timeout)
+            else:
+                item = self.__db.brpop(self.queue_name, timeout=timeout)
         else:
             item = self.__db.rpop(self.queue_name)
         if item:
