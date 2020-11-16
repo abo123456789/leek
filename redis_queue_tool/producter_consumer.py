@@ -265,12 +265,14 @@ class RedisCustomer(object):
 class RedisPublish(object):
     """redis入队列类"""
 
-    def __init__(self, queue_name, fliter_rep=False, max_push_size=50, middleware=MiddlewareEum.REDIS,
+    def __init__(self, queue_name, fliter_rep=False, priority: int = None, max_push_size=50,
+                 middleware=MiddlewareEum.REDIS,
                  consuming_function: Callable = None):
         """
         初始化消息发布队列
         :param queue_name: 队列名称(不包含命名空间)
         :param fliter_rep: 队列任务是否去重 True:去重  False:不去重
+        :param priority: 队列优先级
         :param max_push_size: 使用批量提交时,每次批量提交数量
         :param middleware: 中间件,默认redis 支持sqlite,kafka
         :param consuming_function: 消费函数名称
@@ -283,7 +285,7 @@ class RedisPublish(object):
         elif middleware == MiddlewareEum.MEMORY:
             self._redis_quenen = MemoryQueue(queue_name=queue_name)
         else:
-            self._redis_quenen = RedisQueue(queue_name, host=default_config.redis_host,
+            self._redis_quenen = RedisQueue(queue_name, priority=priority, host=default_config.redis_host,
                                             port=default_config.redis_port,
                                             db=default_config.redis_db,
                                             password=default_config.redis_password)
@@ -406,7 +408,9 @@ class RedisPublish(object):
             pass
 
 
-def task_deco(queue_name, process_num=1,
+def task_deco(queue_name,
+              priority=None,
+              process_num=1,
               threads_num=50,
               max_retry_times=3, qps=0,
               middleware=MiddlewareEum.REDIS,
@@ -418,6 +422,7 @@ def task_deco(queue_name, process_num=1,
     """
     support by ydf
     装饰器方式添加任务，如果有人过于喜欢装饰器方式，例如celery 装饰器方式的任务注册，觉得黑科技，那就可以使用这个装饰器。此种方式不利于ide代码自动补全不推荐。
+    :param priority:
     :param process_num:
     :param threads_num:
     :param max_retry_times:
@@ -457,7 +462,7 @@ def task_deco(queue_name, process_num=1,
         # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
         func.start_consuming_message = func.consume = func.start = cs.start_consuming_message
 
-        publisher = RedisPublish(queue_name=queue_name, consuming_function=cs._consuming_function,
+        publisher = RedisPublish(queue_name=queue_name, priority=priority, consuming_function=cs._consuming_function,
                                  fliter_rep=cs.fliter_rep, max_push_size=cs.max_push_size, middleware=cs.middleware)
         func.publisher = publisher
         func.pub = func.publish = func.publish_redispy = publisher.publish_redispy
@@ -474,21 +479,21 @@ def task_deco(queue_name, process_num=1,
 
 if __name__ == '__main__':
     # #装饰器使用方式
-    @task_deco('test1', process_num=3, ack=True)  # 消费函数上新增任务队列装饰器
+    @task_deco('test12', priority=1, process_num=3, ack=True)  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
         # raise Exception('test1 exception')
-        time.sleep(30)
+        time.sleep(1)
 
 
     # 发布任务
-    for i in range(1, 2):
-        f.pub(a=1, b=1)
+    # for i in range(1, 20000):
+    #     f.pub(a=1, b=1)
 
     # 消费任务
     f.start()
 
-    f.publisher.dlq_re_queue()
+    # f.publisher.dlq_re_queue()
 
     # # #非装饰器版使用demo
     # for zz in range(1, 51):
