@@ -36,7 +36,7 @@ class RedisQueue(BaseQueue):
         self.heartbeat_key = f"tasks:heartbeat:check"
 
         self._db = self._getconn(**kwargs)
-        self._init_queues = [f"{a}_{queue_name}" for a in range(0, 5)]
+        self._init_queues = [f"{4 - a}_{queue_name}" for a in range(0, 5)]
 
     def _getconn(self, **kwargs):
         if 'redis_conn' in self.redis_conn_instance:
@@ -70,10 +70,10 @@ class RedisQueue(BaseQueue):
 
     def get(self, block=False, timeout=None):
         if block:
-            if self.priority is not None:
-                item = self.__db.brpop(self._init_queues, timeout=timeout)
-            else:
+            if self.priority is None:
                 item = self.__db.brpop(self.queue_name, timeout=timeout)
+            else:
+                item = self.__db.brpop(self._init_queues, timeout=timeout)
         else:
             item = self.__db.rpop(self.queue_name)
         if item:
@@ -93,13 +93,17 @@ class RedisQueue(BaseQueue):
         self.getdb().sadd(self.un_ack_sets, json.dumps(message) if isinstance(message, dict) else message)
 
     def dlq_re_consume(self):
-        dlq_queue_name = f'dlq:{self.queue_name}'
-        dlq_queue_length = self.getdb().llen(dlq_queue_name)
-        print(dlq_queue_length)
-        for i in range(0, dlq_queue_length):
-            dql_message = self.getdb().rpop(dlq_queue_name)
-            print(dql_message)
-            self.getdb().lpush(self.queue_name, dql_message)
+        all_queues = [self.queue_name]
+        if self.priority is not None:
+            all_queues = self._init_queues
+        for queue_name in all_queues:
+            dlq_queue_name = f'dlq:{queue_name}'
+            dlq_queue_length = self.getdb().llen(dlq_queue_name)
+            # print(dlq_queue_length)
+            for i in range(0, dlq_queue_length):
+                dql_message = self.getdb().rpop(dlq_queue_name)
+                # print(dql_message)
+                self.getdb().lpush(queue_name, dql_message)
 
 
 if __name__ == '__main__':
@@ -107,7 +111,7 @@ if __name__ == '__main__':
     redis_password = ''
     redis_port = 6379
     redis_db = 0
-    r_queue = RedisQueue('test1', priority=0, host=redis_host, port=redis_port, db=redis_db,
+    r_queue = RedisQueue('test12', host=redis_host, port=redis_port, db=redis_db,
                          password=redis_password)
     for i in range(1, 10):
         r_queue.put('123456')

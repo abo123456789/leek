@@ -69,7 +69,8 @@ class RedisCustomer(object):
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0,
                  middleware=MiddlewareEum.REDIS,
-                 specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=False):
+                 specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=False,
+                 priority=None):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -85,6 +86,7 @@ class RedisCustomer(object):
         :param fliter_rep: 消费任务是否去重 bool True:去重 False:不去重
         :param max_push_size : 每次批量推送任务数量 默认值50
         :param ack : 是否需要确认消费 默认值False
+        :param priority : 队列优先级 int[0-4]
         """
         if middleware == MiddlewareEum.SQLITE:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
@@ -94,7 +96,8 @@ class RedisCustomer(object):
         elif middleware == MiddlewareEum.MEMORY:
             self._redis_quenen = MemoryQueue(queue_name=queue_name)
         else:
-            self._redis_quenen = RedisQueue(queue_name, host=default_config.redis_host, port=default_config.redis_port,
+            self._redis_quenen = RedisQueue(queue_name, priority=priority, host=default_config.redis_host,
+                                            port=default_config.redis_port,
                                             db=default_config.redis_db,
                                             password=default_config.redis_password)
         self._consuming_function = consuming_function
@@ -277,6 +280,8 @@ class RedisPublish(object):
         :param middleware: 中间件,默认redis 支持sqlite,kafka
         :param consuming_function: 消费函数名称
         """
+        if priority and priority > 4:
+            raise Exception('max priority support is 4')
         if middleware == MiddlewareEum.SQLITE:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
         elif middleware == MiddlewareEum.KAFKA:
@@ -454,7 +459,7 @@ def task_deco(queue_name,
     def _deco(func):
         cs = RedisCustomer(queue_name, process_num=process_num, threads_num=threads_num, middleware=middleware, qps=qps,
                            consuming_function=func, specify_threadpool=specify_threadpool, customer_type=customer_type,
-                           fliter_rep=fliter_rep, ack=ack, max_retry_times=max_retry_times,
+                           fliter_rep=fliter_rep, ack=ack, max_retry_times=max_retry_times, priority=priority,
                            *consumer_args, **consumer_init_kwargs)
         if 'consuming_function' in consumer_init_kwargs:
             consumer_init_kwargs.pop('consuming_function')
@@ -488,7 +493,7 @@ if __name__ == '__main__':
 
     # 发布任务
     # for i in range(1, 20000):
-    #     f.pub(a=1, b=1)
+    #     f.pub(a=i, b=i)
 
     # 消费任务
     f.start()

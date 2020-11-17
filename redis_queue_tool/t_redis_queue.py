@@ -9,8 +9,9 @@ if __name__ == '__main__':
     redis_password = ''
     redis_port = 6379
     redis_db = 0
-    r_queue = RedisQueue('test1', host=redis_host, port=redis_port, db=redis_db,
+    r_queue = RedisQueue('test12', priority=1, host=redis_host, port=redis_port, db=redis_db,
                          password=redis_password)
-    for i in range(10):
-        ss = r_queue.getdb().brpop(['test1', 'test2'])
-        print(ss)
+    # for i in range(10):
+    #     ss = r_queue.getdb().brpop(['5_test12', '3_test12', '0_test2'])
+    #     print(ss)
+    r_queue.dlq_re_consume()
