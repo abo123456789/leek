@@ -145,14 +145,40 @@ def t_demo9():
     f9.start()
 
 
+def t_demo10():
+    """
+    优先级队列demo
+    """
+    from redis_queue_tool import task_deco
+
+    @task_deco('test10', priority=1, fliter_rep=False)  # 消费函数上新增任务队列装饰器
+    def f10(a: int = 1):
+        print(f"t_demo10,p1,a:{a}")
+
+    @task_deco('test10', priority=2, fliter_rep=False)  # 消费函数上新增任务队列装饰器
+    def f11(a: int = 1):
+        print(f"t_demo10,p2,a:{a}")
+
+    # 发布任务
+    for i in range(50):
+        f10.pub(i)
+
+    for i in range(50):
+        f11.pub(i)
+
+    # 消费任务
+    f10.start()
+
+
 if __name__ == '__main__':
     pass
-    t_demo0()
-    t_demo1()
-    t_demo2()
+    # t_demo0()
+    # t_demo1()
+    # t_demo2()
     # t_demo3()
-    t_demo4()
+    # t_demo4()
     # t_demo5()
-    t_demo6()
-    t_demo7()
-    t_demo9()
+    # t_demo6()
+    # t_demo7()
+    # t_demo9()
+    t_demo10()

@@ -492,7 +492,7 @@ if __name__ == '__main__':
 
 
     # 发布任务
-    # for i in range(1, 20000):
+    # for i in range(1, 200):
     #     f.pub(a=i, b=i)
 
     # 消费任务

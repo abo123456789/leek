@@ -160,6 +160,8 @@ redis web manage tool [redisweb](https://github.com/abo123456789/redisweb)
 
 
 ```java
+2020-12-18  pip installation version is upgraded to 4.8.0, and the priority queue parameter is added
+
 2020-06-11 Version 4.1.5 Added support for gevent coroutine consumption parameter customer_type='gevent'
 
 2020-05-20 Added consumption function timeout time parameter

@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.7.0',
+    version='4.8.0',
     # name='leek',
     # version='1.0.3',
     description=(
