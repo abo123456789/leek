@@ -19,6 +19,7 @@ _shutdown = False
 _threads_queues = weakref.WeakKeyDictionary()
 logger = get_logger(__name__)
 
+
 def _python_exit():
     global _shutdown
     _shutdown = True
@@ -32,7 +33,7 @@ def _python_exit():
 atexit.register(_python_exit)
 
 
-class _WorkItem():
+class _WorkItem(object):
     def __init__(self, fn, args, kwargs):
         self.fn = fn
         self.args = args
@@ -115,9 +116,10 @@ class _CustomThread(threading.Thread, ):
         self._executorx = executorx
         self._run_times = 0
 
+    # noinspection PyProtectedMember
     def _remove_thread(self, stop_resson=''):
         # noinspection PyUnresolvedReferences
-
+        logger.info(stop_resson)
         self._executorx.change_threads_free_count(-1)
         self._executorx._threads.remove(self)
         _threads_queues.pop(self)
@@ -133,7 +135,8 @@ class _CustomThread(threading.Thread, ):
             except queue.Empty:
                 if self._executorx.threads_free_count > self._executorx._min_workers:
                     self._remove_thread(
-                        f'当前线程超过60秒没有任务，线程池中不在工作状态中的线程数量是 {self._executorx.threads_free_count}，超过了指定的数量 {self._executorx._min_workers}')
+                        f'当前线程超过60秒没有任务，线程池中不在工作状态中的线程数量是 {self._executorx.threads_free_count}，'
+                        f'超过了指定的数量 {self._executorx._min_workers}')
                     break
                 else:
                     continue
@@ -152,7 +155,6 @@ class _CustomThread(threading.Thread, ):
 
 if __name__ == '__main__':
     pool = CustomThreadPoolExecutor(200)
-
 
     # pool = BoundedThreadPoolExecutor(200)
 

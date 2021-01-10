@@ -12,6 +12,9 @@ class MemoryQueue(metaclass=FlyweightMeta):
     def __init__(self, queue_name, fliter_rep=False, namespace='', **kwargs):
         self.queue = Queue(maxsize=100000)
         self.queue_set = set()
+        self.queue_name = queue_name
+        self.fliter_rep = fliter_rep
+        self.namespace = namespace
 
     def _getconn(self, **kwargs):
         pass
@@ -44,9 +47,10 @@ class MemoryQueue(metaclass=FlyweightMeta):
     def check_has_customer(self, hash_value):
         return hash_value in self.queue_set
 
+    # noinspection PyBroadException
     def get(self, block=False, timeout=None):
         try:
-            return self.queue.get(block=block,timeout=timeout)
+            return self.queue.get(block=block, timeout=timeout)
         except Exception:
             return None
 

@@ -51,8 +51,10 @@ try:
     default_config.kafka_username = redis_queue_tool_config.kafka_port
     default_config.kafka_password = redis_queue_tool_config.kafka_password
     logger.info('读取到redis_queue_tool_config.py配置,使用自定义配置')
-except:
-    logger.warning('未读取redis_queue_tool_config.py自定义配置,使用默认配置')
+except ModuleNotFoundError:
+    logger.warning('未读取redis_queue_tool_config.py自定义配置文件,使用默认配置文件')
+except AttributeError:
+    logger.warning('未读取redis_queue_tool_config.py自定义连接属性,使用默认属性')
 
 
 def init_redis_config(host, password, port, db):
@@ -118,6 +120,7 @@ class RedisCustomer(object):
         self.ack = ack
         self.middleware = middleware
 
+    # noinspection PyBroadException
     def _start_consuming_message_thread(self):
         current_customer_count = 0
         get_queue_begin_time = time.time()
@@ -133,8 +136,8 @@ class RedisCustomer(object):
                         for msg in message:
                             if self.qps != 0:
                                 if self.qps < 5:
-                                    sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost if (
-                                                                                                                    1 / self.qps) * self.process_num > get_message_cost else 0
+                                    sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost \
+                                        if (1 / self.qps) * self.process_num > get_message_cost else 0
                                     time.sleep(sleep_seconds)
                                 else:
                                     current_customer_count = current_customer_count + 1
@@ -147,8 +150,8 @@ class RedisCustomer(object):
                     else:
                         if self.qps != 0:
                             if self.qps < 5:
-                                sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost if (
-                                                                                                                1 / self.qps) * self.process_num > get_message_cost else 0
+                                sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost \
+                                    if (1 / self.qps) * self.process_num > get_message_cost else 0
                                 time.sleep(sleep_seconds)
                             else:
                                 current_customer_count = current_customer_count + 1
@@ -167,7 +170,7 @@ class RedisCustomer(object):
                     self._redis_quenen.getdb().expire(heartbeat_check_queue_name, 10)
                     self._heartbeat_check_common(is_break=True)
                 self._clear_process()
-            except:
+            except Exception:
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
 
@@ -179,24 +182,27 @@ class RedisCustomer(object):
             threading.Thread(target=self._heartbeat_check).start()
         cpu_count = multiprocessing.cpu_count()
         if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
-            for i in range(0, min(self.process_num, cpu_count)):
+            for pn in range(0, min(self.process_num, cpu_count)):
                 logger.info(
-                    f'start consuming message  process:{i + 1},{self.customer_type}_num:{self.threads_num},system:{platform.system()}')
+                    f'start consuming message  process:{pn + 1},{self.customer_type}_num:'
+                    f'{self.threads_num},system:{platform.system()}')
                 p = Process(target=self._start_consuming_message_thread)
                 p.start()
         else:
             logger.info(
-                f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num},system:{platform.system()}')
+                f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num}'
+                f',system:{platform.system()}')
             threading.Thread(target=self._start_consuming_message_thread).start()
 
+    # noinspection PyBroadException
     def _consuming_exception_retry(self, message):
         try:
             @retry(stop_max_attempt_number=self.max_retry_times)
-            def consuming_exception_retry(message):
+            def consuming_exception_retry(message2):
                 if type(message) == dict:
-                    self._consuming_function(**message)
+                    self._consuming_function(**message2)
                 else:
-                    dit_message = json.loads(message)
+                    dit_message = json.loads(message2)
                     if type(dit_message) == dict:
                         self._consuming_function(**dit_message)
                     else:
@@ -205,7 +211,7 @@ class RedisCustomer(object):
             consuming_exception_retry(message)
             if self.ack:
                 self._redis_quenen.ack(message)
-        except:
+        except Exception:
             logger.error(traceback.format_exc())
             if self.ack:
                 if self.middleware == MiddlewareEum.REDIS:
@@ -250,15 +256,16 @@ class RedisCustomer(object):
                     queue_name = heart_field.split(':heartbeat_')[0]
                     un_ack_sets_name = f"{heart_field}:unack_message"
                     dlq_queue_name = f"dlq:{queue_name}"
-                    for i in self._redis_quenen.getdb().sscan_iter(un_ack_sets_name):
-                        self._redis_quenen.getdb().lpush(dlq_queue_name, i.decode())
-                        self._redis_quenen.getdb().srem(un_ack_sets_name, i)
+                    for msg in self._redis_quenen.getdb().sscan_iter(un_ack_sets_name):
+                        self._redis_quenen.getdb().lpush(dlq_queue_name, msg.decode())
+                        self._redis_quenen.getdb().srem(un_ack_sets_name, msg)
                     self._redis_quenen.getdb().hdel(self._redis_quenen.heartbeat_key, heart_field)
                 else:
                     self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
                                                     heart_field,
                                                     get_now_millseconds())
 
+    # noinspection PyMethodMayBeStatic
     def _clear_process(self):
         pid = os.getpid()
         logger.warning(f'{pid} process is KeyboardInterrupt and kill')
@@ -303,6 +310,7 @@ class RedisPublish(object):
         self.consuming_function = consuming_function
         self.fliter_rep = fliter_rep
 
+    # noinspection PyBroadException
     @tomorrow_threads(50)
     def publish_redispy(self, *args, **kwargs):
         """
@@ -310,7 +318,6 @@ class RedisPublish(object):
         :param kwargs: 待写入参数 (a=3,b=4)
         :return: None
         """
-        # logger.info(f"args:{args},kwargs:{kwargs}")
         dict_msg = None
         if self.consuming_function:
             keys = inspect.getfullargspec(self.consuming_function).args[0:]
@@ -319,10 +326,10 @@ class RedisPublish(object):
             if args:
                 param = dict() if dict_msg is None else dict_msg
                 try:
-                    for i in range(0, len(args)):
-                        param[keys[i]] = args[i]
+                    for arg_index in range(0, len(args)):
+                        param[keys[arg_index]] = args[arg_index]
                     dict_msg = param
-                except:
+                except Exception:
                     raise Exception('发布任务和消费函数参数不一致,请仔细核对')
             dict_msg = dict(sorted(dict_msg.items(), key=lambda d: d[0]))
         else:
@@ -360,8 +367,8 @@ class RedisPublish(object):
         """
         if self.middleware == MiddlewareEum.REDIS:
             pipe = self._redis_quenen.getdb().pipeline()
-            for id in msgs:
-                pipe.lpush(self._redis_quenen.queue_name, json.dumps(id))
+            for msg in msgs:
+                pipe.lpush(self._redis_quenen.queue_name, json.dumps(msg))
                 if len(pipe) == self.max_push_size:
                     pipe.execute()
                     logger.info(str(self.max_push_size).center(20, '*') + 'commit')
@@ -372,6 +379,7 @@ class RedisPublish(object):
 
     pub_list = publish_redispy_list
 
+    # noinspection PyBroadException
     def publish_redispy_mutil(self, msg: str):
         """
         单笔写入,批量提交
@@ -387,7 +395,7 @@ class RedisPublish(object):
             try:
                 while self._local_quenen.qsize() > 0:
                     self._pipe.lpush(self._redis_quenen.queue_name, self._local_quenen.get_nowait())
-            except:
+            except Exception:
                 logger.error(traceback.format_exc())
             self._pipe.execute()
             logger.info('commit'.center(16, '*'))
@@ -492,8 +500,8 @@ if __name__ == '__main__':
 
 
     # 发布任务
-    # for i in range(1, 200):
-    #     f.pub(a=i, b=i)
+    for i in range(1, 200):
+        f.pub(a=i, b=i)
 
     # 消费任务
     f.start()

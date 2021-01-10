@@ -22,6 +22,7 @@ class RedisQueue(BaseQueue):
         :param namespace: 队列名命名空间
         :param kwargs: db连接动态参数
         """
+        super().__init__(queue_name, fliter_rep, namespace=namespace, **kwargs)
         if namespace:
             self.queue_name = '%s:%s' % (namespace, queue_name)
         else:
@@ -99,10 +100,9 @@ class RedisQueue(BaseQueue):
         for queue_name in all_queues:
             dlq_queue_name = f'dlq:{queue_name}'
             dlq_queue_length = self.getdb().llen(dlq_queue_name)
-            # print(dlq_queue_length)
-            for i in range(0, dlq_queue_length):
+            for aa in range(0, dlq_queue_length):
                 dql_message = self.getdb().rpop(dlq_queue_name)
-                # print(dql_message)
+                print(aa)
                 self.getdb().lpush(queue_name, dql_message)
 
 
@@ -124,4 +124,3 @@ if __name__ == '__main__':
     r_queue.un_ack('66666')
     r_queue.ack('123456')
     r_queue.dlq_re_consume()
-    print(r_queue._init_queues)

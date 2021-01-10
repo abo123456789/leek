@@ -14,7 +14,7 @@ from redis_queue_tool.base_queue import BaseQueue
 kafka_conn_instance = {}
 
 
-class Kafka_consumer(object):
+class KafkaConsumerOwner(object):
     """
     使用Kafka—python的消费模块
     """
@@ -28,16 +28,16 @@ class Kafka_consumer(object):
             self.consumer = kafka_conn_instance.get(key)
         else:
             if default_config.kafka_username and default_config.kafka_password:
-                self.consumer = KafkaConsumer(self.kafkatopic
-                                              , group_id=groupid,
+                self.consumer = KafkaConsumer(self.kafkatopic,
+                                              group_id=groupid,
                                               sasl_mechanism='PLAIN',
                                               security_protocol='SASL_PLAINTEXT',
                                               sasl_plain_username=default_config.kafka_username,
                                               sasl_plain_password=default_config.kafka_password,
                                               bootstrap_servers=self.bootstrap_servers, enable_auto_commit=True)
             else:
-                self.consumer = KafkaConsumer(self.kafkatopic
-                                              , group_id=groupid,
+                self.consumer = KafkaConsumer(self.kafkatopic,
+                                              group_id=groupid,
                                               bootstrap_servers=self.bootstrap_servers, enable_auto_commit=True)
             kafka_conn_instance[key] = self.consumer
 
@@ -45,7 +45,7 @@ class Kafka_consumer(object):
         return self.consumer.poll(1000)
 
 
-class Kafka_producer(object):
+class KafkaProducerOwner(object):
     """
     使用kafka的生产模块
     """
@@ -74,10 +74,11 @@ class Kafka_producer(object):
 
 class KafkaQueue(BaseQueue):
 
+    # noinspection PyBroadException
     def put(self, item):
         try:
             self.producer_k.send_msg(item)
-        except:
+        except Exception:
             traceback.print_exc()
 
     def getdb(self):
@@ -86,6 +87,7 @@ class KafkaQueue(BaseQueue):
     def qsize(self):
         super().qsize()
 
+    # noinspection PyBroadException
     def get(self, block=False, timeout=None):
         try:
             rs = self.consumer_k.consumer.poll(timeout_ms=1000)
@@ -93,14 +95,14 @@ class KafkaQueue(BaseQueue):
             for key in rs:
                 for record in rs[key]:
                     result.append(json.loads(record.value.decode()))
-        except:
+        except Exception:
             traceback.print_exc()
             return None
         return result
 
     def _getconn(self, **kwargs):
-        self.producer_k = Kafka_producer(topic=self.queue_name, **kwargs)
-        self.consumer_k = Kafka_consumer(topic=self.queue_name, **kwargs)
+        self.producer_k = KafkaProducerOwner(topic=self.queue_name, **kwargs)
+        self.consumer_k = KafkaConsumerOwner(topic=self.queue_name, **kwargs)
 
     def isempty(self):
         super().isempty()
