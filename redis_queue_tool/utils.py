@@ -35,6 +35,15 @@ def get_day_str():
     return time.strftime("%Y%m%d%H%M%S", time.localtime())
 
 
+def sort_dict(dict_obj: dict) -> dict:
+    rs = dict()
+    if not dict_obj:
+        return rs
+    for k in sorted(dict_obj.keys()):
+        rs[k] = dict_obj[k]
+    return rs
+
+
 def get_now_millseconds():
     return int(time.time() * 1000)
 
@@ -78,3 +87,4 @@ if __name__ == '__main__':
     print(get_host_name())
     print(get_now_millseconds())
     print(get_day_formate(get_now_millseconds()))
+    print(sort_dict(dict(a=12, b=32, d=1, c=9)))

@@ -34,7 +34,7 @@ import traceback
 from collections import Callable
 from tomorrow3 import threads as tomorrow_threads
 
-from redis_queue_tool.utils import str_sha256, get_now_millseconds
+from redis_queue_tool.utils import str_sha256, get_now_millseconds, sort_dict
 
 logger = get_logger(__name__, formatter_template=5)
 
@@ -322,7 +322,7 @@ class RedisPublish(object):
         if self.consuming_function:
             keys = inspect.getfullargspec(self.consuming_function).args[0:]
             if kwargs:
-                dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
+                dict_msg = sort_dict(kwargs)
             if args:
                 param = dict() if dict_msg is None else dict_msg
                 try:
@@ -331,10 +331,10 @@ class RedisPublish(object):
                     dict_msg = param
                 except Exception:
                     raise Exception('发布任务和消费函数参数不一致,请仔细核对')
-            dict_msg = dict(sorted(dict_msg.items(), key=lambda d: d[0]))
+            dict_msg = sort_dict(kwargs)
         else:
             if kwargs:
-                dict_msg = dict(sorted(kwargs.items(), key=lambda d: d[0]))
+                dict_msg = sort_dict(kwargs)
             elif args:
                 dict_msg = args[0]
         if self.fliter_rep:
@@ -492,7 +492,7 @@ def task_deco(queue_name,
 
 if __name__ == '__main__':
     # #装饰器使用方式
-    @task_deco('test12', priority=1, process_num=3, ack=True)  # 消费函数上新增任务队列装饰器
+    @task_deco('test12', priority=1, process_num=3)  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
         # raise Exception('test1 exception')
