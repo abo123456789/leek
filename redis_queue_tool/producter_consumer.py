@@ -331,7 +331,7 @@ class RedisPublish(object):
                     dict_msg = param
                 except Exception:
                     raise Exception('发布任务和消费函数参数不一致,请仔细核对')
-            dict_msg = sort_dict(kwargs)
+            dict_msg = sort_dict(dict_msg)
         else:
             if kwargs:
                 dict_msg = sort_dict(kwargs)
