@@ -28,7 +28,7 @@ Feature description:
          You can view the current task consumption in real time through the redis web version management tool
 
 #### version description
-* Supported version: Python 3.0 - 3.7
+* Supported version: Python 3.0+
 
 #### Pip installation
 ```shell
