@@ -35,6 +35,7 @@ pip install redis-queue-tool
 ```
 
 #### DEMO说明
+[所有demo](https://github.com/abo123456789/redis-queue-tool/blob/master/redis_queue_tool/test_demo.py)
 
 ##### 0.发布任务和消费任务(装饰器版)
 ```python

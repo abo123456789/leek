@@ -36,6 +36,8 @@ pip install redis-queue-tool
 ```
 
 #### DEMO description
+[All demo](https://github.com/abo123456789/redis-queue-tool/blob/master/redis_queue_tool/test_demo.py)
+
 
 ##### 0. Release tasks and consumer tasks (decorator version)
 ```python
