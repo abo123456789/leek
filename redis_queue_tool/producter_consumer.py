@@ -119,6 +119,9 @@ class RedisCustomer(object):
         self.max_push_size = max_push_size
         self.ack = ack
         self.middleware = middleware
+        self.publisher_queue = RedisPublish(queue_name, fliter_rep=fliter_rep, priority=priority,
+                                               middleware=MiddlewareEum.REDIS,
+                                               consuming_function=consuming_function)
 
     # noinspection PyBroadException
     def _start_consuming_message_thread(self):
@@ -490,9 +493,31 @@ def task_deco(queue_name,
     return _deco
 
 
+def get_consumer(queue_name,
+                 consuming_function: Callable = None,
+                 priority=None,
+                 process_num=1,
+                 threads_num=50,
+                 max_retry_times=3,
+                 qps=0,
+                 middleware=MiddlewareEum.REDIS,
+                 specify_threadpool=None,
+                 customer_type='thread',
+                 fliter_rep=False,
+                 ack=False, *consumer_args,
+                 **consumer_init_kwargs) -> RedisCustomer:
+    customer = RedisCustomer(queue_name, process_num=process_num, threads_num=threads_num, middleware=middleware,
+                             qps=qps,
+                             consuming_function=consuming_function, specify_threadpool=specify_threadpool,
+                             customer_type=customer_type,
+                             fliter_rep=fliter_rep, ack=ack, max_retry_times=max_retry_times, priority=priority,
+                             *consumer_args, **consumer_init_kwargs)
+    return customer
+
+
 if __name__ == '__main__':
     # #装饰器使用方式
-    @task_deco('test12', priority=1, process_num=3)  # 消费函数上新增任务队列装饰器
+    # @task_deco('test12', priority=1, process_num=3)  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
         # raise Exception('test1 exception')
@@ -500,11 +525,18 @@ if __name__ == '__main__':
 
 
     # 发布任务
-    for i in range(1, 200):
-        f.pub(a=i, b=i)
+    # for i in range(1, 200):
+    #     f.pub(a=i, b=i)
 
     # 消费任务
-    f.start()
+    # f.start()
+
+    customer = get_consumer('test12', consuming_function=f, process_num=3, qps=3)
+
+    for i in range(1, 200):
+        customer.publisher_queue.pub(a=i, b=i)
+
+    customer.start()
 
     # f.publisher.dlq_re_queue()
 

@@ -5,6 +5,8 @@
 import json
 import time
 
+from redis_queue_tool import get_consumer
+
 
 def t_demo0():
     from redis_queue_tool import task_deco
@@ -170,6 +172,18 @@ def t_demo10():
     f10.start()
 
 
+def t_demo11():
+    def f11(a: int = 1, b: int = 1):
+        print(f"t_demo11,a:{a},b:{b}")
+
+    customer = get_consumer('test12', consuming_function=f11, process_num=3)
+
+    for i in range(1, 200):
+        customer.publisher_queue.pub(a=i, b=i)
+
+    customer.start()
+
+
 if __name__ == '__main__':
     pass
     t_demo0()
@@ -182,3 +196,4 @@ if __name__ == '__main__':
     t_demo7()
     t_demo9()
     t_demo10()
+    t_demo11()

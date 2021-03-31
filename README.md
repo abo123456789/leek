@@ -37,7 +37,21 @@ pip install redis-queue-tool
 #### DEMO说明
 [所有demo](https://github.com/abo123456789/redis-queue-tool/blob/master/redis_queue_tool/test_demo.py)
 
-##### 0.发布任务和消费任务(装饰器版)
+##### 1.发布任务和消费任务(函数版)
+```python
+from redis_queue_tool import get_consumer
+def f11(a: int = 1, b: int = 1):
+    print(f"t_demo11,a:{a},b:{b}")
+
+customer = get_consumer('test11', consuming_function=f11)
+
+for i in range(1, 200):
+    customer.publisher_queue.pub(a=i, b=i)
+
+customer.start()
+```
+
+##### 2.发布任务和消费任务(装饰器版)
 ```python
 from redis_queue_tool import task_deco
 
@@ -52,26 +66,8 @@ for i in range(1, 51):
 # 消费任务
 f0.start()
 ```
-##### 1.发布消费任务(额外参数)
-```python
-from redis_queue_tool import task_deco
 
-@task_deco('test1', qps=30, threads_num=30, max_retry_times=3, ack=True)
-def f1(a, b):
-    print(f"t_demo1,a:{a},b:{b}")
-
-# 发布任务
-for i in range(1, 31):
-    f1.pub(i, i + 1)  # 或者 f1.publish_redispy(i,i+1)
-
-# 消费任务
-f1.start()
-
-# DLQ消息重入消费队列
-f1.publisher.dlq_re_queue()
-```
-
-##### 2.发布消费任务(非装饰器版)
+##### 3.发布消费任务(类调用版)
 ```python
 from redis_queue_tool import RedisPublish, RedisCustomer
 
@@ -90,7 +86,26 @@ RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
               qps=50).start_consuming_message()
 ```
 
-##### 3.批量提交任务(使用协程消费)
+##### 4.发布消费任务(额外参数)
+```python
+from redis_queue_tool import task_deco
+
+@task_deco('test1', qps=30, threads_num=30, max_retry_times=3, ack=True)
+def f1(a, b):
+    print(f"t_demo1,a:{a},b:{b}")
+
+# 发布任务
+for i in range(1, 31):
+    f1.pub(i, i + 1)  # 或者 f1.publish_redispy(i,i+1)
+
+# 消费任务
+f1.start()
+
+# DLQ消息重入消费队列
+f1.publisher.dlq_re_queue()
+```
+
+##### 5.批量提交任务(使用协程消费)
 
 ```python
 from redis_queue_tool import task_deco
@@ -113,7 +128,7 @@ f3.pub_list(result)
 f3.start()
 ```
 
-##### 4.切换任务队列中间件为sqlite(默认为redis)
+##### 6.切换任务队列中间件为sqlite(默认为redis)
 
 ```python
 from redis_queue_tool import task_deco, MiddlewareEum

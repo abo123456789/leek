@@ -6,9 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='redis-queue-tool',
-    version='4.8.2',
-    # name='leek',
-    # version='1.0.3',
+    version='4.8.3',
     description=(
         '高并发reids队列,分布式爬虫利器(High concurrency RedisQueue,Distributed crawler weapon)'
     ),
