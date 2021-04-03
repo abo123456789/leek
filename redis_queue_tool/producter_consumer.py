@@ -77,6 +77,7 @@ class RedisCustomer(object):
         redis队列消费程序
         :param queue_name: 队列名称
         :param consuming_function: 队列消息取出来后执行的方法
+        :param process_num: 启动进程数量
         :param threads_num: 启动多少个线程(档customer_type=gevent时为协程数量)
         :param max_retry_times: 错误重试次数
         :param func_timeout: 函数超时时间(秒)
