@@ -38,8 +38,21 @@ pip install redis-queue-tool
 #### DEMO description
 [All demo](https://github.com/abo123456789/redis-queue-tool/blob/master/redis_queue_tool/test_demo.py)
 
+##### 1. Release tasks and consumer tasks (functional version)
+```python
+from redis_queue_tool import get_consumer
+def f11(a: int = 1, b: int = 1):
+     print(f"t_demo11,a:{a},b:{b}")
 
-##### 0. Release tasks and consumer tasks (decorator version)
+customer = get_consumer('test11', consuming_function=f11)
+
+for i in range(1, 200):
+     customer.publisher_queue.pub(a=i, b=i)
+
+customer.start()
+```
+
+##### 2. Release tasks and consumer tasks (decorator version)
 ```python
 from redis_queue_tool import task_deco
 
@@ -54,7 +67,7 @@ for i in range(1, 51):
 # Consumer task
 f0.start()
 ```
-##### 1. Publish consumer tasks (use extra parameters)
+##### 3. Publish consumer tasks (use extra parameters)
 ```python
 from redis_queue_tool import task_deco
 
@@ -73,7 +86,7 @@ f1.start()
 f1.publisher.dlq_re_queue()
 ```
 
-##### 2. Publish consumer tasks (non-decorator version)
+##### 4. Publish consumer tasks (non-decorator version)
 ```python
 from redis_queue_tool import RedisPublish, RedisCustomer
 
@@ -92,7 +105,7 @@ RedisCustomer(queue_name='test2', consuming_function=print_msg_dict,
               qps=50).start_consuming_message()
 ```
 
-##### 3. Batch submit task consumption(consumption using coroutine)
+##### 5. Batch submit task consumption(consumption using coroutine)
 
 ```python 
 from redis_queue_tool import task_deco
@@ -115,7 +128,7 @@ f3.pub_list(result)
 f3.start()
 ```
 
-##### 4. Switch task queue middleware to sqlite (default is redis)
+##### 6. Switch task queue middleware to sqlite (default is redis)
 
 ```python
 from redis_queue_tool import task_deco, MiddlewareEum
@@ -128,6 +141,23 @@ for zz in range(1, 51):
     f4.pub(zz, zz, zz)
 
 f4.start()
+```
+#### Detailed explanation of consumption function parameters
+```
+get_consumer(queue_name='test11', consuming_function=f11, process_num=2, threads_num=30, max_retry_times=5, qps=10)
+:param queue_name: queue name
+:param consuming_function: The method to be executed after the queue message is taken out
+:param process_num: number of started processes (default: 1)
+:param threads_num: how many threads to start (default: 50)
+:param max_retry_times: number of error retries (default: 3)
+:param qps: limit the number of consumer tasks per second (default 0 is unlimited)
+:param middleware: consumer middleware, default redis supports sqlite, kafka, memory
+:param specify_threadpool: external incoming thread pool
+:param customer_type: consumer type string support ('thread','gevent') default thread
+:param fliter_rep: Whether to de-duplicate consumer tasks bool True: de-duplicate False: do not de-duplicate
+:param max_push_size: the number of batch push tasks each time the default value is 50
+:param ack: Do you need to confirm consumption? Default value is False
+:param priority: queue priority int[0-4]
 ```
 
 #### Reids install
