@@ -328,13 +328,16 @@ class RedisPublish(object):
             if kwargs:
                 dict_msg = sort_dict(kwargs)
             if args:
-                param = dict() if dict_msg is None else dict_msg
-                try:
-                    for arg_index in range(0, len(args)):
-                        param[keys[arg_index]] = args[arg_index]
-                    dict_msg = param
-                except Exception:
-                    raise Exception('发布任务和消费函数参数不一致,请仔细核对')
+                if len(args) == 1 and type(args[0]) == dict:
+                    dict_msg = args[0]
+                else:
+                    param = dict() if dict_msg is None else dict_msg
+                    try:
+                        for arg_index in range(0, len(args)):
+                            param[keys[arg_index]] = args[arg_index]
+                        dict_msg = param
+                    except Exception:
+                        raise Exception('发布任务和消费函数参数不一致,请仔细核对')
             dict_msg = sort_dict(dict_msg)
         else:
             if kwargs:

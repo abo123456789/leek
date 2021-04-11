@@ -179,7 +179,7 @@ def t_demo11():
     customer = get_consumer('test12', consuming_function=f11, process_num=3)
 
     for i in range(1, 200):
-        customer.publisher_queue.pub(a=i, b=i)
+        customer.publisher_queue.pub({'a': i, 'b': i})
 
     customer.start()
 
