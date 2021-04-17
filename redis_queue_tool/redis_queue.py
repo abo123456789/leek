@@ -68,6 +68,7 @@ class RedisQueue(BaseQueue):
         self.__db.delete(self.queue_name)
         if self.key_sets:
             self.__db.delete(self.key_sets)
+        self.__db.delete('dlq:'+self.queue_name)
 
     def get(self, block=False, timeout=None):
         if block:

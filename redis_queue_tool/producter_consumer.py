@@ -524,7 +524,7 @@ if __name__ == '__main__':
     # @task_deco('test12', priority=1, process_num=3)  # 消费函数上新增任务队列装饰器
     def f(a, b):
         print(f"a:{a},b:{b}")
-        # raise Exception('test1 exception')
+        raise Exception('test1 exception')
         time.sleep(1)
 
 
@@ -535,13 +535,14 @@ if __name__ == '__main__':
     # 消费任务
     # f.start()
 
-    customer = get_consumer('test12', consuming_function=f, process_num=3, qps=3)
+    customer = get_consumer('test12', consuming_function=f, process_num=3, ack=True)
 
     for i in range(1, 200):
         customer.publisher_queue.pub(a=i, b=i)
 
     customer.start()
 
+    # customer.publisher_queue.clear_quenen()
     # f.publisher.dlq_re_queue()
 
     # # #非装饰器版使用demo
