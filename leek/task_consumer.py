@@ -275,6 +275,10 @@ class TaskConsumer(object):
 
     # noinspection PyMethodMayBeStatic
     def _clear_process(self):
+        try:
+            self._redis_quenen.getdb().delete(self._redis_quenen.heartbeat_key)
+        except:
+            pass
         pid = os.getpid()
         logger.warning(f'{pid} process is KeyboardInterrupt and kill')
         os.kill(pid, signal.SIGTERM)
