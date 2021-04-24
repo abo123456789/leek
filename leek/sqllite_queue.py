@@ -7,7 +7,7 @@ import traceback
 
 import persistqueue
 
-from redis_queue_tool.base_queue import BaseQueue
+from leek.base_queue import BaseQueue
 
 
 class SqlliteQueue(BaseQueue):

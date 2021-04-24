@@ -4,7 +4,7 @@
 import abc
 import os
 
-from redis_queue_tool.utils import get_host_ip, get_day_str
+from leek.utils import get_host_ip, get_day_str
 
 
 class BaseQueue(metaclass=abc.ABCMeta):

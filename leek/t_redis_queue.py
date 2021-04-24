@@ -2,7 +2,7 @@
 # @Time    : 2020/11/16 22:48
 # @Author  : CC
 # @Desc    : test_redis_queue.py
-from redis_queue_tool import RedisQueue
+from leek import RedisQueue
 
 if __name__ == '__main__':
     redis_host = '127.0.0.1'

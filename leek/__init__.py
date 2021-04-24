@@ -3,7 +3,8 @@
 # @Author  : cc
 # @FileName: __init__.py.py
 from .middleware_eum import *
-from .producter_consumer import *
+from .task_publisher import *
+from .task_consumer import *
 from .init_config_file import use_config_form_distributed_frame_config_module
 from multiprocessing import set_start_method
 import platform

@@ -5,11 +5,11 @@
 import json
 import time
 
-from redis_queue_tool import get_consumer
+from leek import get_consumer
 
 
 def t_demo0():
-    from redis_queue_tool import task_deco
+    from leek import task_deco
 
     @task_deco('test0', fliter_rep=True)  # 消费函数上新增任务队列装饰器
     def f0(a, b):
@@ -24,7 +24,7 @@ def t_demo0():
 
 
 def t_demo1():
-    from redis_queue_tool import task_deco
+    from leek import task_deco
 
     @task_deco('test1', qps=30, threads_num=30, max_retry_times=3, ack=True)  # 消费函数上新增任务队列装饰器
     def f1(a, b):
@@ -40,7 +40,7 @@ def t_demo1():
 
 
 def t_demo2():
-    from redis_queue_tool import RedisPublish, RedisCustomer
+    from leek import RedisPublish, RedisCustomer
 
     for zz in range(1, 51):
         # 写入字典任务 {"a":zz,"b":zz,"c":zz}
@@ -56,7 +56,7 @@ def t_demo2():
 
 
 def t_demo3():
-    from redis_queue_tool import task_deco
+    from leek import task_deco
     from gevent import monkey
     monkey.patch_all()
 
@@ -77,7 +77,7 @@ def t_demo3():
 
 
 def t_demo4():
-    from redis_queue_tool import task_deco
+    from leek import task_deco
 
     @task_deco('test4', middleware='sqlite')
     def f4(a, b, c):
@@ -90,7 +90,7 @@ def t_demo4():
 
 
 def t_demo5():
-    from redis_queue_tool import task_deco, MiddlewareEum
+    from leek import task_deco, MiddlewareEum
 
     @task_deco('test5', middleware=MiddlewareEum.KAFKA, fliter_rep=True)
     def f5(a, b, c):
@@ -103,7 +103,7 @@ def t_demo5():
 
 
 def t_demo6():
-    from redis_queue_tool import task_deco, MiddlewareEum
+    from leek import task_deco, MiddlewareEum
 
     @task_deco('test6', middleware=MiddlewareEum.MEMORY)
     def f6(a, b, c):
@@ -116,7 +116,7 @@ def t_demo6():
 
 
 def t_demo7():
-    from redis_queue_tool import task_deco
+    from leek import task_deco
 
     @task_deco('test7')
     def f7(a):
@@ -133,7 +133,7 @@ def t_demo7():
 
 
 def t_demo9():
-    from redis_queue_tool import task_deco
+    from leek import task_deco
 
     @task_deco('test9', fliter_rep=False)  # 消费函数上新增任务队列装饰器
     def f9(a: int = 1):
@@ -151,7 +151,7 @@ def t_demo10():
     """
     优先级队列demo
     """
-    from redis_queue_tool import task_deco
+    from leek import task_deco
 
     @task_deco('test10', priority=1, fliter_rep=False)  # 消费函数上新增任务队列装饰器
     def f10(a: int = 1):

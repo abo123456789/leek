@@ -5,9 +5,9 @@ import json
 import os
 
 import redis
-from redis_queue_tool.utils import get_host_ip, get_day_str
+from leek.utils import get_host_ip, get_day_str
 
-from redis_queue_tool.base_queue import BaseQueue
+from leek.base_queue import BaseQueue
 
 
 class RedisQueue(BaseQueue):

@@ -7,9 +7,9 @@ import time
 import traceback
 
 from kafka import KafkaConsumer, KafkaProducer
-from redis_queue_tool import default_config
+from leek import default_config
 
-from redis_queue_tool.base_queue import BaseQueue
+from leek.base_queue import BaseQueue
 
 kafka_conn_instance = {}
 
