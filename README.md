@@ -39,6 +39,7 @@ from leek import get_consumer
 
 def f(a, b):
     print(f"a:{a},b:{b}")
+    print(f.meta)
 
 cunsumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401')
 
