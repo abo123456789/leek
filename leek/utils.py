@@ -48,6 +48,10 @@ def get_now_millseconds():
     return int(time.time() * 1000)
 
 
+def get_now_seconds():
+    return int(time.time())
+
+
 def get_host_ip():
     """
     查询本机ip地址
@@ -88,3 +92,4 @@ if __name__ == '__main__':
     print(get_now_millseconds())
     print(get_day_formate(get_now_millseconds()))
     print(sort_dict(dict(a=12, b=32, d=1, c=9)))
+    print(get_now_seconds())

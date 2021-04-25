@@ -40,7 +40,7 @@ from leek import get_consumer
 def f(a, b):
     print(f"a:{a},b:{b}")
 
-cunsumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, batch_id='2021042401')
+cunsumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401')
 
 for i in range(1, 200):
     cunsumer.task_publisher.pub(a=i, b=i)

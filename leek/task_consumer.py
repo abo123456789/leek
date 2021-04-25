@@ -30,7 +30,7 @@ import time
 import traceback
 from collections import Callable
 
-from leek.utils import str_sha256, get_now_millseconds, sort_dict
+from leek.utils import str_sha256, get_now_millseconds, sort_dict, get_now_seconds
 
 logger = get_logger(__name__, formatter_template=5)
 
@@ -123,7 +123,7 @@ class TaskConsumer(object):
                                             middleware=MiddlewareEum.REDIS,
                                             consuming_function=consuming_function,
                                             max_retry_times=max_retry_times,
-                                            task_expires=task_expires,
+                                            task_expires=task_expires + get_now_seconds() if task_expires else None,
                                             batch_id=batch_id)
 
     # noinspection PyBroadException
@@ -138,36 +138,19 @@ class TaskConsumer(object):
                 if message:
                     if self.ack:
                         self._redis_quenen.un_ack(message)
-                    if isinstance(message, list):
-                        for msg in message:
-                            if self.qps != 0:
-                                if self.qps < 5:
-                                    sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost \
-                                        if (1 / self.qps) * self.process_num > get_message_cost else 0
-                                    time.sleep(sleep_seconds)
-                                else:
-                                    current_customer_count = current_customer_count + 1
-                                    if current_customer_count == int(self.qps / self.process_num):
-                                        sleep_time = 1 - (time.time() - get_queue_begin_time)
-                                        time.sleep(sleep_time if sleep_time > 0 else 0)
-                                        current_customer_count = 0
-                                        get_queue_begin_time = time.time()
-
-                            self._threadpool.submit(self._consuming_exception_retry, msg)
-                    else:
-                        if self.qps != 0:
-                            if self.qps < 5:
-                                sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost \
-                                    if (1 / self.qps) * self.process_num > get_message_cost else 0
-                                time.sleep(sleep_seconds)
-                            else:
-                                current_customer_count = current_customer_count + 1
-                                if current_customer_count == int(self.qps / self.process_num):
-                                    sleep_time = 1 - (time.time() - get_queue_begin_time)
-                                    time.sleep(sleep_time if sleep_time > 0 else 0)
-                                    current_customer_count = 0
-                                    get_queue_begin_time = time.time()
-                        self._threadpool.submit(self._consuming_exception_retry, message)
+                    if self.qps != 0:
+                        if self.qps < 5:
+                            sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost \
+                                if (1 / self.qps) * self.process_num > get_message_cost else 0
+                            time.sleep(sleep_seconds)
+                        else:
+                            current_customer_count = current_customer_count + 1
+                            if current_customer_count == int(self.qps / self.process_num):
+                                sleep_time = 1 - (time.time() - get_queue_begin_time)
+                                time.sleep(sleep_time if sleep_time > 0 else 0)
+                                current_customer_count = 0
+                                get_queue_begin_time = time.time()
+                    self._threadpool.submit(self._consuming_exception_retry, message)
                 else:
                     time.sleep(0.3)
             except KeyboardInterrupt:
@@ -205,16 +188,17 @@ class TaskConsumer(object):
         try:
             @retry(stop_max_attempt_number=self.max_retry_times)
             def consuming_exception_retry(message2):
-                if type(message2) == dict:
-                    task_body = message2['body']
+                task_dict = message2 if isinstance(message2, dict) else json.loads(message2)
+                task_body = task_dict['body']
+                self._consuming_function.meta = task_dict['meta']
+                task_expires_now = task_dict['meta'].get('task_expires')
+                if task_expires_now and task_expires_now < get_now_seconds():
+                    logger.warning(f"task has expired:{task_dict}")
+                    return
+                if isinstance(task_body, dict):
                     self._consuming_function(**task_body)
                 else:
-                    dit_message = json.loads(message2)
-                    if type(dit_message) == dict:
-                        task_body = dit_message['body']
-                        self._consuming_function(**task_body)
-                    else:
-                        self._consuming_function(dit_message)
+                    self._consuming_function(task_body)
 
             consuming_exception_retry(message)
             if self.ack:
@@ -311,11 +295,12 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
+        print(f.meta)
 
 
-    cunsumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, batch_id='2021042401')
+    cunsumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401-003')
 
-    for i in range(1, 200):
+    for i in range(1, 60):
         cunsumer.task_publisher.pub(a=i, b=i)
 
     cunsumer.start()
