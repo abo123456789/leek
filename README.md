@@ -41,12 +41,12 @@ def f(a, b):
     print(f"a:{a},b:{b}")
     print(f.meta)
 
-cunsumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401')
+consumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401')
 
 for i in range(1, 200):
-    cunsumer.task_publisher.pub(a=i, b=i)
+    consumer.task_publisher.pub(a=i, b=i)
 
-cunsumer.start()
+consumer.start()
 ```
 
 #### 消费函数参数详解

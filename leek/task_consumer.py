@@ -186,7 +186,7 @@ class TaskConsumer(object):
     # noinspection PyBroadException
     def _consuming_exception_retry(self, message):
         try:
-            @retry(stop_max_attempt_number=self.max_retry_times)
+            @retry(stop_max_attempt_number=self.max_retry_times, wait_random_min=700, wait_random_max=1700)
             def consuming_exception_retry(message2):
                 task_dict = message2 if isinstance(message2, dict) else json.loads(message2)
                 task_body = task_dict['body']
@@ -296,11 +296,12 @@ if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
         print(f.meta)
+        # raise Exception('测试❌')
 
 
-    cunsumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401-003')
+    consumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401-003')
 
     for i in range(1, 60):
-        cunsumer.task_publisher.pub(a=i, b=i)
+        consumer.task_publisher.pub(a=i, b=i)
 
-    cunsumer.start()
+    consumer.start()
