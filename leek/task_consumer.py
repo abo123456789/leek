@@ -30,7 +30,7 @@ import time
 import traceback
 from collections import Callable
 
-from leek.utils import str_sha256, get_now_millseconds, sort_dict, get_now_seconds
+from leek.utils import str_sha256, get_now_millseconds, get_now_seconds
 
 logger = get_logger(__name__, formatter_template=5)
 
@@ -296,7 +296,6 @@ if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
         print(f.meta)
-        # raise Exception('测试❌')
 
 
     consumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401-003')
