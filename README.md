@@ -51,7 +51,7 @@ consumer.start()
 
 #### 消费函数参数详解
 ```
-get_consumer(queue_name='test11', consuming_function=f11, process_num=2, threads_num=30, max_retry_times=5, qps=10, task_expires=60, batch_id='test_v1.0')
+get_consumer(queue_name='test11', consuming_function=f, process_num=2, threads_num=30, max_retry_times=5, qps=10, task_expires=60, batch_id='test_v1.0')
 :param queue_name: 队列名称
 :param consuming_function: 队列消息取出来后执行的方法
 :param process_num: 启动进程数量(默认值:1)
