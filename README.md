@@ -63,7 +63,6 @@ get_consumer(queue_name='test11', consuming_function=f11, process_num=2, threads
 :param fliter_rep: 消费任务是否去重 bool True:去重 False:不去重
 :param max_push_size : 每次批量推送任务数量 默认值50
 :param ack : 是否需要确认消费 默认值False
-:param priority : 队列优先级 int[0-4]
 :param task_expires : 任务过期时间 单位/秒
 :param batch_id : 批次ID
 ```

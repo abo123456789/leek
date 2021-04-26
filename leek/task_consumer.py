@@ -298,7 +298,8 @@ if __name__ == '__main__':
         print(f.meta)
 
 
-    consumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401-003')
+    consumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10,
+                            batch_id='2021042401-003')
 
     for i in range(1, 60):
         consumer.task_publisher.pub(a=i, b=i)

@@ -5,7 +5,7 @@ import traceback
 from collections import Callable
 
 from py_log import get_logger
-from leek.utils import sort_dict, str_sha256
+from leek.utils import sort_dict, str_sha256, gen_uuid
 
 from leek import default_config
 from leek.kafka_queue import KafkaQueue
@@ -73,6 +73,7 @@ class TaskPublisher(object):
         task['body'] = sort_dict(kwargs) if kwargs else None
         if not task['body']:
             return False
+        task['meta']['task_id'] = gen_uuid()
         if self.fliter_rep:
             hash_value = str_sha256(json.dumps(task))
             if self._quenen.check_has_customer(hash_value):
@@ -96,6 +97,7 @@ class TaskPublisher(object):
                     self.logger.error(traceback.format_exc())
                     return False
                 task = dict(meta=self.meta, body=task_body)
+                task['meta']['task_id'] = gen_uuid()
                 pipe.lpush(self._quenen.queue_name, json.dumps(task))
                 if len(pipe) == self.max_push_size:
                     pipe.execute()
@@ -136,4 +138,4 @@ if __name__ == '__main__':
     result = task_publisher.pub_list(results)
     print(result)
 
-    task_publisher.clear()
+    # task_publisher.clear()

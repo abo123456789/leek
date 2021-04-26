@@ -7,6 +7,7 @@ import getpass
 import hashlib
 import socket
 import time
+import uuid
 
 
 def str_sha256(text: str) -> str:
@@ -29,6 +30,21 @@ def str_sha512(text: str) -> str:
     hash_obj = hashlib.sha512()
     hash_obj.update(text.encode('utf-8'))
     return hash_obj.hexdigest()
+
+
+def str_md5(text: str) -> str:
+    """
+    获取字符串md5值
+    :param text: 待hash原始字符串
+    :return: hash值
+    """
+    hash_obj = hashlib.md5()
+    hash_obj.update(text.encode('utf-8'))
+    return hash_obj.hexdigest()
+
+
+def gen_uuid():
+    return uuid.uuid4().hex
 
 
 def get_day_str():
@@ -93,3 +109,5 @@ if __name__ == '__main__':
     print(get_day_formate(get_now_millseconds()))
     print(sort_dict(dict(a=12, b=32, d=1, c=9)))
     print(get_now_seconds())
+    print(str_md5('qwe'))
+    print(gen_uuid())
