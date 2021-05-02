@@ -68,7 +68,7 @@ class TaskConsumer(object):
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0,
                  middleware=MiddlewareEum.REDIS,
                  specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=False,
-                 priority=None, task_expires=None, batch_id=None):
+                 priority=None, task_expires=None, batch_id=None, re_queue_exception: tuple = None):
         """
         redis队列消费程序
         :param queue_name: 队列名称
@@ -88,6 +88,7 @@ class TaskConsumer(object):
         :param priority : 队列优先级 int[0-4]
         :param task_expires : 任务过期时间 单位秒
         :param batch_id : 批次ID
+        :re_queue_exception : 需要重入队列的异常
         """
         if middleware == MiddlewareEum.SQLITE:
             self._redis_quenen = SqlliteQueue(queue_name=queue_name)
@@ -118,6 +119,7 @@ class TaskConsumer(object):
         self.max_push_size = max_push_size
         self.ack = ack
         self.middleware = middleware
+        self.re_queue_exception = re_queue_exception
         self.task_publisher = TaskPublisher(queue_name, fliter_rep=fliter_rep,
                                             priority=priority,
                                             middleware=MiddlewareEum.REDIS,
@@ -125,6 +127,23 @@ class TaskConsumer(object):
                                             max_retry_times=max_retry_times,
                                             task_expires=task_expires + get_now_seconds() if task_expires else None,
                                             batch_id=batch_id)
+
+    def start(self):
+        if self.ack:
+            threading.Thread(target=self._heartbeat_check).start()
+        cpu_count = multiprocessing.cpu_count()
+        if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
+            for pn in range(0, min(self.process_num, cpu_count)):
+                logger.info(
+                    f'start consuming message  process:{pn + 1},{self.customer_type}_num:'
+                    f'{self.threads_num},system:{platform.system()}')
+                p = Process(target=self._start_consuming_message_thread)
+                p.start()
+        else:
+            logger.info(
+                f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num}'
+                f',system:{platform.system()}')
+            threading.Thread(target=self._start_consuming_message_thread).start()
 
     # noinspection PyBroadException
     def _start_consuming_message_thread(self):
@@ -163,26 +182,6 @@ class TaskConsumer(object):
                 logger.error(traceback.format_exc())
                 time.sleep(0.5)
 
-    def start(self):
-        self.start_consuming_message()
-
-    def start_consuming_message(self):
-        if self.ack:
-            threading.Thread(target=self._heartbeat_check).start()
-        cpu_count = multiprocessing.cpu_count()
-        if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
-            for pn in range(0, min(self.process_num, cpu_count)):
-                logger.info(
-                    f'start consuming message  process:{pn + 1},{self.customer_type}_num:'
-                    f'{self.threads_num},system:{platform.system()}')
-                p = Process(target=self._start_consuming_message_thread)
-                p.start()
-        else:
-            logger.info(
-                f'start consuming message {self.customer_type}, {self.customer_type}_num:{self.threads_num}'
-                f',system:{platform.system()}')
-            threading.Thread(target=self._start_consuming_message_thread).start()
-
     # noinspection PyBroadException
     def _consuming_exception_retry(self, message):
         try:
@@ -195,10 +194,20 @@ class TaskConsumer(object):
                 if task_expires_now and task_expires_now < get_now_seconds():
                     logger.warning(f"task has expired:{task_dict}")
                     return
-                if isinstance(task_body, dict):
-                    self._consuming_function(**task_body)
+                if self.re_queue_exception:
+                    try:
+                        if isinstance(task_body, dict):
+                            self._consuming_function(**task_body)
+                        else:
+                            self._consuming_function(task_body)
+                    except self.re_queue_exception as e:
+                        logger.error(e)
+                        self._redis_quenen.getdb().lpush(self.queue_name, json.dumps(task_dict))
                 else:
-                    self._consuming_function(task_body)
+                    if isinstance(task_body, dict):
+                        self._consuming_function(**task_body)
+                    else:
+                        self._consuming_function(task_body)
 
             consuming_exception_retry(message)
             if self.ack:
@@ -281,6 +290,7 @@ def get_consumer(queue_name,
                  fliter_rep=False,
                  task_expires=None,
                  batch_id=None,
+                 re_queue_exception: tuple = None,
                  ack=False, *consumer_args,
                  **consumer_init_kwargs) -> TaskConsumer:
     consumer = TaskConsumer(queue_name, process_num=process_num, threads_num=threads_num, middleware=middleware,
@@ -288,6 +298,7 @@ def get_consumer(queue_name,
                             consuming_function=consuming_function, specify_threadpool=specify_threadpool,
                             customer_type=customer_type, task_expires=task_expires, batch_id=batch_id,
                             fliter_rep=fliter_rep, ack=ack, max_retry_times=max_retry_times, priority=priority,
+                            re_queue_exception=re_queue_exception,
                             *consumer_args, **consumer_init_kwargs)
     return consumer
 
@@ -295,11 +306,12 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
+        t = a / 0
         print(f.meta)
 
 
-    consumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10,
-                            batch_id='2021042401-003')
+    consumer = get_consumer('test12', consuming_function=f, process_num=1, ack=True,
+                            batch_id='2021042401-003', qps=10, re_queue_exception=(ZeroDivisionError,))
 
     for i in range(1, 60):
         consumer.task_publisher.pub(a=i, b=i)
