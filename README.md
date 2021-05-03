@@ -65,4 +65,5 @@ get_consumer(queue_name='test11', consuming_function=f, process_num=2, threads_n
 :param ack : 是否需要确认消费 默认值False
 :param task_expires : 任务过期时间 单位/秒
 :param batch_id : 批次ID
+:param re_queue_exception : 需要重入队列的异常
 ```
