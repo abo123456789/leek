@@ -202,7 +202,13 @@ class TaskConsumer(object):
                             self._consuming_function(task_body)
                     except self.re_queue_exception as e:
                         logger.error(e)
-                        self._redis_quenen.getdb().lpush(self.queue_name, json.dumps(task_dict))
+                        retry_left_times = task_dict['meta']['max_retry_times']
+                        task_dict['meta']['max_retry_times'] = retry_left_times - 1
+                        logger.debug(task_dict)
+                        if task_dict['meta']['max_retry_times'] > 0:
+                            self._redis_quenen.getdb().lpush(self.queue_name, json.dumps(task_dict))
+                        else:
+                            self._redis_quenen.un_ack(task_dict)
                 else:
                     if isinstance(task_body, dict):
                         self._consuming_function(**task_body)
@@ -311,9 +317,10 @@ if __name__ == '__main__':
 
 
     consumer = get_consumer('test12', consuming_function=f, process_num=1, ack=True,
-                            batch_id='2021042401-003', qps=10, re_queue_exception=(ZeroDivisionError,))
+                            batch_id='2021042401-003', max_retry_times=5, qps=10,
+                            re_queue_exception=(ZeroDivisionError,))
 
-    for i in range(1, 60):
+    for i in range(1, 10):
         consumer.task_publisher.pub(a=i, b=i)
 
     consumer.start()
