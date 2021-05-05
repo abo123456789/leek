@@ -12,6 +12,7 @@ def t_demo1():
 
     def print_msg_dict(a, b):
         print(f"t_demo1:{a},{b}")
+        # print(print_msg_dict.meta)
 
     TaskConsumer(queue_name='test1', consuming_function=print_msg_dict).start()
 
