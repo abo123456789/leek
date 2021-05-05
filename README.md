@@ -35,6 +35,19 @@ pip install leek
 
 ##### 1.发布任务和消费任务
 ```python
+from leek import TaskPublisher, TaskConsumer
+
+for zz in range(1, 11):
+    TaskPublisher(queue_name='test1').pub(a=zz, b=zz)
+
+def print_msg_dict(a, b):
+    print(f"t_demo1:{a},{b}")
+
+TaskConsumer(queue_name='test1', consuming_function=print_msg_dict).start()
+```
+
+##### 2.发布任务和消费任务(更多参数实例)
+```python
 from leek import get_consumer
 
 def f(a, b):
