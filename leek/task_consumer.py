@@ -204,7 +204,7 @@ class TaskConsumer(object):
                         logger.error(e)
                         retry_left_times = task_dict['meta']['max_retry_times']
                         task_dict['meta']['max_retry_times'] = retry_left_times - 1
-                        logger.debug(task_dict)
+                        # logger.debug(task_dict)
                         if task_dict['meta']['max_retry_times'] > 0:
                             self._redis_quenen.getdb().lpush(self.queue_name, json.dumps(task_dict))
                         else:
