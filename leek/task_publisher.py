@@ -63,14 +63,25 @@ class TaskPublisher(object):
 
     # noinspection PyBroadException
     # @tomorrow_threads(50)
-    def pub(self, **kwargs):
+    def pub(self, *args, **kwargs):
         """
         将多参数写入消息队列
         :param kwargs: 待写入参数 (a=3,b=4)
         :return: None
         """
         task = dict(meta=self.meta)
-        task['body'] = sort_dict(kwargs) if kwargs else None
+        if kwargs:
+            dict_msg = sort_dict(kwargs)
+            task['meta']['msg_type'] = 'params'
+        elif args:
+            dict_msg = args[0]
+            if type(dict_msg) == dict:
+                task['meta']['msg_type'] = 'dict'
+            else:
+                task['meta']['msg_type'] = 'only'
+        else:
+            raise Exception('^^^^^^^^参数非法^^^^^^^^')
+        task['body'] = dict_msg
         if not task['body']:
             return False
         task['meta']['task_id'] = gen_uuid()
@@ -92,12 +103,13 @@ class TaskPublisher(object):
             pipe = self._quenen.getdb().pipeline()
             for msg in tasks:
                 try:
-                    task_body = sort_dict(json.loads(msg))
+                    task_body = sort_dict(json.loads(msg) if isinstance(msg, str) else msg)
                 except:
                     self.logger.error(traceback.format_exc())
                     return False
                 task = dict(meta=self.meta, body=task_body)
                 task['meta']['task_id'] = gen_uuid()
+                task['meta']['msg_type'] = 'only'
                 pipe.lpush(self._quenen.queue_name, json.dumps(task))
                 if len(pipe) == self.max_push_size:
                     pipe.execute()

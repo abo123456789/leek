@@ -196,7 +196,7 @@ class TaskConsumer(object):
                     return
                 if self.re_queue_exception:
                     try:
-                        if isinstance(task_body, dict):
+                        if task_dict['meta']['msg_type'] == 'params':
                             self._consuming_function(**task_body)
                         else:
                             self._consuming_function(task_body)
@@ -210,7 +210,7 @@ class TaskConsumer(object):
                         else:
                             self._redis_quenen.un_ack(task_dict)
                 else:
-                    if isinstance(task_body, dict):
+                    if task_dict['meta']['msg_type'] == 'params':
                         self._consuming_function(**task_body)
                     else:
                         self._consuming_function(task_body)
