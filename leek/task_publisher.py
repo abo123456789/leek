@@ -109,7 +109,7 @@ class TaskPublisher(object):
                     return False
                 task = dict(meta=self.meta, body=task_body)
                 task['meta']['task_id'] = gen_uuid()
-                task['meta']['msg_type'] = 'only'
+                task['meta']['msg_type'] = 'params' if isinstance(msg, dict) else 'only'
                 pipe.lpush(self._quenen.queue_name, json.dumps(task))
                 if len(pipe) == self.max_push_size:
                     pipe.execute()
