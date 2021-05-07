@@ -36,16 +36,16 @@ logger = get_logger(__name__, formatter_template=5)
 
 # 配置连接信息
 try:
-    import redis_queue_tool_config
+    import leek_config
 
-    default_config.redis_host = redis_queue_tool_config.redis_host
-    default_config.redis_password = redis_queue_tool_config.redis_password
-    default_config.redis_port = redis_queue_tool_config.redis_port
-    default_config.redis_db = redis_queue_tool_config.redis_db
-    default_config.kafka_host = redis_queue_tool_config.kafka_host
-    default_config.kafka_port = redis_queue_tool_config.kafka_port
-    default_config.kafka_username = redis_queue_tool_config.kafka_port
-    default_config.kafka_password = redis_queue_tool_config.kafka_password
+    default_config.redis_host = leek_config.redis_host
+    default_config.redis_password = leek_config.redis_password
+    default_config.redis_port = leek_config.redis_port
+    default_config.redis_db = leek_config.redis_db
+    default_config.kafka_host = leek_config.kafka_host
+    default_config.kafka_port = leek_config.kafka_port
+    default_config.kafka_username = leek_config.kafka_port
+    default_config.kafka_password = leek_config.kafka_password
     logger.info('读取到leek_config.py配置,使用自定义配置')
 except ModuleNotFoundError:
     logger.warning('未读取leek_config.py自定义配置文件,使用默认配置文件')
