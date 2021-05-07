@@ -320,7 +320,10 @@ if __name__ == '__main__':
                             batch_id='2021042401-003', max_retry_times=5, qps=10,
                             re_queue_exception=(ZeroDivisionError,))
 
-    for i in range(1, 10):
-        consumer.task_publisher.pub(a=i, b=i)
+    # for i in range(1, 10):
+    #     consumer.task_publisher.pub(a=i, b=i)
+
+    dict_list = [dict(a=i, b=i) for i in range(1, 10)]
+    consumer.task_publisher.pub_list(dict_list)
 
     consumer.start()
