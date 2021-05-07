@@ -46,11 +46,11 @@ try:
     default_config.kafka_port = redis_queue_tool_config.kafka_port
     default_config.kafka_username = redis_queue_tool_config.kafka_port
     default_config.kafka_password = redis_queue_tool_config.kafka_password
-    logger.info('读取到redis_queue_tool_config.py配置,使用自定义配置')
+    logger.info('读取到leek_config.py配置,使用自定义配置')
 except ModuleNotFoundError:
-    logger.warning('未读取redis_queue_tool_config.py自定义配置文件,使用默认配置文件')
+    logger.warning('未读取leek_config.py自定义配置文件,使用默认配置文件')
 except AttributeError:
-    logger.warning('未读取redis_queue_tool_config.py自定义连接属性,使用默认属性')
+    logger.warning('未读取leek_config.py自定义连接属性,使用默认属性')
 
 
 def init_redis_config(host, password, port, db):
