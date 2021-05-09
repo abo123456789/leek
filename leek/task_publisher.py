@@ -93,10 +93,11 @@ class TaskPublisher(object):
         self._quenen.put(json.dumps(task))
         return True
 
-    def pub_list(self, tasks: list):
+    def pub_list(self, tasks: list, param_type: str = 'params'):
         """
         批量写入redis队列
-        :param tasks: 待写入任务列表数据(JSON字符串)
+        :param tasks: 待写入任务列表数据
+        :param param_type: 待写入任务列表数据类型 params(多参数) only(单参数)
         :return:
         """
         if self.middleware == MiddlewareEum.REDIS:
@@ -109,7 +110,7 @@ class TaskPublisher(object):
                     return False
                 task = dict(meta=self.meta, body=task_body)
                 task['meta']['task_id'] = gen_uuid()
-                task['meta']['msg_type'] = 'params' if isinstance(msg, dict) else 'only'
+                task['meta']['msg_type'] = 'params' if isinstance(msg, dict) and param_type == 'params' else 'only'
                 pipe.lpush(self._quenen.queue_name, json.dumps(task))
                 if len(pipe) == self.max_push_size:
                     pipe.execute()
