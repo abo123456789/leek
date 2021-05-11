@@ -12,7 +12,7 @@ setup(
     ),
     keywords=(
         "redisqueue", "queue-tasks", "redis", "distributed-scraper", "producer-consumer",
-        "distribute-crawler", "web-crawler"),
+        "distribute-crawler", "leek"),
     long_description_content_type="text/markdown",
     long_description=open('README.md', encoding='utf-8').read(),
     author='cc',
