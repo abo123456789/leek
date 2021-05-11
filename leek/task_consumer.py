@@ -64,8 +64,8 @@ def init_redis_config(host, password, port, db):
 class TaskConsumer(object):
     """reids队列消费类"""
 
-    def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=50,
-                 max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=0,
+    def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=15,
+                 max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=50,
                  middleware=MiddlewareEum.REDIS,
                  specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=False,
                  priority=None, task_expires=None, batch_id=None, re_queue_exception: tuple = None):
@@ -287,9 +287,9 @@ def get_consumer(queue_name,
                  consuming_function: Callable = None,
                  priority=None,
                  process_num=1,
-                 threads_num=50,
+                 threads_num=15,
                  max_retry_times=3,
-                 qps=0,
+                 qps=50,
                  middleware=MiddlewareEum.REDIS,
                  specify_threadpool=None,
                  customer_type='thread',
@@ -312,18 +312,18 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
-        t = a / 0
+        # t = a / 0
         print(f.meta)
 
 
-    consumer = get_consumer('test12', consuming_function=f, process_num=1, ack=True,
-                            batch_id='2021042401-003', max_retry_times=5, qps=10,
+    consumer = get_consumer('test12', consuming_function=f, ack=True,
+                            batch_id='2021042401-003', max_retry_times=3,
                             re_queue_exception=(ZeroDivisionError,))
 
     # for i in range(1, 10):
     #     consumer.task_publisher.pub(a=i, b=i)
 
-    dict_list = [dict(a=i, b=i) for i in range(1, 10)]
+    dict_list = [dict(a=i, b=i) for i in range(1, 100)]
     consumer.task_publisher.pub_list(dict_list)
 
     consumer.start()
