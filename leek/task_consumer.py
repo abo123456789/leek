@@ -67,7 +67,7 @@ class TaskConsumer(object):
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=15,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=50,
                  middleware=MiddlewareEum.REDIS,
-                 specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=False,
+                 specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=True,
                  priority=None, task_expires=None, batch_id=None, re_queue_exception: tuple = None):
         """
         redis队列消费程序
@@ -84,7 +84,7 @@ class TaskConsumer(object):
         :param customer_type: 消费者类型 string 支持('thread','gevent') 默认thread
         :param fliter_rep: 消费任务是否去重 bool True:去重 False:不去重
         :param max_push_size : 每次批量推送任务数量 默认值50
-        :param ack : 是否需要确认消费 默认值False
+        :param ack : 是否需要确认消费 默认值True
         :param priority : 队列优先级 int[0-4]
         :param task_expires : 任务过期时间 单位秒
         :param batch_id : 批次ID
@@ -297,7 +297,7 @@ def get_consumer(queue_name,
                  task_expires=None,
                  batch_id=None,
                  re_queue_exception: tuple = None,
-                 ack=False, *consumer_args,
+                 ack=True, *consumer_args,
                  **consumer_init_kwargs) -> TaskConsumer:
     consumer = TaskConsumer(queue_name, process_num=process_num, threads_num=threads_num, middleware=middleware,
                             qps=qps,
