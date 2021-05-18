@@ -252,25 +252,23 @@ class TaskConsumer(object):
         logger.info('_heartbeat_check_common')
         redis_db = self._redis_quenen.getdb()
         redis_heartbeat_key = self._redis_quenen.heartbeat_key
-        if redis_db.hexists(redis_heartbeat_key,
-                            self._redis_quenen.heartbeat_field) is False:
-            redis_db.hset(redis_heartbeat_key,
-                          self._redis_quenen.heartbeat_field, get_now_millseconds())
-        hash_all_data = redis_db.hgetall(redis_heartbeat_key)
-        if hash_all_data:
+        if is_break:
+            hash_all_data = redis_db.hgetall(redis_heartbeat_key)
             for key in hash_all_data:
                 heart_field = key.decode()
                 heart_value = int(hash_all_data[key].decode())
-                if is_break or get_now_millseconds() - heart_value > 10500:
+                if get_now_millseconds() - heart_value > 10500:
                     queue_name = heart_field.split(':heartbeat_')[0]
-                    un_ack_sets_name = f"{heart_field}:unack_message"
+                    un_ack_sets_name = f"unack_message:{heart_field}"
                     dlq_queue_name = f"dlq:{queue_name}"
                     for msg in redis_db.sscan_iter(un_ack_sets_name):
                         redis_db.lpush(dlq_queue_name, msg.decode())
                         redis_db.srem(un_ack_sets_name, msg)
                     redis_db.hdel(redis_heartbeat_key, heart_field)
-                else:
-                    redis_db.hset(redis_heartbeat_key, heart_field, get_now_millseconds())
+        else:
+            # logger.info('set _heartbeat_check_common seconds')
+            redis_db.hset(redis_heartbeat_key,
+                          self._redis_quenen.heartbeat_field, get_now_millseconds())
 
     # noinspection PyMethodMayBeStatic
     def _clear_process(self):
@@ -312,6 +310,7 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
+        time.sleep(10)
         # t = a / 0
         print(f.meta)
 
