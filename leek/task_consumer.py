@@ -256,17 +256,14 @@ class TaskConsumer(object):
             hash_all_data = redis_db.hgetall(redis_heartbeat_key)
             for key in hash_all_data:
                 heart_field = key.decode()
-                heart_value = int(hash_all_data[key].decode())
-                if get_now_millseconds() - heart_value > 10500:
-                    queue_name = heart_field.split(':heartbeat_')[0]
-                    un_ack_sets_name = f"unack_message:{heart_field}"
-                    dlq_queue_name = f"dlq:{queue_name}"
-                    for msg in redis_db.sscan_iter(un_ack_sets_name):
-                        redis_db.lpush(dlq_queue_name, msg.decode())
-                        redis_db.srem(un_ack_sets_name, msg)
-                    redis_db.hdel(redis_heartbeat_key, heart_field)
+                queue_name = heart_field.split(':heartbeat_')[0]
+                un_ack_sets_name = f"unack_message:{queue_name}"
+                dlq_queue_name = f"dlq:{queue_name}"
+                for msg in redis_db.sscan_iter(un_ack_sets_name):
+                    redis_db.lpush(dlq_queue_name, msg.decode())
+                    redis_db.srem(un_ack_sets_name, msg)
+                redis_db.hdel(redis_heartbeat_key, heart_field)
         else:
-            # logger.info('set _heartbeat_check_common seconds')
             redis_db.hset(redis_heartbeat_key,
                           self._redis_quenen.heartbeat_field, get_now_millseconds())
 
@@ -310,8 +307,7 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
-        time.sleep(10)
-        # t = a / 0
+        time.sleep(100)
         print(f.meta)
 
 
@@ -322,7 +318,7 @@ if __name__ == '__main__':
     # for i in range(1, 10):
     #     consumer.task_publisher.pub(a=i, b=i)
 
-    dict_list = [dict(a=i, b=i) for i in range(1, 100)]
+    dict_list = [dict(a=i, b=i) for i in range(1, 11)]
     consumer.task_publisher.pub_list(dict_list)
 
     consumer.start()
