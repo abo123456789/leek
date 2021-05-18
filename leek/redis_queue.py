@@ -34,7 +34,7 @@ class RedisQueue(BaseQueue):
         self.key_sets = self.queue_name + ':filter'
         self.heartbeat_field = f"{self.queue_name}:heartbeat_{os.getpid()}_{get_host_ip()}_{get_day_str()}"
         self.un_ack_sets = f"{self.heartbeat_field}:unack_message"
-        self.heartbeat_key = f"tasks:heartbeat:check"
+        self.heartbeat_key = f"heartbeat_check:{self.queue_name}"
 
         self._db = self._getconn(**kwargs)
         self._init_queues = [f"{4 - a}_{queue_name}" for a in range(0, 5)]
