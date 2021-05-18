@@ -132,7 +132,7 @@ class TaskConsumer(object):
         if self.ack:
             threading.Thread(target=self._heartbeat_check).start()
         cpu_count = multiprocessing.cpu_count()
-        if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num > 1:
+        if (platform.system() == 'Darwin' or platform.system() == 'Linux') and self.process_num >= 1:
             for pn in range(0, min(self.process_num, cpu_count)):
                 logger.info(
                     f'start consuming message  process:{pn + 1},{self.customer_type}_num:'
@@ -250,11 +250,13 @@ class TaskConsumer(object):
 
     def _heartbeat_check_common(self, is_break=False):
         logger.info('_heartbeat_check_common')
-        if self._redis_quenen.getdb().hexists(self._redis_quenen.heartbeat_key,
-                                              self._redis_quenen.heartbeat_field) is False:
-            self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
-                                            self._redis_quenen.heartbeat_field, get_now_millseconds())
-        hash_all_data = self._redis_quenen.getdb().hgetall(self._redis_quenen.heartbeat_key)
+        redis_db = self._redis_quenen.getdb()
+        redis_heartbeat_key = self._redis_quenen.heartbeat_key
+        if redis_db.hexists(redis_heartbeat_key,
+                            self._redis_quenen.heartbeat_field) is False:
+            redis_db.hset(redis_heartbeat_key,
+                          self._redis_quenen.heartbeat_field, get_now_millseconds())
+        hash_all_data = redis_db.hgetall(redis_heartbeat_key)
         if hash_all_data:
             for key in hash_all_data:
                 heart_field = key.decode()
@@ -263,14 +265,12 @@ class TaskConsumer(object):
                     queue_name = heart_field.split(':heartbeat_')[0]
                     un_ack_sets_name = f"{heart_field}:unack_message"
                     dlq_queue_name = f"dlq:{queue_name}"
-                    for msg in self._redis_quenen.getdb().sscan_iter(un_ack_sets_name):
-                        self._redis_quenen.getdb().lpush(dlq_queue_name, msg.decode())
-                        self._redis_quenen.getdb().srem(un_ack_sets_name, msg)
-                    self._redis_quenen.getdb().hdel(self._redis_quenen.heartbeat_key, heart_field)
+                    for msg in redis_db.sscan_iter(un_ack_sets_name):
+                        redis_db.lpush(dlq_queue_name, msg.decode())
+                        redis_db.srem(un_ack_sets_name, msg)
+                    redis_db.hdel(redis_heartbeat_key, heart_field)
                 else:
-                    self._redis_quenen.getdb().hset(self._redis_quenen.heartbeat_key,
-                                                    heart_field,
-                                                    get_now_millseconds())
+                    redis_db.hset(redis_heartbeat_key, heart_field, get_now_millseconds())
 
     # noinspection PyMethodMayBeStatic
     def _clear_process(self):
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         print(f.meta)
 
 
-    consumer = get_consumer('test12', consuming_function=f, ack=True,
+    consumer = get_consumer('test12', consuming_function=f, ack=True, process_num=1,
                             batch_id='2021042401-003', max_retry_times=3,
                             re_queue_exception=(ZeroDivisionError,))
 
