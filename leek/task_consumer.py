@@ -244,30 +244,25 @@ class TaskConsumer(object):
                     logger.info('redis队列心跳检查程序退出')
                 except Exception as ex:
                     logger.error(ex)
-                    time.sleep(10)
+                    time.sleep(60)
                 else:
-                    time.sleep(10)
+                    time.sleep(60)
 
     def _heartbeat_check_common(self, is_break=False):
-        logger.info('_heartbeat_check_common')
+        logger.info('_heartbeat_check_common {}'.format(self.queue_name))
         redis_db = self._redis_quenen.getdb()
         redis_heartbeat_key = self._redis_quenen.heartbeat_key
         if is_break:
-            hash_all_data = redis_db.hgetall(redis_heartbeat_key)
-            for key in hash_all_data:
-                heart_field = key.decode()
-                queue_name = heart_field.split(':heartbeat_')[0]
-                un_ack_sets_name = f"unack_message:{queue_name}"
-                dlq_queue_name = f"dlq:{queue_name}"
-                for msg in redis_db.sscan_iter(un_ack_sets_name):
-                    redis_db.lpush(dlq_queue_name, msg.decode())
-                    redis_db.srem(un_ack_sets_name, msg)
-                redis_db.hdel(redis_heartbeat_key, heart_field)
+            un_ack_sets_name = f"unack_message:{self.queue_name}"
+            dlq_queue_name = f"dlq:{self.queue_name}"
+            for msg in redis_db.sscan_iter(un_ack_sets_name):
+                redis_db.lpush(dlq_queue_name, msg.decode())
+                redis_db.srem(un_ack_sets_name, msg)
         else:
             redis_db.hset(redis_heartbeat_key,
                           self._redis_quenen.heartbeat_field, get_now_millseconds())
 
-    # noinspection PyMethodMayBeStatic
+    # noinspection PyMethodMayBeStaticx
     def _clear_process(self):
         try:
             self._redis_quenen.getdb().delete(self._redis_quenen.heartbeat_key)
