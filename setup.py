@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='leek',
-    version='1.3.7',
+    version='1.3.8',
     description=(
         'Task publishing and consumption Middleware'
     ),
@@ -32,7 +32,7 @@ setup(
     ],
     packages=find_packages(),
     platforms=["all"],
-    url='https://github.com/abo123456789/redisqueue',
+    url='https://github.com/abo123456789/redisqueue/tree/leek',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
