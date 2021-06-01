@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='leek',
-    version='1.3.8',
+    version='1.3.9',
     description=(
         'Task publishing and consumption Middleware'
     ),

@@ -68,7 +68,7 @@ get_consumer(queue_name='test11', consuming_function=f, process_num=2, threads_n
 :param queue_name: 队列名称
 :param consuming_function: 队列消息取出来后执行的方法
 :param process_num: 启动进程数量(默认值:1)
-:param threads_num: 启动线程数(默认值:15)
+:param threads_num: 启动线程数(默认值:8)
 :param max_retry_times: 错误重试次数(默认值:3)
 :param qps: 每秒限制消费任务数量(默认50)
 :param middleware: 消费中间件,默认redis 支持sqlite ,kafka, memory

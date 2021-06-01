@@ -64,7 +64,7 @@ def init_redis_config(host, password, port, db):
 class TaskConsumer(object):
     """reids队列消费类"""
 
-    def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=15,
+    def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=8,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=50,
                  middleware=MiddlewareEum.REDIS,
                  specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=True,
@@ -277,7 +277,7 @@ def get_consumer(queue_name,
                  consuming_function: Callable = None,
                  priority=None,
                  process_num=1,
-                 threads_num=15,
+                 threads_num=8,
                  max_retry_times=3,
                  qps=50,
                  middleware=MiddlewareEum.REDIS,
