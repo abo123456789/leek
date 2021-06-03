@@ -42,6 +42,7 @@ try:
     default_config.redis_password = leek_config.redis_password
     default_config.redis_port = leek_config.redis_port
     default_config.redis_db = leek_config.redis_db
+    default_config.redis_ssl = leek_config.redis_ssl
     default_config.kafka_host = leek_config.kafka_host
     default_config.kafka_port = leek_config.kafka_port
     default_config.kafka_username = leek_config.kafka_port
@@ -101,7 +102,8 @@ class TaskConsumer(object):
             self._redis_quenen = RedisQueue(queue_name, priority=priority, host=default_config.redis_host,
                                             port=default_config.redis_port,
                                             db=default_config.redis_db,
-                                            password=default_config.redis_password)
+                                            password=default_config.redis_password,
+                                            ssl=default_config.redis_ssl)
         self._consuming_function = consuming_function
         self.queue_name = queue_name
         self.process_num = process_num
