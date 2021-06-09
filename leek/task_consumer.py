@@ -210,7 +210,10 @@ class TaskConsumer(object):
                         if task_dict['meta']['max_retry_times'] > 0:
                             self._redis_quenen.getdb().lpush(self.queue_name, json.dumps(task_dict))
                         else:
-                            self._redis_quenen.un_ack(task_dict)
+                            # self._redis_quenen.un_ack(task_dict)
+                            dlq_message = json.dumps(task_dict) if isinstance(task_dict, dict) else task_dict
+                            self._redis_quenen.getdb().lpush(f'dlq:{self._redis_quenen.queue_name}', dlq_message)
+
                 else:
                     if task_dict['meta']['msg_type'] == 'params':
                         self._consuming_function(**task_body)
@@ -304,7 +307,9 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
-        time.sleep(100)
+        c = 1/0
+        print(c)
+        time.sleep(1)
         print(f.meta)
 
 
