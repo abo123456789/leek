@@ -52,7 +52,11 @@ class KafkaProducerOwner(object):
 
     def __init__(self, host, port, topic):
         self.kafkatopic = topic
-        self.bootstrap_servers = f'{host}:{port}'
+        if ',' in host:
+            self.bootstrap_servers = ','.join(
+                [f'{host_pre}:{port}' if port and str(port) not in host_pre else host_pre for host_pre in host.split(',')])
+        else:
+            self.bootstrap_servers = f'{host}:{port}' if port and str(port) not in host else host
         key = f"producer_{self.kafkatopic}_{self.bootstrap_servers}"
         if kafka_conn_instance.get(key):
             self.producer = kafka_conn_instance.get(key)

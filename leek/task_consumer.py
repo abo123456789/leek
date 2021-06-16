@@ -37,29 +37,28 @@ logger = get_logger(__name__, formatter_template=5)
 # 配置连接信息
 try:
     import leek_config
-
     default_config.redis_host = leek_config.redis_host
     default_config.redis_password = leek_config.redis_password
     default_config.redis_port = leek_config.redis_port
     default_config.redis_db = leek_config.redis_db
     default_config.redis_ssl = leek_config.redis_ssl
+    logger.info('读取到leek_config.py redis配置')
+except ModuleNotFoundError:
+    logger.warning('未读取到leek_config.py redis配置.')
+except AttributeError:
+    logger.warning('未读取到leek_config.py redis配置。')
+
+try:
+    import leek_config
     default_config.kafka_host = leek_config.kafka_host
     default_config.kafka_port = leek_config.kafka_port
-    default_config.kafka_username = leek_config.kafka_port
+    default_config.kafka_username = leek_config.kafka_username
     default_config.kafka_password = leek_config.kafka_password
-    logger.info('读取到leek_config.py配置,使用自定义配置')
+    logger.info('读取到leek_config.py kafka配置,使用自定义配置')
 except ModuleNotFoundError:
-    logger.warning('未读取leek_config.py自定义配置文件,使用默认配置文件')
+    logger.warning('未读取到leek_config.py kafka配置.')
 except AttributeError:
-    logger.warning('未读取leek_config.py自定义连接属性,使用默认属性')
-
-
-def init_redis_config(host, password, port, db):
-    default_config.redis_host = host
-    default_config.redis_password = password
-    default_config.redis_port = port
-    default_config.redis_db = db
-    logger.info('使用猴子补丁配置')
+    logger.warning('未读取到leek_config.py kafka配置。')
 
 
 class TaskConsumer(object):
@@ -307,13 +306,13 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
-        c = 1/0
-        print(c)
+        # c = 1/0
+        # print(c)
         time.sleep(1)
         print(f.meta)
 
 
-    consumer = get_consumer('test12', consuming_function=f, ack=True, process_num=1,
+    consumer = get_consumer('test12', middleware='kafka', consuming_function=f, ack=True, process_num=1,
                             batch_id='2021042401-003', max_retry_times=3,
                             re_queue_exception=(ZeroDivisionError,))
 
