@@ -123,7 +123,7 @@ class TaskConsumer(object):
         self.re_queue_exception = re_queue_exception
         self.task_publisher = TaskPublisher(queue_name, fliter_rep=fliter_rep,
                                             priority=priority,
-                                            middleware=MiddlewareEum.REDIS,
+                                            middleware=self.middleware,
                                             consuming_function=consuming_function,
                                             max_retry_times=max_retry_times,
                                             task_expires=task_expires + get_now_seconds() if task_expires else None,
@@ -174,10 +174,11 @@ class TaskConsumer(object):
                 else:
                     time.sleep(0.3)
             except KeyboardInterrupt:
-                heartbeat_check_queue_name = f"_heartbeat_check_common:{self._redis_quenen.queue_name}"
-                if self._redis_quenen.getdb().setnx(heartbeat_check_queue_name, 1):
-                    self._redis_quenen.getdb().expire(heartbeat_check_queue_name, 10)
-                    self._heartbeat_check_common(is_break=True)
+                if self.middleware == MiddlewareEum.REDIS:
+                    heartbeat_check_queue_name = f"_heartbeat_check_common:{self._redis_quenen.queue_name}"
+                    if self._redis_quenen.getdb().setnx(heartbeat_check_queue_name, 1):
+                        self._redis_quenen.getdb().expire(heartbeat_check_queue_name, 10)
+                        self._heartbeat_check_common(is_break=True)
                 self._clear_process()
             except Exception:
                 logger.error(traceback.format_exc())
@@ -306,20 +307,19 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
-        # c = 1/0
-        # print(c)
         time.sleep(1)
         print(f.meta)
 
 
-    consumer = get_consumer('test12', middleware='kafka', consuming_function=f, ack=True, process_num=1,
-                            batch_id='2021042401-003', max_retry_times=3,
+    consumer = get_consumer(queue_name='amz_kafka_test', middleware='kafka', consuming_function=f, ack=True,
+                            process_num=1, batch_id='2021042401-003', max_retry_times=3,
                             re_queue_exception=(ZeroDivisionError,))
 
     # for i in range(1, 10):
     #     consumer.task_publisher.pub(a=i, b=i)
 
     dict_list = [dict(a=i, b=i) for i in range(1, 11)]
-    consumer.task_publisher.pub_list(dict_list)
+    for d in dict_list:
+        consumer.task_publisher.pub(d)
 
     consumer.start()

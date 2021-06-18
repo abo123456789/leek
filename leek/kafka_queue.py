@@ -22,7 +22,13 @@ class KafkaConsumerOwner(object):
     def __init__(self, host, port, topic, groupid='default'):
         self.kafkatopic = topic
         self.groupid = groupid
-        self.bootstrap_servers = f'{host}:{port}'
+        if ',' in host:
+            self.bootstrap_servers = ','.join(
+                [f'{host_pre}:{port}' if port and str(port) not in host_pre else host_pre for host_pre in
+                 host.split(',')])
+        else:
+            self.bootstrap_servers = f'{host}:{port}' if port and str(port) not in host else host
+
         key = f"consumer_{self.kafkatopic}_{self.bootstrap_servers}"
         if kafka_conn_instance.get(key):
             self.consumer = kafka_conn_instance.get(key)
@@ -30,8 +36,6 @@ class KafkaConsumerOwner(object):
             if default_config.kafka_username and default_config.kafka_password:
                 self.consumer = KafkaConsumer(self.kafkatopic,
                                               group_id=groupid,
-                                              sasl_mechanism='PLAIN',
-                                              security_protocol='SASL_PLAINTEXT',
                                               sasl_plain_username=default_config.kafka_username,
                                               sasl_plain_password=default_config.kafka_password,
                                               bootstrap_servers=self.bootstrap_servers, enable_auto_commit=True)
@@ -62,9 +66,7 @@ class KafkaProducerOwner(object):
             self.producer = kafka_conn_instance.get(key)
         else:
             if default_config.kafka_username and default_config.kafka_password:
-                self.producer = KafkaProducer(sasl_mechanism='PLAIN',
-                                              security_protocol='SASL_PLAINTEXT',
-                                              sasl_plain_username=default_config.kafka_username,
+                self.producer = KafkaProducer(sasl_plain_username=default_config.kafka_username,
                                               sasl_plain_password=default_config.kafka_password,
                                               bootstrap_servers=self.bootstrap_servers)
             else:
@@ -116,7 +118,7 @@ class KafkaQueue(BaseQueue):
 
 
 if __name__ == '__main__':
-    kafka_queue = KafkaQueue(queue_name='test5', host='127.0.0.1', port=9092)
+    kafka_queue = KafkaQueue(queue_name='amz_kafka_test', host=default_config.kafka_host, port=default_config.kafka_port)
     while True:
         kafka_queue.put('123456789')
         time.sleep(3)

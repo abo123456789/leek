@@ -6,12 +6,9 @@ from collections import Callable
 
 from py_log import get_logger
 from leek.utils import sort_dict, str_sha256, gen_uuid
-
 from leek import default_config
-from leek.kafka_queue import KafkaQueue
 from leek.memery_queue import MemoryQueue
 from leek.middleware_eum import MiddlewareEum
-from leek.redis_queue import RedisQueue
 from leek.sqllite_queue import SqlliteQueue
 
 
@@ -38,11 +35,13 @@ class TaskPublisher(object):
         if middleware == MiddlewareEum.SQLITE:
             self._quenen = SqlliteQueue(queue_name=queue_name)
         elif middleware == MiddlewareEum.KAFKA:
+            from leek.kafka_queue import KafkaQueue
             self._quenen = KafkaQueue(queue_name=queue_name, host=default_config.kafka_host,
                                       port=default_config.kafka_port)
         elif middleware == MiddlewareEum.MEMORY:
             self._quenen = MemoryQueue(queue_name=queue_name)
         else:
+            from leek.redis_queue import RedisQueue
             self._quenen = RedisQueue(queue_name, priority=priority, host=default_config.redis_host,
                                       port=default_config.redis_port,
                                       db=default_config.redis_db,
@@ -62,7 +61,6 @@ class TaskPublisher(object):
                          batch_id=batch_id, priority=priority)
 
     # noinspection PyBroadException
-    # @tomorrow_threads(50)
     def pub(self, *args, **kwargs):
         """
         将多参数写入消息队列
@@ -143,12 +141,12 @@ class TaskPublisher(object):
 
 
 if __name__ == '__main__':
-    task_publisher = TaskPublisher('test')
+    task_publisher = TaskPublisher('amz_kafka_test', middleware=MiddlewareEum.KAFKA)
     result = task_publisher.pub(aa=1, b=2, c=3)
     print(result)
 
-    results = [json.dumps(dict(a=i, c=i, b=i)) for i in range(1, 51)]
-    result = task_publisher.pub_list(results)
-    print(result)
+    # results = [json.dumps(dict(a=i, c=i, b=i)) for i in range(1, 51)]
+    # result = task_publisher.pub_list(results)
+    # print(result)
 
     # task_publisher.clear()
