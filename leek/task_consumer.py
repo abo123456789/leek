@@ -37,6 +37,7 @@ logger = get_logger(__name__, formatter_template=5)
 # 配置连接信息
 try:
     import leek_config
+
     default_config.redis_host = leek_config.redis_host
     default_config.redis_password = leek_config.redis_password
     default_config.redis_port = leek_config.redis_port
@@ -50,6 +51,7 @@ except AttributeError:
 
 try:
     import leek_config
+
     default_config.kafka_host = leek_config.kafka_host
     default_config.kafka_port = leek_config.kafka_port
     default_config.kafka_username = leek_config.kafka_username
@@ -62,7 +64,7 @@ except AttributeError:
 
 
 class TaskConsumer(object):
-    """reids队列消费类"""
+    """任务消费类"""
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=8,
                  max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=50,
@@ -91,18 +93,18 @@ class TaskConsumer(object):
         :re_queue_exception : 需要重入队列的异常
         """
         if middleware == MiddlewareEum.SQLITE:
-            self._redis_quenen = SqlliteQueue(queue_name=queue_name)
+            self._queue = SqlliteQueue(queue_name=queue_name)
         elif middleware == MiddlewareEum.KAFKA:
-            self._redis_quenen = KafkaQueue(queue_name=queue_name, host=default_config.kafka_host,
-                                            port=default_config.kafka_port)
+            self._queue = KafkaQueue(queue_name=queue_name, host=default_config.kafka_host,
+                                     port=default_config.kafka_port)
         elif middleware == MiddlewareEum.MEMORY:
-            self._redis_quenen = MemoryQueue(queue_name=queue_name)
+            self._queue = MemoryQueue(queue_name=queue_name)
         else:
-            self._redis_quenen = RedisQueue(queue_name, priority=priority, host=default_config.redis_host,
-                                            port=default_config.redis_port,
-                                            db=default_config.redis_db,
-                                            password=default_config.redis_password,
-                                            ssl=default_config.redis_ssl)
+            self._queue = RedisQueue(queue_name, priority=priority, host=default_config.redis_host,
+                                     port=default_config.redis_port,
+                                     db=default_config.redis_db,
+                                     password=default_config.redis_password,
+                                     ssl=default_config.redis_ssl)
         self._consuming_function = consuming_function
         self.queue_name = queue_name
         self.process_num = process_num
@@ -153,11 +155,11 @@ class TaskConsumer(object):
         while True:
             try:
                 time_begin = time.time()
-                message = self._redis_quenen.get(block=True, timeout=20)
+                message = self._queue.get(block=True, timeout=20)
                 get_message_cost = time.time() - time_begin
                 if message:
                     if self.ack:
-                        self._redis_quenen.un_ack(message)
+                        self._queue.un_ack(message)
                     if self.qps != 0:
                         if self.qps < 5:
                             sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost \
@@ -175,9 +177,9 @@ class TaskConsumer(object):
                     time.sleep(0.3)
             except KeyboardInterrupt:
                 if self.middleware == MiddlewareEum.REDIS:
-                    heartbeat_check_queue_name = f"_heartbeat_check_common:{self._redis_quenen.queue_name}"
-                    if self._redis_quenen.getdb().setnx(heartbeat_check_queue_name, 1):
-                        self._redis_quenen.getdb().expire(heartbeat_check_queue_name, 10)
+                    heartbeat_check_queue_name = f"_heartbeat_check_common:{self._queue.queue_name}"
+                    if self._queue.getdb().setnx(heartbeat_check_queue_name, 1):
+                        self._queue.getdb().expire(heartbeat_check_queue_name, 10)
                         self._heartbeat_check_common(is_break=True)
                 self._clear_process()
             except Exception:
@@ -208,11 +210,11 @@ class TaskConsumer(object):
                         task_dict['meta']['max_retry_times'] = retry_left_times - 1
                         # logger.debug(task_dict)
                         if task_dict['meta']['max_retry_times'] > 0:
-                            self._redis_quenen.getdb().lpush(self.queue_name, json.dumps(task_dict))
+                            self._queue.getdb().lpush(self.queue_name, json.dumps(task_dict))
                         else:
-                            # self._redis_quenen.un_ack(task_dict)
+                            # self._queue.un_ack(task_dict)
                             dlq_message = json.dumps(task_dict) if isinstance(task_dict, dict) else task_dict
-                            self._redis_quenen.getdb().lpush(f'dlq:{self._redis_quenen.queue_name}', dlq_message)
+                            self._queue.getdb().lpush(f'dlq:{self._queue.queue_name}', dlq_message)
 
                 else:
                     if task_dict['meta']['msg_type'] == 'params':
@@ -222,19 +224,19 @@ class TaskConsumer(object):
 
             consuming_exception_retry(message)
             if self.ack:
-                self._redis_quenen.ack(message)
+                self._queue.ack(message)
         except Exception:
             logger.error(traceback.format_exc())
             if self.ack:
                 if self.middleware == MiddlewareEum.REDIS:
                     dlq_message = json.dumps(message) if isinstance(message, dict) else message
-                    self._redis_quenen.getdb().lpush(f'dlq:{self._redis_quenen.queue_name}', dlq_message)
+                    self._queue.getdb().lpush(f'dlq:{self._queue.queue_name}', dlq_message)
             logger.warning('consuming_exception_retry faliture')
         else:
             if self.fliter_rep:
                 if self.middleware == MiddlewareEum.REDIS:
                     hash_value = str_sha256(json.dumps(message) if isinstance(message, dict) else message)
-                    self._redis_quenen.add_customer_task(hash_value)
+                    self._queue.add_customer_task(hash_value)
 
     def _heartbeat_check(self):
         """
@@ -255,8 +257,8 @@ class TaskConsumer(object):
 
     def _heartbeat_check_common(self, is_break=False):
         logger.info('_heartbeat_check_common {}'.format(self.queue_name))
-        redis_db = self._redis_quenen.getdb()
-        redis_heartbeat_key = self._redis_quenen.heartbeat_key
+        redis_db = self._queue.getdb()
+        redis_heartbeat_key = self._queue.heartbeat_key
         if is_break:
             un_ack_sets_name = f"unack_message:{self.queue_name}"
             dlq_queue_name = f"dlq:{self.queue_name}"
@@ -265,13 +267,13 @@ class TaskConsumer(object):
                 redis_db.srem(un_ack_sets_name, msg)
         else:
             redis_db.hset(redis_heartbeat_key,
-                          self._redis_quenen.heartbeat_field, get_now_millseconds())
+                          self._queue.heartbeat_field, get_now_millseconds())
 
     # noinspection PyMethodMayBeStaticx
     def _clear_process(self):
         try:
-            self._redis_quenen.getdb().delete(self._redis_quenen.heartbeat_key)
-        except:
+            self._queue.getdb().delete(self._queue.heartbeat_key)
+        except (Exception,):
             pass
         pid = os.getpid()
         logger.warning(f'{pid} process is KeyboardInterrupt and kill')
@@ -307,19 +309,32 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
-        time.sleep(1)
         print(f.meta)
 
 
-    consumer = get_consumer(queue_name='amz_kafka_test', middleware='kafka', consuming_function=f, ack=True,
-                            process_num=1, batch_id='2021042401-003', max_retry_times=3,
-                            re_queue_exception=(ZeroDivisionError,))
+    def f1(a):
+        print(f"a1:{a}")
+        print(f1.meta)
+
+
+    consumer_ = get_consumer(queue_name='amz_kafka_test', middleware='redis',
+                             consuming_function=f1, ack=True, max_retry_times=3,
+                             re_queue_exception=(ZeroDivisionError,))
+    # for i in range(1, 11):
+    #     consumer_.task_publisher.pub(str(i))
+
+    for i in range(1, 11):
+        consumer_.task_publisher.pub(dict(a=i, b=i))
 
     # for i in range(1, 10):
-    #     consumer.task_publisher.pub(a=i, b=i)
+    #     consumer_.task_publisher.pub(a=i, b=i)
 
-    dict_list = [dict(a=i, b=i) for i in range(1, 11)]
-    for d in dict_list:
-        consumer.task_publisher.pub(d)
+    # dict_list = [str(i) for i in range(1, 11)]
+    # for d in dict_list:
+    #     consumer_.task_publisher.pub_list(dict_list)
 
-    consumer.start()
+    # dict_list = [dict(a=i, b=i) for i in range(1, 11)]
+    # for d in dict_list:
+    #     consumer_.task_publisher.pub_list(dict_list)
+
+    consumer_.start()

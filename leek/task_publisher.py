@@ -13,7 +13,7 @@ from leek.sqllite_queue import SqlliteQueue
 
 
 class TaskPublisher(object):
-    """发布任务入队列类"""
+    """任务发布类"""
     logger = get_logger(__name__, formatter_template=5)
 
     def __init__(self, queue_name, fliter_rep=False, priority: int = None, max_push_size=50,
@@ -102,8 +102,9 @@ class TaskPublisher(object):
             pipe = self._quenen.getdb().pipeline()
             for msg in tasks:
                 try:
-                    task_body = sort_dict(json.loads(msg) if isinstance(msg, str) else msg)
-                except:
+                    message = json.loads(msg) if isinstance(msg, str) and '{' in msg and '}' in msg else msg
+                    task_body = sort_dict(message)
+                except (Exception,):
                     self.logger.error(traceback.format_exc())
                     return False
                 task = dict(meta=self.meta, body=task_body)
@@ -142,7 +143,7 @@ class TaskPublisher(object):
 
 if __name__ == '__main__':
     task_publisher = TaskPublisher('amz_kafka_test', middleware=MiddlewareEum.KAFKA)
-    result = task_publisher.pub(aa=1, b=2, c=3)
+    result = task_publisher.pub(a=1, b=2)
     print(result)
 
     # results = [json.dumps(dict(a=i, c=i, b=i)) for i in range(1, 51)]

@@ -55,6 +55,8 @@ def sort_dict(dict_obj: dict) -> dict:
     rs = dict()
     if not dict_obj:
         return rs
+    if not isinstance(dict_obj, dict):
+        return dict_obj
     for k in sorted(dict_obj.keys()):
         rs[k] = dict_obj[k]
     return rs
