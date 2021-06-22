@@ -80,3 +80,6 @@ get_consumer(queue_name='test11', consuming_function=f, process_num=2, threads_n
 :param batch_id : 批次ID
 :param re_queue_exception : 需要重入队列的异常
 ```
+
+#### leek安装数量走势图
+![avatar](leek_overall.png)
