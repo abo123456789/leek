@@ -67,24 +67,25 @@ class TaskConsumer(object):
     """任务消费类"""
 
     def __init__(self, queue_name, consuming_function: Callable = None, process_num=1, threads_num=8,
-                 max_retry_times=3, func_timeout=None, is_support_mutil_param=True, qps=50,
+                 max_retry_times=3, func_timeout=None, qps=50,
                  middleware=MiddlewareEum.REDIS,
-                 specify_threadpool=None, customer_type='thread', fliter_rep=False, max_push_size=50, ack=True,
+                 specify_threadpool=None, customer_type='thread', fliter_rep=False, filter_field=None, max_push_size=50,
+                 ack=True,
                  priority=None, task_expires=None, batch_id=None, re_queue_exception: tuple = None):
         """
-        redis队列消费程序
+        redis队列消费程序l
         :param queue_name: 队列名称
         :param consuming_function: 队列消息取出来后执行的方法
         :param process_num: 启动进程数量
         :param threads_num: 启动多少个线程(档customer_type=gevent时为协程数量)
         :param max_retry_times: 错误重试次数
         :param func_timeout: 函数超时时间(秒)
-        :param is_support_mutil_param: 消费函数是否支持多个参数,默认True
         :param qps: 每秒限制消费任务数量,默认0不限
         :param middleware: 消费中间件,默认redis 支持sqlite ,kafka
         :param specify_threadpool: 外部传入线程池
         :param customer_type: 消费者类型 string 支持('thread','gevent') 默认thread
         :param fliter_rep: 消费任务是否去重 bool True:去重 False:不去重
+        :param filter_field 任务去重字段 string
         :param max_push_size : 每次批量推送任务数量 默认值50
         :param ack : 是否需要确认消费 默认值True
         :param priority : 队列优先级 int[0-4]
@@ -116,14 +117,16 @@ class TaskConsumer(object):
             self._threadpool = specify_threadpool if specify_threadpool else CustomThreadPoolExecutor(threads_num)
         self.max_retry_times = max_retry_times
         self.func_timeout = func_timeout
-        self.is_support_mutil_param = is_support_mutil_param
         self.qps = qps
         self.fliter_rep = fliter_rep
+        self.filter_field = filter_field
         self.max_push_size = max_push_size
         self.ack = ack
         self.middleware = middleware
         self.re_queue_exception = re_queue_exception
-        self.task_publisher = TaskPublisher(queue_name, fliter_rep=fliter_rep,
+        self.task_publisher = TaskPublisher(queue_name,
+                                            fliter_rep=fliter_rep,
+                                            filter_field=filter_field,
                                             priority=priority,
                                             middleware=self.middleware,
                                             consuming_function=consuming_function,
@@ -235,8 +238,14 @@ class TaskConsumer(object):
         else:
             if self.fliter_rep:
                 if self.middleware == MiddlewareEum.REDIS:
-                    hash_value = str_sha256(json.dumps(message) if isinstance(message, dict) else message)
-                    self._queue.add_customer_task(hash_value)
+                    if self.filter_field:
+                        hash_value = message['body'].get(self.filter_field) if isinstance(message, dict) else json.loads(
+                            message)['body'].get(self.filter_field)
+                        hash_value = str(hash_value) if hash_value else ''
+                    else:
+                        hash_value = str_sha256(json.dumps(message) if isinstance(message, dict) else message)
+                    if hash_value:
+                        self._queue.add_customer_task(hash_value)
 
     def _heartbeat_check(self):
         """
@@ -291,13 +300,14 @@ def get_consumer(queue_name,
                  specify_threadpool=None,
                  customer_type='thread',
                  fliter_rep=False,
+                 filter_field=None,
                  task_expires=None,
                  batch_id=None,
                  re_queue_exception: tuple = None,
                  ack=True, *consumer_args,
                  **consumer_init_kwargs) -> TaskConsumer:
     consumer = TaskConsumer(queue_name, process_num=process_num, threads_num=threads_num, middleware=middleware,
-                            qps=qps,
+                            qps=qps, filter_field=filter_field,
                             consuming_function=consuming_function, specify_threadpool=specify_threadpool,
                             customer_type=customer_type, task_expires=task_expires, batch_id=batch_id,
                             fliter_rep=fliter_rep, ack=ack, max_retry_times=max_retry_times, priority=priority,
@@ -317,14 +327,14 @@ if __name__ == '__main__':
         print(f1.meta)
 
 
-    consumer_ = get_consumer(queue_name='amz_kafka_test', middleware='redis',
+    consumer_ = get_consumer(queue_name='r_test', middleware='redis', fliter_rep=True, filter_field='a',
                              consuming_function=f1, ack=True, max_retry_times=3,
                              re_queue_exception=(ZeroDivisionError,))
     # for i in range(1, 11):
     #     consumer_.task_publisher.pub(str(i))
 
-    for i in range(1, 11):
-        consumer_.task_publisher.pub(dict(a=i, b=i))
+    # for i in range(1, 15):
+    #     consumer_.task_publisher.pub(dict(a=i, b=i))
 
     # for i in range(1, 10):
     #     consumer_.task_publisher.pub(a=i, b=i)
@@ -333,8 +343,8 @@ if __name__ == '__main__':
     # for d in dict_list:
     #     consumer_.task_publisher.pub_list(dict_list)
 
-    # dict_list = [dict(a=i, b=i) for i in range(1, 11)]
-    # for d in dict_list:
-    #     consumer_.task_publisher.pub_list(dict_list)
+    dict_list = [dict(a=i, b=i) for i in range(1, 11)]
+    for d in dict_list:
+        consumer_.task_publisher.pub_list(dict_list, param_type='only')
 
     consumer_.start()

@@ -16,7 +16,7 @@ class TaskPublisher(object):
     """任务发布类"""
     logger = get_logger(__name__, formatter_template=5)
 
-    def __init__(self, queue_name, fliter_rep=False, priority: int = None, max_push_size=50,
+    def __init__(self, queue_name, fliter_rep=False, filter_field=None, priority: int = None, max_push_size=50,
                  middleware=MiddlewareEum.REDIS, task_expires=None, batch_id=None,
                  max_retry_times=3, consuming_function: Callable = None):
         """
@@ -53,6 +53,7 @@ class TaskPublisher(object):
         self.middleware = middleware
         self.consuming_function = consuming_function
         self.fliter_rep = fliter_rep
+        self.filter_field = filter_field
         self.task_expires = task_expires
         self.batch_id = batch_id
         self.max_retry_times = max_retry_times
@@ -84,7 +85,10 @@ class TaskPublisher(object):
             return False
         task['meta']['task_id'] = gen_uuid()
         if self.fliter_rep:
-            hash_value = str_sha256(json.dumps(task))
+            if self.filter_field:
+                hash_value = str(task['body'].get(self.filter_field, ''))
+            else:
+                hash_value = str_sha256(json.dumps(task))
             if self._quenen.check_has_customer(hash_value):
                 self.logger.warning(f'{task} is repeat task!!')
                 return False
