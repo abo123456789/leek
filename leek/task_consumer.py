@@ -210,12 +210,15 @@ class TaskConsumer(object):
                     except self.re_queue_exception as e:
                         logger.error(e)
                         retry_left_times = task_dict['meta']['max_retry_times']
-                        task_dict['meta']['max_retry_times'] = retry_left_times - 1
+                        if retry_left_times>0:
+                            task_dict['meta']['max_retry_times'] = retry_left_times - 1
                         # logger.debug(task_dict)
                         if task_dict['meta']['max_retry_times'] > 0:
                             self._queue.getdb().lpush(self.queue_name, json.dumps(task_dict))
                         else:
                             # self._queue.un_ack(task_dict)
+                            if isinstance(task_dict, dict):
+                                task_dict['meta']['max_retry_times'] = self.max_retry_times
                             dlq_message = json.dumps(task_dict) if isinstance(task_dict, dict) else task_dict
                             self._queue.getdb().lpush(f'dlq:{self._queue.queue_name}', dlq_message)
 
@@ -325,6 +328,7 @@ if __name__ == '__main__':
     def f1(a):
         print(f"a1:{a}")
         print(f1.meta)
+        raise ZeroDivisionError('test exception')
 
 
     consumer_ = get_consumer(queue_name='r_test', middleware='redis', fliter_rep=True, filter_field='a',
