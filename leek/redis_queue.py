@@ -68,6 +68,7 @@ class RedisQueue(BaseQueue):
         self.__db.delete(self.queue_name)
         if self.key_sets:
             self.__db.delete(self.key_sets)
+        self.__db.delete(self.un_ack_sets)
         self.__db.delete('dlq:'+self.queue_name)
 
     def get(self, block=False, timeout=None):
@@ -119,9 +120,9 @@ if __name__ == '__main__':
     print(r_queue.qsize())
     r_queue.put('456')
     print(r_queue.get())
-    r_queue.clear()
     print(r_queue.qsize())
     print(r_queue.check_has_customer('123'))
     r_queue.un_ack('66666')
     r_queue.ack('123456')
     r_queue.dlq_re_consume()
+    r_queue.clear()
