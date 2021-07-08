@@ -158,26 +158,28 @@ class TaskConsumer(object):
         while True:
             try:
                 time_begin = time.time()
-                message = self._queue.get(block=True, timeout=20)
+                message_c = self._queue.get(block=True, timeout=20)
+                messages = message_c if message_c and isinstance(message_c, list) else [message_c]
                 get_message_cost = time.time() - time_begin
-                if message:
-                    if self.ack:
-                        self._queue.un_ack(message)
-                    if self.qps != 0:
-                        if self.qps < 5:
-                            sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost \
-                                if (1 / self.qps) * self.process_num > get_message_cost else 0
-                            time.sleep(sleep_seconds)
-                        else:
-                            current_customer_count = current_customer_count + 1
-                            if current_customer_count == int(self.qps / self.process_num):
-                                sleep_time = 1 - (time.time() - get_queue_begin_time)
-                                time.sleep(sleep_time if sleep_time > 0 else 0)
-                                current_customer_count = 0
-                                get_queue_begin_time = time.time()
-                    self._threadpool.submit(self._consuming_exception_retry, message)
-                else:
-                    time.sleep(0.3)
+                for message in messages:
+                    if message:
+                        if self.ack:
+                            self._queue.un_ack(message)
+                        if self.qps != 0:
+                            if self.qps < 5:
+                                sleep_seconds = (1 / self.qps) * self.process_num - get_message_cost \
+                                    if (1 / self.qps) * self.process_num > get_message_cost else 0
+                                time.sleep(sleep_seconds)
+                            else:
+                                current_customer_count = current_customer_count + 1
+                                if current_customer_count == int(self.qps / self.process_num):
+                                    sleep_time = 1 - (time.time() - get_queue_begin_time)
+                                    time.sleep(sleep_time if sleep_time > 0 else 0)
+                                    current_customer_count = 0
+                                    get_queue_begin_time = time.time()
+                        self._threadpool.submit(self._consuming_exception_retry, message)
+                    else:
+                        time.sleep(0.3)
             except KeyboardInterrupt:
                 if self.middleware == MiddlewareEum.REDIS:
                     heartbeat_check_queue_name = f"_heartbeat_check_common:{self._queue.queue_name}"

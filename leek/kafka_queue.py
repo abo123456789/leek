@@ -74,7 +74,7 @@ class KafkaProducerOwner(object):
             kafka_conn_instance[key] = self.producer
 
     def send_msg(self, params):
-        parmas_message = json.dumps(params)
+        parmas_message = json.dumps(params) if isinstance(params, dict) else params
         self.producer.send(self.kafkatopic, parmas_message.encode())
 
 
@@ -118,7 +118,7 @@ class KafkaQueue(BaseQueue):
 
 
 if __name__ == '__main__':
-    kafka_queue = KafkaQueue(queue_name='amz_kafka_test', host=default_config.kafka_host, port=default_config.kafka_port)
+    kafka_queue = KafkaQueue(queue_name='test_leek', host=default_config.kafka_host, port=default_config.kafka_port)
     while True:
         kafka_queue.put('123456789')
         time.sleep(3)
