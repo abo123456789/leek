@@ -131,7 +131,7 @@ class TaskConsumer(object):
                                             middleware=self.middleware,
                                             consuming_function=consuming_function,
                                             max_retry_times=max_retry_times,
-                                            task_expires=task_expires + get_now_seconds() if task_expires else None,
+                                            task_expires=task_expires if task_expires else None,
                                             batch_id=batch_id)
 
     def start(self):

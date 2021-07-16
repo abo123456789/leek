@@ -5,7 +5,7 @@ import traceback
 from collections import Callable
 
 from py_log import get_logger
-from leek.utils import sort_dict, str_sha256, gen_uuid
+from leek.utils import sort_dict, str_sha256, gen_uuid, get_now_seconds
 from leek import default_config
 from leek.memery_queue import MemoryQueue
 from leek.middleware_eum import MiddlewareEum
@@ -58,7 +58,7 @@ class TaskPublisher(object):
         self.batch_id = batch_id
         self.max_retry_times = max_retry_times
         self.meta = dict(queue_name=queue_name, fliter_rep=fliter_rep,
-                         max_retry_times=max_retry_times, task_expires=task_expires,
+                         max_retry_times=max_retry_times,
                          batch_id=batch_id, priority=priority)
 
     # noinspection PyBroadException
@@ -68,6 +68,8 @@ class TaskPublisher(object):
         :param kwargs: 待写入参数 (a=3,b=4)
         :return: None
         """
+        if self.task_expires:
+            self.meta['task_expires'] = self.task_expires + get_now_seconds()
         task = dict(meta=self.meta)
         if kwargs:
             dict_msg = sort_dict(kwargs)
@@ -102,6 +104,8 @@ class TaskPublisher(object):
         :param param_type: 待写入任务列表数据类型 params(多参数) only(单参数)
         :return:
         """
+        if self.task_expires:
+            self.meta['task_expires'] = self.task_expires + get_now_seconds()
         if self.middleware == MiddlewareEum.REDIS:
             pipe = self._quenen.getdb().pipeline()
             for msg in tasks:
@@ -146,8 +150,9 @@ class TaskPublisher(object):
 
 
 if __name__ == '__main__':
-    task_publisher = TaskPublisher('amz_kafka_test', middleware=MiddlewareEum.KAFKA)
+    task_publisher = TaskPublisher('amz_kafka_test', middleware=MiddlewareEum.REDIS, task_expires=1000000000000000)
     result = task_publisher.pub(a=1, b=2)
+    print(task_publisher.meta)
     print(result)
 
     # results = [json.dumps(dict(a=i, c=i, b=i)) for i in range(1, 51)]
