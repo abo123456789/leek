@@ -43,11 +43,9 @@ try:
     default_config.redis_port = leek_config.redis_port
     default_config.redis_db = leek_config.redis_db
     default_config.redis_ssl = leek_config.redis_ssl
-    logger.info('读取到leek_config.py redis配置')
-except ModuleNotFoundError:
-    logger.warning('未读取到leek_config.py redis配置.')
-except AttributeError:
-    logger.warning('未读取到leek_config.py redis配置。')
+    logger.info('读取到leek_config.py redis配置,使用自定义配置')
+except (ModuleNotFoundError, AttributeError):
+    logger.warning('未读取到leek_config.py redis配置,使用默认配置')
 
 try:
     import leek_config
@@ -57,10 +55,8 @@ try:
     default_config.kafka_username = leek_config.kafka_username
     default_config.kafka_password = leek_config.kafka_password
     logger.info('读取到leek_config.py kafka配置,使用自定义配置')
-except ModuleNotFoundError:
-    logger.warning('未读取到leek_config.py kafka配置.')
-except AttributeError:
-    logger.warning('未读取到leek_config.py kafka配置。')
+except (ModuleNotFoundError, AttributeError):
+    logger.warning('未读取到leek_config.py kafka配置,使用默认配置')
 
 
 class TaskConsumer(object):
