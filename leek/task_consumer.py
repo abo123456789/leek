@@ -36,7 +36,7 @@ logger = get_logger(__name__, formatter_template=5)
 
 # 配置连接信息
 try:
-    import leek_config
+    leek_config = __import__('leek_config')
 
     default_config.redis_host = leek_config.redis_host
     default_config.redis_password = leek_config.redis_password
@@ -48,7 +48,7 @@ except (ModuleNotFoundError, AttributeError):
     logger.warning('未读取到leek_config.py redis配置,使用默认配置')
 
 try:
-    import leek_config
+    leek_config = __import__('leek_config')
 
     default_config.kafka_host = leek_config.kafka_host
     default_config.kafka_port = leek_config.kafka_port
@@ -320,12 +320,12 @@ def get_consumer(queue_name,
 if __name__ == '__main__':
     def f(a, b):
         print(f"a:{a},b:{b}")
-        print(f.meta)
+        # print(f.meta)
 
 
     def f1(a):
         print(f"a1:{a}")
-        print(f1.meta)
+        # print(f1.meta)
         raise ZeroDivisionError('test exception')
 
 
