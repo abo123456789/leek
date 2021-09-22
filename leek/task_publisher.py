@@ -23,6 +23,7 @@ class TaskPublisher(object):
         初始化消息发布队列
         :param queue_name: 队列名称
         :param fliter_rep: 队列任务是否去重 True:去重  False:不去重
+        :filter_field : 队列任务根据该字段去重
         :param priority: 队列优先级
         :param max_push_size: 使用批量提交时,每次批量提交数量
         :param task_expires: 任务过期时间
