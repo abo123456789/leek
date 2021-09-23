@@ -208,7 +208,7 @@ class TaskConsumer(object):
                     except self.re_queue_exception as e:
                         logger.error(e)
                         retry_left_times = task_dict['meta']['max_retry_times']
-                        if retry_left_times>0:
+                        if retry_left_times > 0:
                             task_dict['meta']['max_retry_times'] = retry_left_times - 1
                         # logger.debug(task_dict)
                         if task_dict['meta']['max_retry_times'] > 0:
@@ -240,11 +240,14 @@ class TaskConsumer(object):
             if self.fliter_rep:
                 if self.middleware == MiddlewareEum.REDIS:
                     if self.filter_field:
-                        hash_value = message['body'].get(self.filter_field) if isinstance(message, dict) else json.loads(
+                        hash_value = message['body'].get(self.filter_field) if isinstance(message, dict) else \
+                        json.loads(
                             message)['body'].get(self.filter_field)
                         hash_value = str(hash_value) if hash_value else ''
                     else:
-                        hash_value = str_sha256(json.dumps(message) if isinstance(message, dict) else message)
+                        hash_value = str_sha256(
+                            json.dumps(message['body']) if isinstance(message, dict) else json.dumps(json.loads(
+                                message)['body']))
                     if hash_value:
                         self._queue.add_customer_task(hash_value)
 
@@ -323,13 +326,13 @@ if __name__ == '__main__':
         # print(f.meta)
 
 
-    def f1(a):
-        print(f"a1:{a}")
+    def f1(a, b, c):
+        print(f"a:{a}, b:{b}")
         # print(f1.meta)
         raise ZeroDivisionError('test exception')
 
 
-    consumer_ = get_consumer(queue_name='r_test', middleware='redis', fliter_rep=True, filter_field='a',
+    consumer_ = get_consumer(queue_name='r_test', middleware='redis', fliter_rep=True, filter_field=None,
                              consuming_function=f1, ack=True, max_retry_times=3,
                              re_queue_exception=(ZeroDivisionError,))
     # for i in range(1, 11):
@@ -347,6 +350,7 @@ if __name__ == '__main__':
 
     dict_list = [dict(a=i, b=i) for i in range(1, 11)]
     for d in dict_list:
-        consumer_.task_publisher.pub_list(dict_list, param_type='only')
+        consumer_.task_publisher.pub(a=d['a'], b=d['b'], c='3')
 
+    # consumer_.task_publisher.dlq_re_queue()
     consumer_.start()

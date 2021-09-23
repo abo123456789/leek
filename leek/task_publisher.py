@@ -91,7 +91,7 @@ class TaskPublisher(object):
             if self.filter_field:
                 hash_value = str(task['body'].get(self.filter_field, ''))
             else:
-                hash_value = str_sha256(json.dumps(task))
+                hash_value = str_sha256(json.dumps(task['body']))
             if self._quenen.check_has_customer(hash_value):
                 self.logger.warning(f'{task} is repeat task!!')
                 return False
@@ -100,7 +100,7 @@ class TaskPublisher(object):
 
     def pub_list(self, tasks: list, param_type: str = 'params'):
         """
-        批量写入redis队列
+        批量写入redis队列(批量提交暂时不支持去重)
         :param tasks: 待写入任务列表数据
         :param param_type: 待写入任务列表数据类型 params(多参数) only(单参数)
         :return:
