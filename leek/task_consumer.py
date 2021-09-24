@@ -67,7 +67,8 @@ class TaskConsumer(object):
                  middleware=MiddlewareEum.REDIS,
                  specify_threadpool=None, customer_type='thread', fliter_rep=False, filter_field=None, max_push_size=50,
                  ack=True,
-                 priority=None, task_expires=None, batch_id=None, re_queue_exception: tuple = None):
+                 priority=None, task_expires=None, batch_id=None, re_queue_exception: tuple = None,
+                 db_config: dict = dict()):
         """
         redis队列消费程序l
         :param queue_name: 队列名称
@@ -88,6 +89,7 @@ class TaskConsumer(object):
         :param task_expires : 任务过期时间 单位秒
         :param batch_id : 批次ID
         :re_queue_exception : 需要重入队列的异常
+        :db_config : 数据库配置字典
         """
         if middleware == MiddlewareEum.SQLITE:
             self._queue = SqlliteQueue(queue_name=queue_name)
@@ -97,11 +99,12 @@ class TaskConsumer(object):
         elif middleware == MiddlewareEum.MEMORY:
             self._queue = MemoryQueue(queue_name=queue_name)
         else:
-            self._queue = RedisQueue(queue_name, priority=priority, host=default_config.redis_host,
-                                     port=default_config.redis_port,
-                                     db=default_config.redis_db,
-                                     password=default_config.redis_password,
-                                     ssl=default_config.redis_ssl)
+            self._queue = RedisQueue(queue_name, priority=priority,
+                                     host=db_config.get('redis_host') or default_config.redis_host,
+                                     port=db_config.get('redis_port') or default_config.redis_port,
+                                     db=db_config.get('redis_db') or default_config.redis_db,
+                                     password=db_config.get('redis_password') or default_config.redis_password,
+                                     ssl=db_config.get('redis_ssl') or default_config.redis_ssl)
         self._consuming_function = consuming_function
         self.queue_name = queue_name
         self.process_num = process_num
@@ -128,7 +131,8 @@ class TaskConsumer(object):
                                             consuming_function=consuming_function,
                                             max_retry_times=max_retry_times,
                                             task_expires=task_expires if task_expires else None,
-                                            batch_id=batch_id)
+                                            batch_id=batch_id,
+                                            db_config=db_config)
 
     def start(self):
         if self.ack:
@@ -241,8 +245,8 @@ class TaskConsumer(object):
                 if self.middleware == MiddlewareEum.REDIS:
                     if self.filter_field:
                         hash_value = message['body'].get(self.filter_field) if isinstance(message, dict) else \
-                        json.loads(
-                            message)['body'].get(self.filter_field)
+                            json.loads(
+                                message)['body'].get(self.filter_field)
                         hash_value = str(hash_value) if hash_value else ''
                     else:
                         hash_value = str_sha256(
@@ -308,14 +312,16 @@ def get_consumer(queue_name,
                  task_expires=None,
                  batch_id=None,
                  re_queue_exception: tuple = None,
-                 ack=True, *consumer_args,
+                 ack=True,
+                 db_config: dict = dict(),
+                 *consumer_args,
                  **consumer_init_kwargs) -> TaskConsumer:
     consumer = TaskConsumer(queue_name, process_num=process_num, threads_num=threads_num, middleware=middleware,
                             qps=qps, filter_field=filter_field,
                             consuming_function=consuming_function, specify_threadpool=specify_threadpool,
                             customer_type=customer_type, task_expires=task_expires, batch_id=batch_id,
                             fliter_rep=fliter_rep, ack=ack, max_retry_times=max_retry_times, priority=priority,
-                            re_queue_exception=re_queue_exception,
+                            re_queue_exception=re_queue_exception, db_config=db_config,
                             *consumer_args, **consumer_init_kwargs)
     return consumer
 
@@ -329,11 +335,12 @@ if __name__ == '__main__':
     def f1(a, b, c):
         print(f"a:{a}, b:{b}")
         # print(f1.meta)
-        raise ZeroDivisionError('test exception')
+        # raise ZeroDivisionError('test exception')
 
+    db_config = dict(redis_host='127.0.0.1', redis_port='6379', redis_db='1', redis_password='', redis_ssl=False)
 
     consumer_ = get_consumer(queue_name='r_test', middleware='redis', fliter_rep=True, filter_field=None,
-                             consuming_function=f1, ack=True, max_retry_times=3,
+                             consuming_function=f1, ack=True, max_retry_times=3, db_config=db_config,
                              re_queue_exception=(ZeroDivisionError,))
     # for i in range(1, 11):
     #     consumer_.task_publisher.pub(str(i))

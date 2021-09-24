@@ -18,7 +18,8 @@ class TaskPublisher(object):
 
     def __init__(self, queue_name, fliter_rep=False, filter_field=None, priority: int = None, max_push_size=50,
                  middleware=MiddlewareEum.REDIS, task_expires=None, batch_id=None,
-                 max_retry_times=3, consuming_function: Callable = None):
+                 max_retry_times=3, consuming_function: Callable = None,
+                 db_config: dict = dict()):
         """
         初始化消息发布队列
         :param queue_name: 队列名称
@@ -43,10 +44,12 @@ class TaskPublisher(object):
             self._quenen = MemoryQueue(queue_name=queue_name)
         else:
             from leek.redis_queue import RedisQueue
-            self._quenen = RedisQueue(queue_name, priority=priority, host=default_config.redis_host,
-                                      port=default_config.redis_port,
-                                      db=default_config.redis_db,
-                                      password=default_config.redis_password)
+            self._quenen = RedisQueue(queue_name, priority=priority, namespace='',
+                                      host=db_config.get('redis_host') or default_config.redis_host,
+                                      port=db_config.get('redis_port') or default_config.redis_port,
+                                      db=db_config.get('redis_db') or default_config.redis_db,
+                                      password=db_config.get('redis_password') or default_config.redis_password,
+                                      ssl=db_config.get('redis_ssl') or default_config.redis_ssl)
         self.quenen = self._quenen
         self.queue_name = queue_name
         self.max_push_size = max_push_size
@@ -58,6 +61,7 @@ class TaskPublisher(object):
         self.task_expires = task_expires
         self.batch_id = batch_id
         self.max_retry_times = max_retry_times
+        self.db_config = db_config
         self.meta = dict(queue_name=queue_name, fliter_rep=fliter_rep,
                          max_retry_times=max_retry_times,
                          batch_id=batch_id, priority=priority)
@@ -151,13 +155,14 @@ class TaskPublisher(object):
 
 
 if __name__ == '__main__':
-    task_publisher = TaskPublisher('amz_kafka_test', middleware=MiddlewareEum.REDIS, task_expires=1000000000000000)
-    result = task_publisher.pub(a=1, b=2)
-    print(task_publisher.meta)
-    print(result)
+    db_config = dict(redis_host='127.0.0.1', redis_port='6379', redis_db='1', redis_password='', redis_ssl=False)
+    task_publisher = TaskPublisher('test123', middleware=MiddlewareEum.REDIS, db_config=db_config)
+    # result = task_publisher.pub(a=1, b=2)
+    # print(task_publisher.meta)
+    # print(result)
 
-    # results = [json.dumps(dict(a=i, c=i, b=i)) for i in range(1, 51)]
-    # result = task_publisher.pub_list(results)
+    results = [json.dumps(dict(a=i, c=i, b=i)) for i in range(1, 51)]
+    result = task_publisher.pub_list(results)
     # print(result)
 
     # task_publisher.clear()
