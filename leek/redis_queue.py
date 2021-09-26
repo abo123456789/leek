@@ -40,11 +40,12 @@ class RedisQueue(BaseQueue):
         self._init_queues = [f"{4 - a}_{queue_name}" for a in range(0, 5)]
 
     def _getconn(self, **kwargs):
-        if 'redis_conn' in self.redis_conn_instance:
-            self.__db = self.redis_conn_instance.get('redis_conn')
+        cache_key = f"redis_conn_{kwargs.get('host')}_{kwargs.get('db')}"
+        if cache_key in self.redis_conn_instance:
+            self.__db = self.redis_conn_instance.get(cache_key)
         else:
             self.__db = redis.Redis(**kwargs)
-            self.redis_conn_instance['redis_conn'] = self.__db
+            self.redis_conn_instance[cache_key] = self.__db
         return self.__db
 
     def getdb(self):
