@@ -135,6 +135,7 @@ class TaskConsumer(object):
                                             db_config=db_config)
 
     def start(self):
+        logger.info(f"{self.queue_name} is empty:{self._queue.isempty()}")
         if self.ack:
             threading.Thread(target=self._heartbeat_check).start()
         cpu_count = multiprocessing.cpu_count()
