@@ -99,12 +99,16 @@ class TaskConsumer(object):
         elif middleware == MiddlewareEum.MEMORY:
             self._queue = MemoryQueue(queue_name=queue_name)
         else:
+            _redis_db = default_config.redis_db if db_config.get('redis_db') is None or db_config.get(
+                'redis_db') == '' else db_config.get('redis_db')
+            _redis_ssl = default_config.redis_ssl if db_config.get('redis_db') is None or db_config.get(
+                'redis_db') == '' else db_config.get('redis_ssl')
             self._queue = RedisQueue(queue_name, priority=priority,
                                      host=db_config.get('redis_host') or default_config.redis_host,
                                      port=db_config.get('redis_port') or default_config.redis_port,
-                                     db=db_config.get('redis_db') or default_config.redis_db,
+                                     db=_redis_db,
                                      password=db_config.get('redis_password') or default_config.redis_password,
-                                     ssl=db_config.get('redis_ssl') or default_config.redis_ssl)
+                                     ssl=_redis_ssl)
         self._consuming_function = consuming_function
         self.queue_name = queue_name
         self.process_num = process_num
@@ -333,14 +337,17 @@ if __name__ == '__main__':
         # print(f.meta)
 
 
-    def f1(a, b, c):
-        print(f"a:{a}, b:{b}")
+    def f1(a):
+        print(f"a:{a}")
         # print(f1.meta)
         # raise ZeroDivisionError('test exception')
 
-    db_config = dict(redis_host='127.0.0.1', redis_port='6379', redis_db='1', redis_password='', redis_ssl=False)
 
-    consumer_ = get_consumer(queue_name='r_test', middleware='redis', fliter_rep=True, filter_field=None,
+    consumer0_ = get_consumer(queue_name='r_test1', consuming_function=f1)
+
+    db_config = dict(redis_host='127.0.0.1', redis_port=6379, redis_db=1, redis_password='', redis_ssl=False)
+
+    consumer_ = get_consumer(queue_name='r_test', middleware='redis', fliter_rep=False, filter_field=None,
                              consuming_function=f1, ack=True, max_retry_times=3, db_config=db_config,
                              re_queue_exception=(ZeroDivisionError,))
     # for i in range(1, 11):
@@ -356,9 +363,12 @@ if __name__ == '__main__':
     # for d in dict_list:
     #     consumer_.task_publisher.pub_list(dict_list)
 
-    dict_list = [dict(a=i, b=i) for i in range(1, 11)]
-    for d in dict_list:
-        consumer_.task_publisher.pub(a=d['a'], b=d['b'], c='3')
+    # dict_list = [dict(a=i, b=i) for i in range(1, 11)]
+    # for d in dict_list:
+    #     consumer_.task_publisher.pub(a=d['a'], b=d['b'], c='3')
 
     # consumer_.task_publisher.dlq_re_queue()
+    consumer0_.task_publisher.pub(a=0)
+    consumer_.task_publisher.pub(a=1)
+    consumer0_.start()
     consumer_.start()

@@ -44,12 +44,16 @@ class TaskPublisher(object):
             self._quenen = MemoryQueue(queue_name=queue_name)
         else:
             from leek.redis_queue import RedisQueue
+            _redis_db = default_config.redis_db if db_config.get('redis_db') is None or db_config.get(
+                'redis_db') == '' else db_config.get('redis_db')
+            _redis_ssl = default_config.redis_ssl if db_config.get('redis_db') is None or db_config.get(
+                'redis_db') == '' else db_config.get('redis_ssl')
             self._quenen = RedisQueue(queue_name, priority=priority, namespace='',
                                       host=db_config.get('redis_host') or default_config.redis_host,
                                       port=db_config.get('redis_port') or default_config.redis_port,
-                                      db=db_config.get('redis_db') or default_config.redis_db,
+                                      db=_redis_db,
                                       password=db_config.get('redis_password') or default_config.redis_password,
-                                      ssl=db_config.get('redis_ssl') or default_config.redis_ssl)
+                                      ssl=_redis_ssl)
         self.quenen = self._quenen
         self.queue_name = queue_name
         self.max_push_size = max_push_size
