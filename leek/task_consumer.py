@@ -101,8 +101,8 @@ class TaskConsumer(object):
         else:
             _redis_db = default_config.redis_db if db_config.get('redis_db') is None or db_config.get(
                 'redis_db') == '' else db_config.get('redis_db')
-            _redis_ssl = default_config.redis_ssl if db_config.get('redis_db') is None or db_config.get(
-                'redis_db') == '' else db_config.get('redis_ssl')
+            _redis_ssl = default_config.redis_ssl if db_config.get('redis_ssl') is None or db_config.get(
+                'redis_ssl') == '' else db_config.get('redis_ssl')
             self._queue = RedisQueue(queue_name, priority=priority,
                                      host=db_config.get('redis_host') or default_config.redis_host,
                                      port=db_config.get('redis_port') or default_config.redis_port,
