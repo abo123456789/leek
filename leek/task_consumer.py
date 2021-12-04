@@ -28,7 +28,7 @@ __author__ = 'cc'
 
 import time
 import traceback
-from collections import Callable
+from collections.abc import Callable
 
 from leek.utils import str_sha256, get_now_millseconds, get_now_seconds
 

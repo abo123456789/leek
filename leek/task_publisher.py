@@ -2,7 +2,7 @@
 # @Author cc
 import json
 import traceback
-from collections import Callable
+from collections.abc import Callable
 
 from py_log import get_logger
 from leek.utils import sort_dict, str_sha256, gen_uuid, get_now_seconds
