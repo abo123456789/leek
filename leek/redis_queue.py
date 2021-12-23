@@ -3,6 +3,7 @@
 # @TIME 2020/5/10 00:42
 import json
 import os
+import socket
 
 import redis
 from leek.utils import get_host_ip, get_day_str
@@ -44,6 +45,9 @@ class RedisQueue(BaseQueue):
         if cache_key in self.redis_conn_instance:
             self.__db = self.redis_conn_instance.get(cache_key)
         else:
+            if 'socket_keepalive' not in kwargs:
+                kwargs['socket_keepalive'] = True
+                kwargs['socket_connect_timeout'] = 5
             self.__db = redis.Redis(**kwargs)
             self.redis_conn_instance[cache_key] = self.__db
         return self.__db
@@ -70,7 +74,7 @@ class RedisQueue(BaseQueue):
         if self.key_sets:
             self.__db.delete(self.key_sets)
         self.__db.delete(self.un_ack_sets)
-        self.__db.delete('dlq:'+self.queue_name)
+        self.__db.delete('dlq:' + self.queue_name)
 
     def get(self, block=False, timeout=None):
         if block:

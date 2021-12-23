@@ -350,24 +350,6 @@ if __name__ == '__main__':
     consumer_ = get_consumer(queue_name='r_test', middleware='redis', fliter_rep=False, filter_field=None,
                              consuming_function=f1, ack=True, max_retry_times=3, db_config=db_config,
                              re_queue_exception=(ZeroDivisionError,))
-    # for i in range(1, 11):
-    #     consumer_.task_publisher.pub(str(i))
-
-    # for i in range(1, 15):
-    #     consumer_.task_publisher.pub(dict(a=i, b=i))
-
-    # for i in range(1, 10):
-    #     consumer_.task_publisher.pub(a=i, b=i)
-
-    # dict_list = [str(i) for i in range(1, 11)]
-    # for d in dict_list:
-    #     consumer_.task_publisher.pub_list(dict_list)
-
-    # dict_list = [dict(a=i, b=i) for i in range(1, 11)]
-    # for d in dict_list:
-    #     consumer_.task_publisher.pub(a=d['a'], b=d['b'], c='3')
-
-    # consumer_.task_publisher.dlq_re_queue()
     consumer0_.task_publisher.pub(a=0)
     consumer_.task_publisher.pub(a=1)
     consumer0_.start()
