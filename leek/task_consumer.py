@@ -163,7 +163,7 @@ class TaskConsumer(object):
         while True:
             try:
                 time_begin = time.time()
-                message_c = self._queue.get(block=True, timeout=20)
+                message_c = self._queue.get(block=True, timeout=15)
                 messages = message_c if message_c and isinstance(message_c, list) else [message_c]
                 get_message_cost = time.time() - time_begin
                 for message in messages:

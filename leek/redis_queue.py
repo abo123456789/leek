@@ -47,7 +47,9 @@ class RedisQueue(BaseQueue):
         else:
             if 'socket_keepalive' not in kwargs:
                 kwargs['socket_keepalive'] = True
+                kwargs['socket_timeout'] = 30
                 kwargs['socket_connect_timeout'] = 5
+                kwargs['retry_on_timeout'] = True
             self.__db = redis.Redis(**kwargs)
             self.redis_conn_instance[cache_key] = self.__db
         return self.__db
