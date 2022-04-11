@@ -6,7 +6,7 @@
              
 特色说明： 
  
-     支持中间件：
+     支持多中间件：
         支持reids kafka sqlite memory 四种中间件(首推redis,支持批量发布任务,分布式消费快如闪电)
         
      并发支持：
@@ -22,11 +22,14 @@
         启用消费确认,消费任务宕机手动终止情况,任务不会丢失
      
      重试次数：
-        当函数运行出错，会立即重试指定的次数，达到最大次重试数后任务会进入死信队列
+        当函数运行出错，会立即重试指定的次数，达到最大次重试数后任务会进入死信队列                  
      
-     任务可视化：
-        可以通过redis web版管理工具实时查看当前任务消费情况                  
-
+     任务过期机制：
+        如果设定某个任务过期时间,任务超过设定过期时间还未消费,则会自动丢弃该任务
+     
+     死信队列任务重新消费
+        进入死信队列任务支持手动重入队列重新消费
+     
 #### pip安装
 ```shell
 pip install leek
@@ -80,5 +83,5 @@ get_consumer(queue_name='test11', consuming_function=f, process_num=2, threads_n
 :param re_queue_exception : 需要重入队列的异常
 ```
 
-#### leek安装数量走势图
-![avatar](leek_overall.png)
+#### [redisweb](https://github.com/abo123456789/redisweb) 通过浏览器查看任务消费情况
+[![avatar](https://camo.githubusercontent.com/46204ab1c85e52dec751a715ebc08daf6fb63f0ca1dd1e3fc77ee42b68a67145/68747470733a2f2f73312e617831782e636f6d2f323032302f30372f30372f5541494846652e6a7067)](https://github.com/abo123456789/redisweb)
