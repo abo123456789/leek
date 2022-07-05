@@ -85,3 +85,7 @@ get_consumer(queue_name='test11', consuming_function=f, process_num=2, threads_n
 
 #### [redisweb](https://github.com/abo123456789/redisweb) 通过浏览器查看任务消费情况
 [![avatar](https://camo.githubusercontent.com/46204ab1c85e52dec751a715ebc08daf6fb63f0ca1dd1e3fc77ee42b68a67145/68747470733a2f2f73312e617831782e636f6d2f323032302f30372f30372f5541494846652e6a7067)](https://github.com/abo123456789/redisweb)
+
+#### 赞赏一下吧
+![avatar](./skm.jpeg)
+
