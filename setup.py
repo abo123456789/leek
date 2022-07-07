@@ -1,12 +1,16 @@
 # -*- coding:utf-8 -*-
 # @Author cc
 # @TIME 2019/5/25 23:26
+import sys
 
 from setuptools import setup, find_packages
 
+PY_VER = sys.version_info
+if PY_VER < (3, 0):
+    raise RuntimeError("leek doesn't support Python version prior 3.6")
 setup(
     name='leek',
-    version='1.6.7',
+    version='1.6.8',
     description=(
         'Task publishing and consumption Middleware'
     ),
