@@ -1,4 +1,6 @@
 [![Supported Versions](https://img.shields.io/pypi/pyversions/leek.svg)](https://pypi.org/project/leek)
+
+[English Docs](https://github.com/abo123456789/leek/blob/leek/README_EN.md)  | [中文文档](https://github.com/abo123456789/leek)  
 ### Task publishing and consumption middleware
 #### Function description
 * A distributed crawler framework that is more flexible than scrapy and easier to use than celery. Do the most things in the easiest way with the least amount of code
