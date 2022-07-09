@@ -6,6 +6,7 @@ import os
 import platform
 import signal
 import threading
+from functools import update_wrapper
 
 from multiprocessing import Process
 
@@ -329,6 +330,93 @@ def get_consumer(queue_name,
                             re_queue_exception=re_queue_exception, db_config=db_config,
                             *consumer_args, **consumer_init_kwargs)
     return consumer
+
+
+def task_deco(queue_name,
+              priority=None,
+              process_num=1,
+              threads_num=8,
+              max_retry_times=3,
+              qps=50,
+              middleware=MiddlewareEum.REDIS,
+              specify_threadpool=None,
+              customer_type='thread',
+              fliter_rep=False,
+              filter_field=None,
+              task_expires=None,
+              batch_id=None,
+              re_queue_exception: tuple = None,
+              ack=True,
+              db_config: dict = dict(),
+              *consumer_args,
+              **consumer_init_kwargs):
+    """
+    support by ydf
+    装饰器方式添加任务，如果有人过于喜欢装饰器方式，例如celery 装饰器方式的任务注册，觉得黑科技，那就可以使用这个装饰器。此种方式不利于ide代码自动补全不推荐。
+    使用方式例如：
+    @task_deco('queue_test_f01', qps=0.2，)
+    def f(a, b):
+        print(a + b)
+    f(5, 6)  # 可以直接调用
+    for i in range(10, 20):
+        f.pub(a=i, b=i * 2)
+    f.consume()
+    """
+
+    def _deco(func):
+        cs = TaskConsumer(queue_name, process_num=process_num, threads_num=threads_num,
+                          middleware=middleware, qps=qps,
+                          consuming_function=func, specify_threadpool=specify_threadpool,
+                          customer_type=customer_type,
+                          fliter_rep=fliter_rep, ack=ack,
+                          max_retry_times=max_retry_times,
+                          priority=priority,
+                          filter_field=filter_field,
+                          task_expires=task_expires,
+                          batch_id=batch_id,
+                          re_queue_exception=re_queue_exception,
+                          db_config=db_config,
+                          *consumer_args, **consumer_init_kwargs)
+        if 'consuming_function' in consumer_init_kwargs:
+            consumer_init_kwargs.pop('consuming_function')
+        func.consumer = cs
+        # 下面这些连等主要是由于元编程造成的不能再ide下智能补全，参数太长很难手动拼写出来
+        func.start = cs.start
+
+        publisher = TaskPublisher(queue_name=queue_name, priority=priority, consuming_function=cs._consuming_function,
+                                  fliter_rep=cs.fliter_rep, max_push_size=cs.max_push_size, middleware=cs.middleware)
+        func.publisher = publisher
+        func.pub = publisher.pub
+        func.publish_list = publisher.pub_list
+
+        def __deco(*args, **kwargs):
+            return func(*args, **kwargs)
+
+        return update_wrapper(__deco, func)
+
+    return _deco
+
+
+def get_consumer(queue_name,
+                 consuming_function: Callable = None,
+                 priority=None,
+                 process_num=1,
+                 threads_num=50,
+                 max_retry_times=3,
+                 qps=0,
+                 middleware=MiddlewareEum.REDIS,
+                 specify_threadpool=None,
+                 customer_type='thread',
+                 fliter_rep=False,
+                 ack=False, *consumer_args,
+                 **consumer_init_kwargs) -> TaskConsumer:
+    customer = TaskConsumer(queue_name, process_num=process_num, threads_num=threads_num, middleware=middleware,
+                            qps=qps,
+                            consuming_function=consuming_function, specify_threadpool=specify_threadpool,
+                            customer_type=customer_type,
+                            fliter_rep=fliter_rep, ack=ack, max_retry_times=max_retry_times, priority=priority,
+                            *consumer_args, **consumer_init_kwargs)
+    return customer
 
 
 if __name__ == '__main__':

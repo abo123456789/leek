@@ -10,7 +10,7 @@ if PY_VER < (3, 0):
     raise RuntimeError("leek doesn't support Python version prior 3.6")
 setup(
     name='leek',
-    version='1.6.8',
+    version='1.6.9',
     description=(
         'Task publishing and consumption Middleware'
     ),

@@ -74,5 +74,20 @@ def t_demo2():
     export_consumer.start()
 
 
+def t_demo3():
+    from leek import task_deco
+
+    @task_deco('test0')  # 消费函数上新增任务队列装饰器
+    def f3(a, b):
+        print(f"t_demo3,a:{a},b:{b}")
+
+    # 发布任务
+    for i in range(1, 51):
+        f3.pub(a=i, b=i)
+
+    # 消费任务
+    f3.start()
+
+
 if __name__ == '__main__':
-    t_demo2()
+    t_demo3()

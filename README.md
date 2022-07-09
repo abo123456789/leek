@@ -1,3 +1,4 @@
+ [中文文档](https://github.com/abo123456789/leek)  | [English Docs](https://github.com/abo123456789/leek/blob/leek/README_EN.md)  
 [![Supported Versions](https://img.shields.io/pypi/pyversions/leek.svg)](https://pypi.org/project/leek)
 ### 任务发布消费中间件
 #### 功能描述
@@ -56,12 +57,27 @@ def f(a, b):
     print(f"a:{a},b:{b}")
     print(f.meta)
 
-consumer = get_consumer('test12', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401')
+consumer = get_consumer('test2', consuming_function=f, process_num=3, ack=True, task_expires=10, batch_id='2021042401')
 
 for i in range(1, 200):
     consumer.task_publisher.pub(a=i, b=i)
 
 consumer.start()
+```
+##### 3.发布任务和消费任务(装饰器版本)
+```python
+from leek import task_deco
+
+@task_deco('test3')  # 消费函数上新增任务队列装饰器
+def f3(a, b):
+    print(f"t_demo3,a:{a},b:{b}")
+
+# 发布任务
+for i in range(1, 51):
+    f3.pub(a=i, b=i)
+
+# 消费任务
+f3.start()
 ```
 
 #### 消费函数参数详解
@@ -85,7 +101,4 @@ get_consumer(queue_name='test11', consuming_function=f, process_num=2, threads_n
 
 #### [redisweb](https://github.com/abo123456789/redisweb) 通过浏览器查看任务消费情况
 [![avatar](https://camo.githubusercontent.com/46204ab1c85e52dec751a715ebc08daf6fb63f0ca1dd1e3fc77ee42b68a67145/68747470733a2f2f73312e617831782e636f6d2f323032302f30372f30372f5541494846652e6a7067)](https://github.com/abo123456789/redisweb)
-
-#### 赞赏一下吧
-![avatar](./skm.jpeg)
 
