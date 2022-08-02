@@ -384,7 +384,8 @@ def task_deco(queue_name,
         func.start = cs.start
 
         publisher = TaskPublisher(queue_name=queue_name, priority=priority, consuming_function=cs._consuming_function,
-                                  fliter_rep=cs.fliter_rep, max_push_size=cs.max_push_size, middleware=cs.middleware)
+                                  fliter_rep=cs.fliter_rep, filter_field=filter_field,
+                                  max_push_size=cs.max_push_size, middleware=cs.middleware)
         func.publisher = publisher
         func.pub = publisher.pub
         func.publish_list = publisher.pub_list

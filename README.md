@@ -93,6 +93,7 @@ get_consumer(queue_name='test11', consuming_function=f, process_num=2, threads_n
 :param middleware: 消费中间件,默认redis 支持sqlite ,kafka, memory
 :param customer_type: 消费者类型 string 支持('thread','gevent') 默认thread
 :param fliter_rep: 消费任务是否去重 bool True:去重 False:不去重
+:filter_field: 消费任务去重的字段,当fliter_rep为True时有效
 :param max_push_size : 每次批量推送任务数量 默认值50
 :param ack : 是否需要确认消费 默认值True
 :param task_expires : 任务过期时间 单位/秒
