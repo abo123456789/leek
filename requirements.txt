@@ -1,4 +1,4 @@
-redis==2.10.6
+redis==4.5.3
 tomorrow3==1.1.0
 retrying==1.3.3
 py-log==1.9
