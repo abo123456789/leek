@@ -10,7 +10,9 @@ from functools import update_wrapper
 
 from multiprocessing import Process
 
-from py_log import get_logger
+# from py_log import get_logger
+from loguru import logger
+
 from retrying import retry
 
 from leek import default_config, TaskPublisher
@@ -33,7 +35,8 @@ from collections.abc import Callable
 
 from leek.utils import str_sha256, get_now_millseconds, get_now_seconds
 
-logger = get_logger(__name__, formatter_template=5)
+# logger = get_logger(__name__, formatter_template=5)
+
 
 # 配置连接信息
 try:

@@ -4,7 +4,8 @@ import json
 import traceback
 from collections.abc import Callable
 
-from py_log import get_logger
+# from py_log import get_logger
+from loguru import logger as log
 from leek.utils import sort_dict, str_sha256, gen_uuid, get_now_seconds
 from leek import default_config
 from leek.memery_queue import MemoryQueue
@@ -14,7 +15,7 @@ from leek.sqllite_queue import SqlliteQueue
 
 class TaskPublisher(object):
     """任务发布类"""
-    logger = get_logger(__name__, formatter_template=5)
+    logger = log
 
     def __init__(self, queue_name, fliter_rep=False, filter_field=None, priority: int = None, max_push_size=50,
                  middleware=MiddlewareEum.REDIS, task_expires=None, batch_id=None,

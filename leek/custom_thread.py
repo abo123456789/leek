@@ -13,11 +13,11 @@ import weakref
 
 import time
 
-from py_log import get_logger
+# from py_log import get_logger
+from loguru import logger
 
 _shutdown = False
 _threads_queues = weakref.WeakKeyDictionary()
-logger = get_logger(__name__)
 
 
 def _python_exit():
